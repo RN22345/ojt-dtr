@@ -15,6 +15,7 @@ This document records each defect. The severity rules and the procedure are in `
 | DEF-003 | 2026-10-25 | TC-ST-REV-02 | S3 | AUTH | The design did not say where FR-AUTH-03 is enforced. The server cannot know the client platform. Fixed by D-38 and system modules, section 6.1. | Document review | Closed | Not in git yet |
 | DEF-004 | 2026-10-25 | TC-ST-REV-02 | S3 | COR, RPT | QR-SE-06 needs the device ID on each decision. `correction_requests` and `report_events` had no device ID. Fixed in the data model. | Document review | Closed | Not in git yet |
 | DEF-005 | 2026-10-25 | TC-ST-REV-02 | S4 | ADM | The network document named a table `company_settings`. The data model keeps the settings in `companies`. Fixed in the network document. | Document review | Closed | Not in git yet |
+| DEF-007 | 2026-10-25 | TC-CI-AUTH-01 | S2 | AUTH | A used refresh token still gives a new session 11 s after use. QR-SE-03 needs reuse detection. Likely cause: the `dev` Auth settings are the Supabase defaults. `supabase/config.toml` is not pushed yet (needs `supabase login`). | Vitest on PC, `dev`, N1 | Open | |
 | DEF-006 | 2026-10-25 | TC-ST-REV-02 | S4 | All | The traceability table did not show the module-wide references of TC-UAT-OJT-01 and TC-UAT-ADM-01. Fixed with a NOTE in the table. | Document review | Closed | Not in git yet |
 
 ## Defect detail template

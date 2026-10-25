@@ -16,7 +16,7 @@ This file is the only source for the current project state. Each agent session m
 | Stage | Name | Dates | Status |
 |---|---|---|---|
 | S0 | Plan and design | 2026-10-21 to 2026-10-27 | Gate passed 2026-10-25 (`docs/05-testing/reports/S0-test-report.md`) |
-| S1 | Foundation | 2026-10-28 to 2026-11-03 | In work. Backend tasks wait for the Supabase projects (D-35, D-39). |
+| S1 | Foundation | 2026-10-28 to 2026-11-03 | In work. `dev` exists. `prod` comes before S5 (D-40). |
 | S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | Not started |
 | S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Not started |
 | S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | Not started |
@@ -26,12 +26,13 @@ This file is the only source for the current project state. Each agent session m
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
-1. User: connect a second Supabase account (D-35). Then the agent makes `ojt-dtr-dev` and `ojt-dtr-prod` in the Singapore region.
-2. User: run `gh auth login` one time. Then the agent makes a private GitHub repository, pushes `main`, and adds `ci.yml` (lint, L1, L2 on each push).
-3. Agent, no backend needed: role shells with placeholder screens (D-31), route guards and TC-U-AUTH-03, SQLite adapter and local migrations (TC-CI-DB-01, TC-CI-DB-02), plugin test builds (TC-SI-PLUG-01, select the secure storage plugin, O-2).
-4. Agent, after task 1: backend schema, RLS, seed, `ops` heartbeat (O-3), auth settings, TC-U-AUTH-01, 02, 04, TC-CI-AUTH-01 to 03, TC-CI-ACL-03, TC-SI-AUTH-01.
-5. Agent and user, after tasks 1 and 2: keep-alive sources A, B, and C, and the first own backup (runbook, sections 3 and 6).
-6. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
+1. User: run `supabase login` one time. Then the agent pushes the Auth settings to `dev` and runs TC-CI-AUTH-01 again (DEF-007). Then TC-U-AUTH-01, TC-U-AUTH-02, TC-U-AUTH-04.
+2. User: reset the `dev` database password in the dashboard. Put the session pooler connection string in the GitHub secret `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first own backup.
+3. Agent: role shells with placeholder screens (D-31), route guards and TC-U-AUTH-03, the frontend Supabase client and login (TC-CI-AUTH-02, TC-SI-AUTH-01).
+4. Agent: SQLite adapter and local migrations (TC-CI-DB-01, TC-CI-DB-02), plugin test builds (TC-SI-PLUG-01, select the secure storage plugin, O-2).
+5. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists.
+6. Agent: TC-CI-AUTH-03 (logout and password change now, admin reset when `admin-users` exists).
+7. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
 
 ## 4. Completed work
 
@@ -56,6 +57,9 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | 2026-10-25 | Prerequisites: Supabase CLI 2.122.0, GitHub CLI 2.103.2, `JAVA_HOME` = JDK 21, Android 15 emulator image and AVD `ojt_dtr_api35`, local git repository (D-36). |
 | 2026-10-25 | S0 gate passed. TC-ST-REV-01 and TC-ST-REV-02 pass. Six review defects (DEF-001 to DEF-006) found and closed. TC-ST-REV-03 waived (D-33). The user accepted the test plan. |
 | 2026-10-25 | S1 (part): Ionic Angular standalone app in `system/frontend/` (Angular 22.2.3, Ionic 9.0.9, Capacitor 8.5.3), Android platform. Debug APK builds with JDK 21 and opens on the emulator (R-06 closed). Layer 0 hours utilities: TC-U-UTIL-01 to TC-U-UTIL-05 pass (14 of 14 tests pass, `hours.ts` 100% line coverage). Lint: zero errors. |
+| 2026-10-25 | Supabase `ojt-dtr-dev` made in the same account (D-40). Migrations: core schema, RLS on all 13 `public` tables, audit triggers, append-only punches, heartbeat (O-3 closed). Seed: 9 accounts, 2 companies, 1 batch, 6 assignments. |
+| 2026-10-25 | GitHub: private repository `RN22345/ojt-dtr`. `dev` secrets set. `ci.yml` and `keepalive.yml` (source A) added. |
+| 2026-10-25 | Backend L2 tests: TC-CI-ACL-03 passes (14 tests; the Edge Function part waits for S3). TC-CI-AUTH-01: 2 of 3 pass, 1 fails (DEF-007). Smoke test passes. |
 
 ## 5. Open issues
 
@@ -64,8 +68,10 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | Q-03, Q-04, Q-08 | Answers are defaults and can change later. Design for change (D-30). | User | Watch |
 | Q-06, Q-07 | The real team size and due date are not final. Plan as solo, due 2026-11-21 (D-29, D-32). | User | Watch |
 | UI-01 | The UI/UX design does not agree with the requirements in four items. See `docs/01-project/uiux-moodboard-summary.md`, section 6. The requirements are the source (D-34). Tell the UI/UX team. | User and UI/UX team | Closed by D-34 |
-| ENV-01 | The Supabase projects `ojt-dtr-dev` and `ojt-dtr-prod` do not exist. They go in a second Supabase account (D-35). The S1 backend tasks wait. | User | Open |
-| ENV-02 | No GitHub repository. `gh auth login` is necessary. CI, keep-alive source A, and the weekly backup wait. | User | Open |
+| ENV-01 | `ojt-dtr-dev` exists (D-40). `ojt-dtr-prod` comes before S5. Then pause KitaFix (ask its team) or `dev`. | User | Watch |
+| ENV-02 | The GitHub repository exists. The weekly backup waits for the `dev` database password (readiness plan, item 4b). | User | Open |
+| ENV-04 | The `dev` Auth settings are the Supabase defaults (JWT 3600 s, sign-up on, minimum password 6). `supabase login` is necessary to push `config.toml`. Until then, QR-SE-03 and QR-SE-04 fail on `dev` (DEF-007). | User, then agent | Open |
+| DM-01 | The data model has no punch type for a correction request of kind `add`. The server cannot make the new punch without it. Decide in S3 before COR work (add `requested_type`, then update the data model). | Agent | Open |
 | ENV-03 | The `docs/deliverables/` files were lost in the D-28 move. They were restored from `OJT-Appdev-Project.zip`. The path in `extract_test_cases.py` was fixed again. The Google Doc tabs do not show the S0 review fixes yet. | Agent | Watch |
 
 ## 6. Session log
@@ -86,3 +92,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-25 | Claude Code (desktop) | Recorded answers to Q-03, Q-04, Q-06, Q-07, Q-08 (defaults or accepted assumptions). Added D-29 to D-32 and risk R-10. Moved the due date to 2026-11-21 and shortened S3 to S5. Added frontend rules for placeholders and design for change. | `docs/01-project/project-charter.md`, `timeline.md`, `decision-log.md`, `docs/05-testing/test-plan.md`, `AGENTS.md`, `system/frontend/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-25 | Claude Code (desktop) | Checked the build prerequisites and wrote the readiness and stage plan. | `docs/01-project/readiness-and-stage-plan.md`, `docs/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-25 | Claude Code (desktop) | Installed the prerequisites (D-36). Ran the S0 reviews, fixed six document defects, passed the S0 gate. Started S1 without the backend (D-39): made the frontend app, the Android build, and the layer 0 hours utilities with tests. Restored `docs/deliverables/`. Made the local git repository. | `.gitignore`, `AGENTS.md`, `PROGRESS.md`, `docs/AGENTS.md`, decision log (D-33 to D-39), readiness plan, FR-DTR-09, QR-SE-03, system modules 6.1, data model, network doc, test plan, test cases, defect log, `docs/05-testing/reports/S0-test-report.md`, `docs/deliverables/*`, `system/frontend/*` |
+| 2026-10-25 | Claude Code (desktop) | Made `ojt-dtr-dev` in the same Supabase account (D-40). Applied the core schema and RLS, seeded the test accounts, added the heartbeat and the smoke test. Made the private GitHub repository, the CI and keep-alive workflows, and the GitHub secrets. Wrote the L2 tests: TC-CI-ACL-03 passes, TC-CI-AUTH-01 finds DEF-007. | `system/backend/*`, `.github/workflows/*`, decision log (D-40), runbook section 2, readiness plan, defect log, root `AGENTS.md`, `PROGRESS.md` |

@@ -4,7 +4,42 @@ This folder will contain the Supabase backend: migrations, RLS policies, databas
 
 ## Status
 
-Not created. Create the backend in stage S1 (D-14).
+Created on 2026-10-25 (S1). The `dev` project has the core schema, RLS, audit triggers, the heartbeat, and the seed accounts. `prod` does not exist yet (D-40). `sync_push`, `sync_pull`, Storage, and Edge Functions come in S2 to S4.
+
+| Project | Ref | URL |
+|---|---|---|
+| `ojt-dtr-dev` | `bclcgckflztfyxqaqvqt` | `https://bclcgckflztfyxqaqvqt.supabase.co` |
+
+CAUTION: The same account has the project "RN22345's Project" (ref `pkfataaehrjdipdbrthz`) of a different app (KitaFix). Do not run SQL, migrations, or seed files on it.
+
+## Commands
+
+Run these commands in `system/backend/`. Copy `.env.example` to `.env` first.
+
+| Task | Command |
+|---|---|
+| L2 tests against `dev` | `npx vitest run` |
+| Smoke test (runbook, procedure A) | `npm run smoke` |
+| Apply the Auth settings of `config.toml` | `supabase login` (one time), then `supabase config push --project-ref bclcgckflztfyxqaqvqt` |
+
+NOTE: The agent applied the migrations with the Supabase connector (`apply_migration`). Each local file name has the version that the connector recorded. Thus `supabase db push` sees them as applied.
+
+NOTE: The seed needs the session setting `app.seed_password`. See the header of `supabase/seed.sql`.
+
+## Folder map (files made in S1)
+
+| Path | Contents |
+|---|---|
+| `supabase/config.toml` | CLI configuration. Auth values from QR-SE-03, QR-SE-04, D-22. |
+| `supabase/migrations/20261025134548_core_schema.sql` | Tables, triggers, RLS, audit, heartbeat |
+| `supabase/migrations/20261025134615_restrict_anon_functions.sql` | Removes anonymous EXECUTE grants |
+| `supabase/seed.sql` | Seed accounts, companies, batch, assignments (dev and local only) |
+| `supabase/api-contract.md` | The API contract (D-23) |
+| `supabase/auth-settings.md` | Auth settings for each project |
+| `tests/helpers.ts`, `tests/auth.test.ts`, `tests/acl-admin.test.ts` | L2 tests: TC-CI-AUTH-01, TC-CI-ACL-03 |
+| `ops/smoke-test.mjs` | Smoke test: heartbeat, test login, server epoch |
+| `vitest.config.ts`, `package.json`, `.env.example` | Test setup |
+| `../../.github/workflows/ci.yml`, `keepalive.yml` | CI and keep-alive source A |
 
 ## Stack
 

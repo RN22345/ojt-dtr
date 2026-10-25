@@ -31,12 +31,13 @@ This file is the main memory file for AI agents. Each agent tool must read this 
 
 | Folder | Contents | Memory file |
 |---|---|---|
-| `/` | Project root, agent rules, progress log, `.gitignore`. The git repository root (branch `main`). | `AGENTS.md`, `PROGRESS.md` |
+| `/` | Project root, agent rules, progress log, `.gitignore`, `.gitattributes`. The git repository root (branch `main`, remote: private GitHub repository `RN22345/ojt-dtr`). | `AGENTS.md`, `PROGRESS.md` |
 | `docs/` | All project documents in numbered subfolders (standards, project, requirements, architecture, testing, operations) | `docs/AGENTS.md` (covers all subfolders) |
 | `docs/deliverables/` | DOCX, PDF, and PPTX outputs of the current revision, to upload to Google Drive. `source/` has the build script (docx-js), diagram sources, the mood board image, and `md2html.py` (Markdown to HTML for Google Doc tabs). | `docs/AGENTS.md` |
 | `system/` | The actual system. Contains `frontend/` and `backend/`. No documents (D-28). | Folder `AGENTS.md` files |
 | `system/frontend/` | Ionic Angular app with the Android platform (created in S1) | `system/frontend/AGENTS.md` |
-| `system/backend/` | REST API and database (not created yet) | `system/backend/AGENTS.md` |
+| `system/backend/` | Supabase backend: migrations, seed, API contract, L2 tests, operation scripts (created in S1) | `system/backend/AGENTS.md` |
+| `.github/workflows/` | `ci.yml` (lint, L1, L2 on each push), `keepalive.yml` (keep-alive source A) | `system/backend/AGENTS.md` |
 
 ## 4. Mandatory rules for agents
 

@@ -31,10 +31,14 @@ NOTE: The Free plan terms can change. At the start of each stage, examine the Su
 
 ## 2. Projects
 
-| Project | Region | Purpose | Keep-alive |
-|---|---|---|---|
-| `ojt-dtr-dev` | Southeast Asia (Singapore) | Development, L2 to L4 tests, drills | Yes |
-| `ojt-dtr-prod` | Southeast Asia (Singapore) | Demonstration and user acceptance test | Yes |
+| Project | Ref | Region | Purpose | Keep-alive |
+|---|---|---|---|---|
+| `ojt-dtr-dev` | `bclcgckflztfyxqaqvqt` | Southeast Asia (Singapore) | Development, L2 to L4 tests, drills | Yes |
+| `ojt-dtr-prod` | Not created | Southeast Asia (Singapore) | Demonstration and user acceptance test | Yes |
+
+The projects are in the same account and organization as the project of a different app (KitaFix). The Free plan allows two active projects. Make `prod` before the S5 entry. Then pause one project: KitaFix if its team does not need it, else `dev` after the S4 gate (D-40).
+
+CAUTION: Before you pause the KitaFix project, ask its team. Do not change its data. A paused project can be restored with one click for 90 days only.
 
 ## 3. Layer 1: Prevention
 

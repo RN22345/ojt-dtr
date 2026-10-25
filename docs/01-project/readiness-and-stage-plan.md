@@ -18,16 +18,18 @@ Related decisions: D-29 (due date 2026-11-21), D-30 (design for change), D-31 (w
 | Tools | Node 24, npm, Ionic CLI 7.2.1, git 2.55, Supabase CLI 2.122.0, GitHub CLI 2.103.2, Java 17, 21, and 22 (`JAVA_HOME` = JDK 21), Android SDK (platforms 33 to 37, build-tools, platform-tools, emulator, command-line tools), adb (D-36). |
 | Android emulator | AVD `ojt_dtr_api35` (Pixel 6, Android 15, x86_64). WHPX acceleration works. It boots in about 35 seconds. |
 | Toolchain check (R-06) | The debug APK builds with JDK 21 and Gradle 8.14.3. It installs and opens on the emulator. |
-| Git repository | Local repository at the project root, branch `main`. |
-| Supabase connector | It works in the agent session. It shows the first account only. |
+| Git repository and GitHub | Repository at the project root, branch `main`. Remote: private repository `RN22345/ojt-dtr`. `gh` is logged in. The `dev` secrets are GitHub secrets. |
+| Supabase `dev` project | `ojt-dtr-dev` (ref `bclcgckflztfyxqaqvqt`, Singapore) in the same account as KitaFix (D-40). Core schema, RLS, seed accounts, heartbeat. |
+| Supabase connector | It works in the agent session. |
 
 ### 1.2 Not met
 
 | # | Item | Note | Owner |
 |---|---|---|---|
-| 4 | Supabase projects | Make `ojt-dtr-dev` and `ojt-dtr-prod` in a second Supabase account (D-35). Do not touch "RN22345's Project" (KitaFix data). Connect the Supabase connector (or `supabase login`) to the second account. Then the agent makes the projects in the Singapore region. | User, then agent |
+| 4 | Supabase `prod` project | Make it before the S5 entry. Then pause KitaFix or `dev` (D-40). | Agent, user decides which to pause |
+| 4a | Supabase CLI login | `supabase login` one time. It is necessary to push the Auth settings (DEF-007) and for `supabase db push`, `gen types`, and Edge Function deploys. | User |
+| 4b | `dev` database password | The connector made the project. Nobody has its database password. Reset it in the dashboard (Project Settings, Database) and give the session pooler connection string as the GitHub secret `DB_URL_DEV`. The weekly backup (runbook, section 6) needs it. | User |
 | 6 | Docker | Not installed. It needs WSL and administrator rights. Only needed for a local Supabase stack and pgTAP. Without it, tests run against `dev` (D-21). | Optional |
-| 7 | GitHub | `gh` is installed. The user must run `gh auth login` one time. Then the agent makes a private repository and pushes. CI, keep-alive, and the weekly backup need it. | User, then agent |
 | 8 | Android phone | The emulator is ready. A phone with USB debugging is still necessary for the reference measures (quality requirements, section 2). A second device (phone or emulator) is necessary for two-user sync tests. | User |
 | 10 | Push notifications | An FCM (Firebase) project is necessary. Needed in S4 only. | User |
 | 11 | Keep-alive and backup secrets | A backup encryption key and an external pinger. Secrets go in GitHub secrets, never in files (AGENTS.md, rule 8). Set up in S1, after items 4 and 7. | Agent and user |
@@ -64,6 +66,6 @@ Record each cut in the decision log.
 
 ## 4. Next steps
 
-1. The user connects the second Supabase account (item 4) and runs `gh auth login` (item 7).
-2. The agent makes the two Supabase projects, the private GitHub repository, and the CI workflow.
-3. Continue S1 (D-39): role shells, SQLite adapter, plugin test builds, then the backend schema, RLS, seed, auth, keep-alive, and backup.
+1. The user runs `supabase login` (item 4a) and resets the `dev` database password (item 4b).
+2. The agent pushes the Auth settings and runs TC-CI-AUTH-01 again (DEF-007).
+3. Continue S1: role shells, route guards, SQLite adapter, plugin test builds, keep-alive sources B and C, the backup workflow.
