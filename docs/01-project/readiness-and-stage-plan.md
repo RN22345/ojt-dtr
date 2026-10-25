@@ -27,7 +27,7 @@ Related decisions: D-29 (due date 2026-11-21), D-30 (design for change), D-31 (w
 | # | Item | Note | Owner |
 |---|---|---|---|
 | 4 | Supabase `prod` project | Make it before the S5 entry. Then pause KitaFix or `dev` (D-40). | Agent, user decides which to pause |
-| 4a | Supabase CLI login | `supabase login` one time. It is necessary to push the Auth settings (DEF-007) and for `supabase db push`, `gen types`, and Edge Function deploys. | User |
+| 4a | Supabase CLI login | Done on 2026-10-25. The Auth settings are on `dev`. | Closed |
 | 4b | `dev` database password | The connector made the project. Nobody has its database password. Reset it in the dashboard (Project Settings, Database) and give the session pooler connection string as the GitHub secret `DB_URL_DEV`. The weekly backup (runbook, section 6) needs it. | User |
 | 6 | Docker | Not installed. It needs WSL and administrator rights. Only needed for a local Supabase stack and pgTAP. Without it, tests run against `dev` (D-21). | Optional |
 | 8 | Android phone | The emulator is ready. A phone with USB debugging is still necessary for the reference measures (quality requirements, section 2). A second device (phone or emulator) is necessary for two-user sync tests. | User |
@@ -66,6 +66,5 @@ Record each cut in the decision log.
 
 ## 4. Next steps
 
-1. The user runs `supabase login` (item 4a) and resets the `dev` database password (item 4b).
-2. The agent pushes the Auth settings and runs TC-CI-AUTH-01 again (DEF-007).
-3. Continue S1: role shells, route guards, SQLite adapter, plugin test builds, keep-alive sources B and C, the backup workflow.
+1. The user resets the `dev` database password (item 4b). Then the agent adds the backup workflow.
+2. Continue S1: SQLite adapter, plugin test builds, keep-alive sources B and C, the S1 gate.

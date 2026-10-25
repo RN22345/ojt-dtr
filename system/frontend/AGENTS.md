@@ -4,7 +4,7 @@ This folder will contain the Ionic Angular app. One codebase makes three builds:
 
 ## Status
 
-Created on 2026-10-25 (S1). The app is the Ionic "tabs" starter, the Android platform, and the layer 0 hours utilities. The starter tab pages are not changed yet. They become the role shells in S1.
+Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. Data is read from the server only. The local database and the outbox come next (S1 and S2).
 
 ## How the app was made
 
@@ -27,6 +27,8 @@ Run these commands in `system/frontend/`.
 | Copy the web build to Android | `npx cap sync android` |
 | Debug APK | In `android/`: `gradlew.bat assembleDebug`. `JAVA_HOME` must be JDK 21 (D-36). |
 | Start the emulator | `emulator -avd ojt_dtr_api35` (in the Android SDK `emulator/` folder) |
+| Dev server | `npx ng serve --port 8100`, or the `frontend` entry in `.claude/launch.json` |
+| Test the mobile screens in a browser | Set `platformOverride: 'mobile'` in `src/environments/environment.ts`. Do not commit the change. |
 
 ## Folder map (files made in S1)
 
@@ -34,6 +36,19 @@ Run these commands in `system/frontend/`.
 |---|---|
 | `src/app/shared/utils/hours.ts` | Layer 0: work sessions and hours from punches, Asia/Manila dates and weeks |
 | `src/app/shared/utils/hours.spec.ts` | TC-U-UTIL-01 to TC-U-UTIL-05 |
+| `src/app/core/platform.service.ts` | Mobile or web platform (one place) |
+| `src/app/core/supabase.client.ts` | The one Supabase client (`SUPABASE` token) |
+| `src/app/core/auth/access.ts`, `access.spec.ts` | Role and platform access table. TC-U-AUTH-03. |
+| `src/app/core/auth/auth.service.ts`, `auth.service.spec.ts` | Login, restore, logout, platform check. TC-CI-AUTH-02 (fake client). |
+| `src/app/core/auth/auth.guards.ts` | `groupGuard`, `startGuard`, `loginGuard` |
+| `src/app/core/auth/token-storage.ts` | Secure storage on mobile, `sessionStorage` on web (D-42) |
+| `src/app/data/repositories/profile.repository.ts` | Profile reads |
+| `src/app/features/auth/login.page.ts` | Login page |
+| `src/app/features/{ojt,facilitator,admin}/*.routes.ts` | Role shells: the tabs of each role |
+| `src/app/shared/strings.ts` | All UI text (D-31) |
+| `src/app/shared/placeholder/` | Placeholder box and wireframe page (D-31) |
+| `src/app/shared/shell/` | Tab shell and its route helper |
+| `src/environments/` | Supabase URL and publishable key. `environment.prod.ts` points to `dev` until `prod` exists (D-40). |
 | `android/` | Capacitor Android project (Gradle 8.14.3, Android Gradle plugin 8.13.0, minSdk 24, targetSdk 36) |
 
 ## Planned structure
@@ -82,4 +97,5 @@ Recorded on 2026-10-25. Update this table when a version changes.
 | typescript | 6.0.3 |
 | vitest | 5.0.5 |
 | @capacitor-community/sqlite | Not installed yet |
-| @supabase/supabase-js | Not installed yet |
+| @supabase/supabase-js | 2.118.0 |
+| @aparajita/capacitor-secure-storage | 8.0.1 |

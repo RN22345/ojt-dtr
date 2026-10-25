@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--prefix", "system/frontend", "ng", "serve", "--project", "app", "--port", "8100"],
+      "cwd": "system/frontend",
+      "port": 8100
+    }
+  ]
+}

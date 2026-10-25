@@ -37,6 +37,7 @@ This file is the main memory file for AI agents. Each agent tool must read this 
 | `system/` | The actual system. Contains `frontend/` and `backend/`. No documents (D-28). | Folder `AGENTS.md` files |
 | `system/frontend/` | Ionic Angular app with the Android platform (created in S1) | `system/frontend/AGENTS.md` |
 | `system/backend/` | Supabase backend: migrations, seed, API contract, L2 tests, operation scripts (created in S1) | `system/backend/AGENTS.md` |
+| `.claude/` | `launch.json`: the `frontend` dev server for the Claude Code preview | None |
 | `.github/workflows/` | `ci.yml` (lint, L1, L2 on each push), `keepalive.yml` (keep-alive source A) | `system/backend/AGENTS.md` |
 
 ## 4. Mandatory rules for agents

@@ -20,7 +20,11 @@ Run these commands in `system/backend/`. Copy `.env.example` to `.env` first.
 |---|---|
 | L2 tests against `dev` | `npx vitest run` |
 | Smoke test (runbook, procedure A) | `npm run smoke` |
-| Apply the Auth settings of `config.toml` | `supabase login` (one time), then `supabase config push --project-ref bclcgckflztfyxqaqvqt` |
+| Apply the Auth settings of `config.toml` | `supabase config push --project-ref bclcgckflztfyxqaqvqt`. Answer "n" first to see the difference. The CLI is logged in. |
+
+CAUTION: In `config.toml`, keep `[auth.email] enable_signup = true`. On a hosted project, `false` turns off email login for all users. `[auth] enable_signup = false` stops the sign-ups.
+
+NOTE: A sign-out with the default (global) scope ends all sessions of that user. Tests that share a seed account must not run at the same time.
 
 NOTE: The agent applied the migrations with the Supabase connector (`apply_migration`). Each local file name has the version that the connector recorded. Thus `supabase db push` sees them as applied.
 

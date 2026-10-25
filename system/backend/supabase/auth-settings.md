@@ -11,7 +11,8 @@ This document gives the Supabase Auth settings of each project. The rebuild proc
 | JWT expiry | 900 seconds | QR-SE-03, D-22 |
 | Refresh token rotation | On | QR-SE-03 |
 | Refresh token reuse interval | 10 seconds | QR-SE-03 (reuse after the interval revokes the session) |
-| Public sign-up (all providers and email) | Off | FR-ADM-01, network document section 5 |
+| Public sign-up (`[auth] enable_signup`) | Off | FR-ADM-01, network document section 5 |
+| Email provider (`[auth.email] enable_signup`) | On | FR-AUTH-01. CAUTION: On a hosted project this value turns email login on or off. Do not set it to false. |
 | Anonymous sign-in | Off | QR-SE-01 |
 | Minimum password length | 8 | QR-SE-04 |
 | Email confirmation | Off (the admin makes accounts) | FR-AUTH-07 |
@@ -22,5 +23,5 @@ This document gives the Supabase Auth settings of each project. The rebuild proc
 
 | Project | Ref | Status |
 |---|---|---|
-| `ojt-dtr-dev` | `bclcgckflztfyxqaqvqt` | Not applied yet. The project has the Supabase defaults. See DEF-007. |
+| `ojt-dtr-dev` | `bclcgckflztfyxqaqvqt` | Applied on 2026-10-25 with `supabase config push`. `supabase config push` (dry run, answer "n") shows no difference. |
 | `ojt-dtr-prod` | Not created (D-40) | |

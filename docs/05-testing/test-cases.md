@@ -69,7 +69,7 @@ Use this template when you write the full steps of a test case. Put full test ca
 |---|---|---|---|---|
 | TC-CI-DB-01 | S1 | FR-SYNC-01, QR-FL-04 | Local migrations | The migrations make all local tables on an empty database. A second run makes no change and no error. The in-memory adapter passes the same repository tests. |
 | TC-CI-DB-02 | S1 | FR-SYNC-01, FR-AUTH-04 | Repository with the SQLite adapter | A saved record reads back with the same data. The outbox row exists. The stored profile reads back. |
-| TC-CI-AUTH-01 | S1 | FR-AUTH-01, QR-SE-03 | Login and refresh endpoints | Valid login gives tokens. A wrong password is rejected. Refresh gives a new pair. A used refresh token is rejected. |
+| TC-CI-AUTH-01 | S1 | FR-AUTH-01, QR-SE-03 | Login and refresh endpoints | Valid login gives tokens. A wrong password is rejected. Refresh gives a new pair. An old used refresh token (older than the parent of the active token) is rejected after the 10-second reuse interval. The parent of the active token gives the active session (D-41). |
 | TC-CI-AUTH-02 | S1 | FR-AUTH-03 | Platform restriction | After an admin login in the mobile client, the client signs out at once, shows a message, and stores no data. An OJT or facilitator login in the web client gives the same result (D-38). |
 | TC-CI-AUTH-03 | S1 | FR-AUTH-05, FR-AUTH-06, FR-AUTH-07 | Logout, password change, and password reset | Logout revokes the refresh token. Password change needs the old password. Admin reset makes the old password invalid. |
 | TC-CI-ACL-01 | S2 | QR-SE-01 | OJT data scope | `ojt1` cannot read or write data of `ojt6` through the Data API, Storage, or sync, also with forged IDs. The result is an error or zero rows. |

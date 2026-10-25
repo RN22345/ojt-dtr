@@ -26,13 +26,14 @@ This file is the only source for the current project state. Each agent session m
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
-1. User: run `supabase login` one time. Then the agent pushes the Auth settings to `dev` and runs TC-CI-AUTH-01 again (DEF-007). Then TC-U-AUTH-01, TC-U-AUTH-02, TC-U-AUTH-04.
-2. User: reset the `dev` database password in the dashboard. Put the session pooler connection string in the GitHub secret `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first own backup.
-3. Agent: role shells with placeholder screens (D-31), route guards and TC-U-AUTH-03, the frontend Supabase client and login (TC-CI-AUTH-02, TC-SI-AUTH-01).
-4. Agent: SQLite adapter and local migrations (TC-CI-DB-01, TC-CI-DB-02), plugin test builds (TC-SI-PLUG-01, select the secure storage plugin, O-2).
-5. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists.
-6. Agent: TC-CI-AUTH-03 (logout and password change now, admin reset when `admin-users` exists).
-7. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
+1. User: reset the `dev` database password in the dashboard. Put the session pooler connection string in the GitHub secret `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first own backup.
+2. Agent: SQLite adapter and local migrations (TC-CI-DB-01, TC-CI-DB-02).
+3. Agent: plugin test builds (TC-SI-PLUG-01). The secure storage plugin is selected (D-42).
+4. Agent: TC-U-AUTH-01, TC-U-AUTH-02, TC-U-AUTH-04 (Auth settings and rate limit).
+5. Agent: TC-CI-AUTH-03 (logout and password change now, admin reset when `admin-users` exists).
+6. Agent: ESLint rule for the feature import ban (QR-MA-01) and the complexity rule (QR-MA-04).
+7. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists.
+8. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
 
 ## 4. Completed work
 
@@ -60,6 +61,9 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | 2026-10-25 | Supabase `ojt-dtr-dev` made in the same account (D-40). Migrations: core schema, RLS on all 13 `public` tables, audit triggers, append-only punches, heartbeat (O-3 closed). Seed: 9 accounts, 2 companies, 1 batch, 6 assignments. |
 | 2026-10-25 | GitHub: private repository `RN22345/ojt-dtr`. `dev` secrets set. `ci.yml` and `keepalive.yml` (source A) added. |
 | 2026-10-25 | Backend L2 tests: TC-CI-ACL-03 passes (14 tests; the Edge Function part waits for S3). TC-CI-AUTH-01: 2 of 3 pass, 1 fails (DEF-007). Smoke test passes. |
+| 2026-10-25 | Auth settings pushed to `dev` (JWT 900 s, sign-up off, minimum password 8). DEF-007 closed: test design fault, test corrected (D-41). Backend L2: 19 of 19 pass. |
+| 2026-10-25 | Frontend: Supabase client, secure token storage (D-42), login with the platform check (D-38), route guards, wireframe role shells. TC-U-AUTH-03 and TC-CI-AUTH-02 (fake client) pass: frontend 74 of 74 tests pass, 85% line coverage, lint zero errors. |
+| 2026-10-25 | TC-SI-AUTH-01 passes: OJT and facilitator log in on the Android emulator, admin logs in on the web app. Each sees only the tabs of the role. An admin login on Android is refused and stores no session. A typed URL of another role goes back to the home of the role. |
 
 ## 5. Open issues
 
@@ -70,7 +74,8 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | UI-01 | The UI/UX design does not agree with the requirements in four items. See `docs/01-project/uiux-moodboard-summary.md`, section 6. The requirements are the source (D-34). Tell the UI/UX team. | User and UI/UX team | Closed by D-34 |
 | ENV-01 | `ojt-dtr-dev` exists (D-40). `ojt-dtr-prod` comes before S5. Then pause KitaFix (ask its team) or `dev`. | User | Watch |
 | ENV-02 | The GitHub repository exists. The weekly backup waits for the `dev` database password (readiness plan, item 4b). | User | Open |
-| ENV-04 | The `dev` Auth settings are the Supabase defaults (JWT 3600 s, sign-up on, minimum password 6). `supabase login` is necessary to push `config.toml`. Until then, QR-SE-03 and QR-SE-04 fail on `dev` (DEF-007). | User, then agent | Open |
+| ENV-04 | The `dev` Auth settings were the Supabase defaults. Pushed on 2026-10-25. | Agent | Closed |
+| O-5 | supabase-js has no request timeout. On the emulator just after a cold boot, the first login waited about 25 s, and one attempt ended with "Server not reachable". Add a timeout to the fetch wrapper in S2 (with the fault injector, D-20; offline sync design, section 13). | Agent | Open |
 | DM-01 | The data model has no punch type for a correction request of kind `add`. The server cannot make the new punch without it. Decide in S3 before COR work (add `requested_type`, then update the data model). | Agent | Open |
 | ENV-03 | The `docs/deliverables/` files were lost in the D-28 move. They were restored from `OJT-Appdev-Project.zip`. The path in `extract_test_cases.py` was fixed again. The Google Doc tabs do not show the S0 review fixes yet. | Agent | Watch |
 
@@ -93,3 +98,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-25 | Claude Code (desktop) | Checked the build prerequisites and wrote the readiness and stage plan. | `docs/01-project/readiness-and-stage-plan.md`, `docs/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-25 | Claude Code (desktop) | Installed the prerequisites (D-36). Ran the S0 reviews, fixed six document defects, passed the S0 gate. Started S1 without the backend (D-39): made the frontend app, the Android build, and the layer 0 hours utilities with tests. Restored `docs/deliverables/`. Made the local git repository. | `.gitignore`, `AGENTS.md`, `PROGRESS.md`, `docs/AGENTS.md`, decision log (D-33 to D-39), readiness plan, FR-DTR-09, QR-SE-03, system modules 6.1, data model, network doc, test plan, test cases, defect log, `docs/05-testing/reports/S0-test-report.md`, `docs/deliverables/*`, `system/frontend/*` |
 | 2026-10-25 | Claude Code (desktop) | Made `ojt-dtr-dev` in the same Supabase account (D-40). Applied the core schema and RLS, seeded the test accounts, added the heartbeat and the smoke test. Made the private GitHub repository, the CI and keep-alive workflows, and the GitHub secrets. Wrote the L2 tests: TC-CI-ACL-03 passes, TC-CI-AUTH-01 finds DEF-007. | `system/backend/*`, `.github/workflows/*`, decision log (D-40), runbook section 2, readiness plan, defect log, root `AGENTS.md`, `PROGRESS.md` |
+| 2026-10-25 | Claude Code (desktop) | Pushed the Auth settings to `dev`. Found that the first push turned off email login (`[auth.email] enable_signup`) and fixed it at once. Closed DEF-007 as a test design fault (D-41). Built login, guards, and role shells. Selected the secure storage plugin (D-42). Ran TC-SI-AUTH-01 on the emulator and the web. | `system/backend/supabase/config.toml`, `auth-settings.md`, `tests/auth.test.ts`, `system/frontend/src/*`, `system/frontend/AGENTS.md`, `system/backend/AGENTS.md`, decision log (D-41, D-42), defect log, test cases, readiness plan, `.claude/launch.json`, root `AGENTS.md`, `PROGRESS.md` |
