@@ -1,0 +1,54 @@
+# Decision log
+
+This document records each project decision and its reason. Add new decisions at the end. Do not delete a decision.
+
+| ID | Date | Decision | Reason | Status |
+|---|---|---|---|---|
+| D-01 | 2026-10-21 | Use Ionic + Angular with standalone components and Capacitor. | The course requires Ionic Angular. Capacitor gives access to native device functions. | Accepted |
+| D-02 | 2026-10-21 | Use one codebase for the mobile app and the admin web app. Show modules by role and by platform. | One codebase is faster to build and to test. The course requires one app for OJT and facilitator. | Accepted |
+| D-03 | 2026-10-21 | Use Node.js, Express, TypeScript, Prisma, and PostgreSQL for the backend. | The developer knows Node.js and Express. PostgreSQL has free managed hosts. A custom API shows backend work. | Replaced by D-14 |
+| D-04 | 2026-10-21 | Use a local-first design on mobile: SQLite on the device and an outbox for changes. | The mobile app must operate offline. The outbox keeps each change until the server accepts it. | Accepted |
+| D-05 | 2026-10-21 | Make punches append-only. A correction makes a new punch that refers to the old punch. | Two devices cannot overwrite the same punch. The history stays complete for audit. | Accepted |
+| D-06 | 2026-10-21 | Use a bottom-up test approach. | The data layer and the sync engine have the highest risk. All UI modules depend on them. See the test plan, section 3. | Accepted |
+| D-07 | 2026-10-21 | Use ISO/IEC 25010:2023 as the product quality model. | It is the current edition. It gives nine quality characteristics with measurable sub-characteristics. | Accepted |
+| D-08 | 2026-10-21 | Write all documents in ASD-STE100. | The user requires it. Simple text is easier for people and agents to read. | Accepted |
+| D-09 | 2026-10-21 | Use `AGENTS.md` files as the agent memory in each folder. Add `CLAUDE.md` and `GEMINI.md` pointers at the root. | Many agent tools read `AGENTS.md`. The pointers let other tools find it. | Changed by D-25 |
+| D-10 | 2026-10-21 | The client makes the ID (UUID) of each new record. | The app can make records offline without a server ID. The server can find duplicate sends. | Accepted |
+| D-11 | 2026-10-21 | Use a server change sequence number as the pull cursor. | A sequence number does not depend on the device clock. | Accepted |
+| D-12 | 2026-10-21 | Use a short JWT access token and a rotated refresh token. | Short tokens limit the damage if a token is stolen. The refresh token lets the app continue after offline periods. | Accepted |
+| D-13 | 2026-10-21 | The admin web app does not use the local database. It operates online only. | Admin work needs current data. Offline admin work increases conflict risk. | Accepted |
+| D-14 | 2026-10-21 | Use Supabase (Free plan) as the backend: PostgreSQL, Auth, Storage, Data API, database functions for sync, and Edge Functions. Do not make a separate Express server. | The user knows Supabase. The data is relational and fits PostgreSQL. Row Level Security (RLS) enforces the access rules in the database. No separate server means no second free host that sleeps. Backend work is in SQL migrations, RLS policies, database functions, and Edge Functions. | Accepted |
+| D-15 | 2026-10-21 | The iOS build is optional (priority "Could"). Android is the main mobile platform. | The user confirmed that iOS is secondary. An iOS build needs macOS and Xcode, even when testers have iPhones. | Accepted |
+| D-16 | 2026-10-21 | Use free tiers only for all cloud services. | The user requires it. | Accepted |
+| D-17 | 2026-10-21 | Protect the backend against the Free plan pause with three layers: prevention (four keep-alive sources), tolerance (offline-first apps), and recovery (resume and rebuild procedures). | A Free plan project pauses after 7 days of low activity. One protection layer is not enough. See `docs/07-operations/free-tier-operations-runbook.md`. | Accepted |
+| D-18 | 2026-10-21 | Make an encrypted own backup each week and before each gate and demonstration. | The Free plan does not include automatic backups. | Accepted |
+| D-19 | 2026-10-21 | Add a server epoch. If the epoch changes, each app resets its pull cursor and sends its local records of the last 30 days again. | After a rebuild from a backup, the server can miss recent records. The devices still have them. Record IDs make the second send safe. | Accepted |
+| D-20 | 2026-10-21 | Make network faults for tests with a fault injector in the client `fetch` of supabase-js (test builds only). | The project has no own server, so a server fault middleware is not possible. | Accepted |
+| D-21 | 2026-10-21 | Use the two free projects as `dev` and `prod`. Use the local Supabase stack (CLI and Docker) for tests that need a third project. | The Free plan allows two active projects. | Accepted |
+| D-22 | 2026-10-21 | Use the Supabase Auth controls for tokens and login attempts: JWT expiry 900 seconds, refresh token rotation with reuse detection, sign-in rate limits. This changes the measures of QR-SE-03, QR-SE-04, and QR-SE-08. | Supabase Auth manages tokens and passwords. A custom account lockout is not available without a paid hook. | Accepted |
+| D-23 | 2026-10-21 | Use RLS and database functions as the API contract. Document them in `backend/supabase/api-contract.md` instead of an OpenAPI file. This changes the measure of QR-CO-02. | The Data API is generated from the schema. The project writes no REST routes. | Accepted |
+| D-24 | 2026-10-21 | Share final outputs (DOCX, PDF, PPTX) in the project Google Drive folder. Drive holds only the final files of the current revision batch. | The team needs one shared location for reviewed versions. The Markdown files stay the source. | Changed by D-27 |
+| D-25 | 2026-10-21 | Keep `AGENTS.md` files only at the root and in `docs/`, `frontend/`, and `backend/`. `docs/AGENTS.md` covers all documentation subfolders. | One file in each subfolder was too much to maintain. | Accepted |
+| D-26 | 2026-10-21 | Another team makes the UI/UX design. | Assignment by the course group. | Accepted |
+| D-27 | 2026-10-21 | The Google Doc "OJT-DTR - System Documents - Rev <n>" in the Drive folder is the primary shared file. It has one tab for each document part. The DOCX stays as a download copy. The Markdown files in the repository stay the source. When a Markdown source changes, update the matching Google Doc tab. | The user selected Google Docs. Tabs let readers go to one part quickly, and a DOCX file cannot have tabs. | Accepted |
+| D-28 | 2026-10-25 | Split the repository: documents in `docs/` (with `deliverables/` inside it), code in `system/frontend/` and `system/backend/`. Agent files stay at the root. | Documents and code have different owners, tools, and change rates. A separate `system/` folder can become its own repository. | Accepted |
+| D-29 | 2026-10-25 | The due date is 2026-11-21 (Q-07 default minus one week). S3 is 4 days, S4 is 4 days, and S5 is 3 days. S0 to S2 do not change. | The real date is not known. An early date gives a safety margin. | Accepted |
+| D-30 | 2026-10-25 | Q-03, Q-04, and Q-08 use the defaults, but they can change. Design for change: put time-in verification, DTR export layout, and the facilitator-company relation behind services, settings, or data. Do not hard-code them. | The answers are not final. Modularity and flexibility reduce the cost of a change. | Accepted |
+| D-31 | 2026-10-25 | The UI/UX and art team can be late. Build wireframe-style screens that work, with shared placeholder components for missing assets (for example, a box with the text "LOGO"). Keep theme, strings, and assets in replaceable files. | The final UI does not block the build. The final design can replace the placeholders. | Accepted |
+| D-32 | 2026-10-25 | The project is a group project, but plan it as solo until the first working draft. | The team split is not known yet. | Accepted |
+| D-33 | 2026-10-25 | Waive TC-ST-REV-03 (UI prototype walkthrough) in S0. TC-ST-Q-IC-01 in S4 still measures QR-IC-01 and QR-IC-02. The user accepted the test plan on the same date. | No UI prototype that agrees with the requirements exists (D-31, UI-01). The user approved the waiver. | Accepted |
+| D-34 | 2026-10-25 | For UI-01, the requirements are the source. The Figma file is a reference only. | The Figma design and the requirements disagree in four items. The user selected the requirements. | Accepted |
+| D-35 | 2026-10-25 | Make `ojt-dtr-dev` and `ojt-dtr-prod` in a second Supabase account. Do not use or change the project "RN22345's Project" (ref `pkfataaehrjdipdbrthz`). | That project holds the live data of a different app (KitaFix). The Free plan allows two active projects for each account. | Accepted |
+| D-36 | 2026-10-25 | Tools: Supabase CLI 2.122.0 and GitHub CLI 2.103.2 in the user program folder. JDK 21 (`JAVA_HOME`) for Android builds. Android SDK command-line tools in place of Android Studio. Emulator `ojt_dtr_api35` (Android 15, x86_64). No Docker. | JDK 21 lowers risk R-06. Docker needs WSL and administrator rights. Without Docker, tests run against `dev` (D-21). | Accepted |
+| D-37 | 2026-10-25 | A work session gets the "Missing time-out" mark when it has no time-out 16 hours after its time-in. The 16 hours is a setting. This changes the text of FR-DTR-09 and TC-U-DTR-03. | Review defect DEF-001: the old rule marked a correct session across midnight. A setting obeys D-30. | Accepted |
+| D-38 | 2026-10-25 | The client enforces the platform restriction (FR-AUTH-03) after login. The server enforces the role scope (QR-SE-01). This changes TC-CI-AUTH-02. | Review defect DEF-003: Supabase Auth cannot know the client platform. | Accepted |
+| D-39 | 2026-10-25 | Start S1 with the tasks that do not need the backend (frontend app, layer 0 utilities, local database, Android build). Start the backend tasks when the two Supabase projects exist. | The S0 gate passed. The second Supabase account is not ready. The S1 dates do not change. | Accepted |
+
+## Alternatives considered for D-14
+
+| Option | Advantages | Disadvantages |
+|---|---|---|
+| Supabase only (selected) | One free service. RLS. Auth and Storage included. No idle server. | 7-day pause. No automatic backups. Logic in SQL. |
+| Supabase + Express API on a free host | More TypeScript backend code | Two free services to keep awake. More work. |
+| MongoDB Atlas + Express API | The user knows MongoDB. | The data is relational (assignments, weeks, approvals). Auth, storage, and access rules must be built by hand. Needs a free API host that sleeps. |
+| Firebase (Firestore) | Built-in offline cache | Firestore offline replaces the SQLite and outbox design, so less of the offline design is visible. The data is relational. |
