@@ -26,11 +26,10 @@ This file is the only source for the current project state. Each agent session m
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
-1. User: reset the `dev` database password in the dashboard. Put the session pooler connection string in the GitHub secret `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first own backup.
-2. Keep-alive. Source A (`keepalive.yml`) exists. Source B is deferred (D-45): set it up (runbook, section 3.4) if source A has no scheduled run by 2026-10-28, and in all cases before the S1 gate. Source C: calendar reminders (Monday and Thursday). Make sure that the first scheduled `keepalive.yml` run passes. On 2026-10-26 at 05:05 UTC, no scheduled run had started (the cron time is 01:17 UTC). GitHub can delay or skip scheduled runs. If no run starts by 2026-10-28, source B becomes urgent.
-3. Agent: the S1 test report draft exists (`docs/05-testing/reports/S1-test-report.md`). Close its open items (section 5), then do the gate check. Decide a backend coverage measure (QR-MA-05) before the S2 gate.
-4. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
-5. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
+1. Keep-alive. Source A (`keepalive.yml`) exists. Source B is deferred (D-45): set it up (runbook, section 3.4) if source A has no scheduled run by 2026-10-28, and in all cases before the S1 gate. Source C: calendar reminders (Monday and Thursday). Make sure that the first scheduled `keepalive.yml` run passes. On 2026-10-26 at 05:05 UTC, no scheduled run had started (the cron time is 01:17 UTC). GitHub can delay or skip scheduled runs. If no run starts by 2026-10-28, source B becomes urgent.
+2. Agent: the S1 test report draft exists (`docs/05-testing/reports/S1-test-report.md`). Close its open items (section 5), then do the gate check. Decide a backend coverage measure (QR-MA-05) before the S2 gate.
+3. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
+4. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
 
 ## 4. Completed work
 
@@ -65,6 +64,7 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | 2026-10-26 | Auth tests: TC-U-AUTH-01, TC-U-AUTH-02, TC-U-AUTH-04 pass (TC-U-AUTH-04 in a separate suite, D-43). TC-CI-AUTH-03 passes for logout and password change (client and server). The admin reset part waits for the `admin-users` Edge Function (S3). |
 | 2026-10-26 | ESLint: no import between feature folders (QR-MA-01) and complexity 10 or less (QR-MA-04). A probe file showed that both rules report errors. |
 | 2026-10-26 | TC-SI-PLUG-01 passes on the emulator: 13 of 13 calls for the 9 plugins of the functional requirements, section 13, plus secure storage. Geolocation needs a GPS fix on the emulator. Local reminders use inexact alarms (D-44). Push registration waits for FCM (readiness plan, item 10). Debug APK: 19.5 MB (QR-PE-06 target for the release APK: 25 MB). |
+| 2026-10-26 | Own backup: `backup.yml` (each Sunday 02:17 Manila time; AES-256 GPG archive as a pre-release of the private repository; newest 8 stay). First run passed: release `backup-ojt-dtr-dev-20261026-0657`. A decrypt test with the user's passphrase passed: roles, schema, and data of `public`, `ops`, and `auth` (with `auth.users`). The full restore test is TC-ST-Q-RE-04 (before S4). |
 | 2026-10-26 | Test totals: frontend 90 of 90 pass, 83% line coverage, lint zero errors. Backend L2 24 of 24 pass. |
 
 ## 5. Open issues
@@ -75,7 +75,7 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | Q-06, Q-07 | The real team size and due date are not final. Plan as solo, due 2026-11-21 (D-29, D-32). | User | Watch |
 | UI-01 | The UI/UX design does not agree with the requirements in four items. See `docs/01-project/uiux-moodboard-summary.md`, section 6. The requirements are the source (D-34). Tell the UI/UX team. | User and UI/UX team | Closed by D-34 |
 | ENV-01 | `ojt-dtr-dev` exists (D-40). `ojt-dtr-prod` comes before S5. Then pause KitaFix (ask its team) or `dev`. | User | Watch |
-| ENV-02 | The GitHub repository exists. The weekly backup waits for the `dev` database password (readiness plan, item 4b). | User | Open |
+| ENV-02 | The GitHub repository exists. The weekly backup waited for the `dev` database password (readiness plan, item 4b). `backup.yml` exists and the first backup passed on 2026-10-26. | User | Closed |
 | ENV-04 | The `dev` Auth settings were the Supabase defaults. Pushed on 2026-10-25. | Agent | Closed |
 | O-5 | supabase-js has no request timeout. On the emulator just after a cold boot, the first login waited about 25 s, and one attempt ended with "Server not reachable". Add a timeout to the fetch wrapper in S2 (with the fault injector, D-20; offline sync design, section 13). | Agent | Open |
 | DM-01 | The data model has no punch type for a correction request of kind `add`. The server cannot make the new punch without it. Decide in S3 before COR work (add `requested_type`, then update the data model). | Agent | Open |
@@ -104,3 +104,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-25 | Claude Code (desktop) | Pushed the Auth settings to `dev`. Found that the first push turned off email login (`[auth.email] enable_signup`) and fixed it at once. Closed DEF-007 as a test design fault (D-41). Built login, guards, and role shells. Selected the secure storage plugin (D-42). Ran TC-SI-AUTH-01 on the emulator and the web. | `system/backend/supabase/config.toml`, `auth-settings.md`, `tests/auth.test.ts`, `system/frontend/src/*`, `system/frontend/AGENTS.md`, `system/backend/AGENTS.md`, decision log (D-41, D-42), defect log, test cases, readiness plan, `.claude/launch.json`, root `AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Built the local database, the outbox, and the repositories. Added the Auth account tests and the separate rate-limit suite (D-43). Added the ESLint module and complexity rules. Installed the Capacitor plugins and ran TC-SI-PLUG-01 on the emulator. Found that exact reminders open a system screen (D-44). Added `user_id` to the outbox design. | `system/frontend/*`, `system/backend/tests/auth-account.test.ts`, `system/backend/tests-ratelimit/*`, `system/backend/package.json`, decision log (D-43, D-44), offline sync design 2.1, both `system/*/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Wrote the source B settings (runbook 3.4). The user deferred source B (D-45); it is still necessary for the S1 gate (QR-RE-06). Examined source A: the workflow is active, the scheduler skipped the first run. Wrote the S1 test report draft. | runbook, decision log (D-45), `docs/05-testing/reports/S1-test-report.md`, `docs/AGENTS.md`, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | The user set `DB_URL_DEV` and `BACKUP_PASSPHRASE`. Added `backup.yml`, ran the first backup, and did a decrypt test. | `.github/workflows/backup.yml`, runbook 6.2 and 6.3, `system/backend/AGENTS.md`, S1 report, `PROGRESS.md` |

@@ -29,7 +29,7 @@ This report gives the results of the S1 tests and the status of the S1 gate. It 
 | TC-CI-ACL-03 | L2 | Admin access matrix | Pass. The Edge Function part waits for S3. |
 | TC-SI-AUTH-01 | L3 | Login for each role on the device and the web | Pass (Android emulator and web) |
 | TC-SI-PLUG-01 | L3 | Plugin smoke test | Pass on the emulator: 13 of 13 calls. Run again on a real phone. |
-| TC-ST-Q-RE-05 | L4 | Keep-alive check | Fail now. Source B does not exist (D-45). The first own backup does not exist. Source A has no scheduled run yet. |
+| TC-ST-Q-RE-05 | L4 | Keep-alive check | Fail now. Source B does not exist (D-45). Source A has no scheduled run yet. The backup part passes: the newest backup is from 2026-10-26. |
 
 | Level | Planned | Run | Pass | Part pass | Fail |
 |---|---|---|---|---|---|
@@ -80,13 +80,12 @@ No open S1 or S2 defects.
 | CI on each push | Yes |
 | Login for each role on Android and the web | Yes |
 | Keep-alive sources A, B, and C | A exists. B is deferred (D-45). C is not set up. |
-| First own backup | No. Waits for the `DB_URL_DEV` secret. |
+| First own backup | Yes. `backup-ojt-dtr-dev-20261026-0657`, decrypt test passed. |
 
 Open items before the gate:
 
 1. Source A: a scheduled run passes.
 2. Source B: set up (runbook, section 3.4).
 3. Source C: calendar reminders on Monday and Thursday.
-4. Backup: the user sets `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first backup.
-5. The backend coverage measure.
-6. Run TC-ST-Q-RE-05 again.
+4. The backend coverage measure.
+5. Run TC-ST-Q-RE-05 again.
