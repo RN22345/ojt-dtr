@@ -1,5 +1,5 @@
 // Role shell: a tab bar with the main pages of one role. The route data gives the tabs.
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Type, input } from '@angular/core';
 import { IonIcon, IonLabel, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
@@ -22,6 +22,8 @@ export interface ShellTab {
   path: string;
   pageKey: PageKey;
   icon: string;
+  /** The feature page of the tab. Without it, the tab shows a wireframe page (D-31). */
+  load?: () => Promise<Type<unknown>>;
 }
 
 addIcons({

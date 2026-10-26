@@ -42,6 +42,8 @@ export class SyncService {
   readonly issues = signal(0);
   /** True when the server did not accept the session. AUTH then shows the login screen. The outbox stays. */
   readonly sessionRejected = signal(false);
+  /** Goes up by one after each sync and each local change. Pages read the local data again when it changes. */
+  readonly revision = signal(0);
 
   private userId: string | null = null;
   private engine: SyncRunner | null = null;
@@ -78,8 +80,9 @@ export class SyncService {
     this.failures = 0;
   }
 
-  /** A repository saved a change (section 6, trigger 3). */
+  /** A local change was saved (section 6, trigger 3). */
   changed(): void {
+    this.revision.update((n) => n + 1);
     void this.refreshCounts();
     void this.trigger();
   }
@@ -102,6 +105,7 @@ export class SyncService {
     }
     this.afterSync(engine.lastOutcome);
     await this.refreshCounts();
+    this.revision.update((n) => n + 1);
   }
 
   private afterSync(outcome: SyncOutcome | null): void {

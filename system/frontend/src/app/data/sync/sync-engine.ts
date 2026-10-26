@@ -144,7 +144,7 @@ export class SyncEngine {
       }
       return false;
     }
-    await markOpIssue(db, result.op_id, result.cause ?? result.result);
+    await markOpIssue(db, result.op_id, result.cause ?? result.result, result.record ?? null);
     await markIssue(db, entity, entityId);
     return true;
   }
@@ -167,7 +167,10 @@ export class SyncEngine {
     let epoch = await getState(db, userKey.epoch(userId));
 
     for (let page = 0; page < MAX_PULL_PAGES; page++) {
+      const sentAt = this.now();
       const res = await this.deps.transport.pull(cursor, epoch, PULL_PAGE);
+      // A sync with nothing to push must also give the offset, else the first punches have none.
+      await this.storeClockOffset(db, res.server_time, sentAt);
       if (res.epoch_changed) {
         await this.handleEpochChange(db, userId, res.epoch);
         cursor = 0;

@@ -1,6 +1,6 @@
 // Admin shell (web). Route group /admin/* (system modules, section 6).
 import { Routes } from '@angular/router';
-import { shellRoutes } from '../../shared/shell/shell-routes';
+import { shellRoutes } from '../shared/shell/shell-routes';
 
 export const routes: Routes = shellRoutes(
   [

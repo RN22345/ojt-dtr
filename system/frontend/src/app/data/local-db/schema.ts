@@ -185,6 +185,11 @@ export const LOCAL_MIGRATIONS: readonly LocalMigration[] = [
       );
     `,
   },
+  {
+    version: 3,
+    description: 'Server copy of a record with a sync issue, for the "Sync issues" screen (FR-SYNC-06)',
+    sql: `alter table outbox add column server_record text;`,
+  },
 ];
 
 /** The newest local schema version. */

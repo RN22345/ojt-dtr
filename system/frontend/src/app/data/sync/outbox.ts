@@ -110,8 +110,18 @@ export async function removeOp(db: LocalDb, opId: string): Promise<void> {
   await db.run('delete from outbox where op_id = ?', [opId]);
 }
 
-export async function markOpIssue(db: LocalDb, opId: string, cause: string): Promise<void> {
-  await db.run("update outbox set status = 'issue', last_error = ? where op_id = ?", [cause, opId]);
+/** `serverRecord`: the current server copy, if the server gave it (conflict). The user can take it (FR-SYNC-06). */
+export async function markOpIssue(
+  db: LocalDb,
+  opId: string,
+  cause: string,
+  serverRecord: Record<string, unknown> | null = null,
+): Promise<void> {
+  await db.run("update outbox set status = 'issue', last_error = ?, server_record = ? where op_id = ?", [
+    cause,
+    serverRecord ? JSON.stringify(serverRecord) : null,
+    opId,
+  ]);
 }
 
 /** True if other operations of the same record wait in the outbox. Then the record stays `pending`. */

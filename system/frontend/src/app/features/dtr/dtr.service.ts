@@ -9,6 +9,7 @@ import { GEOLOCATION, Location } from '../../plugins/geolocation.plugin';
 import { DTR_SETTINGS } from '../../shared/config/dtr-settings';
 import { WorkSession, buildSessions, isMissingTimeOut, openSession } from '../../shared/utils/hours';
 import { newId } from '../../shared/utils/uuid';
+import { HistoryWeek, buildHistory } from './dtr-history';
 
 /** `session-open`: FR-DTR-08. `no-open-session`: FR-DTR-02. `not-ojt`: only an OJT records punches. */
 export type PunchFailure = 'session-open' | 'no-open-session' | 'not-ojt';
@@ -45,9 +46,14 @@ export class DtrService {
     return sessions.map((s) => ({ ...s, missingTimeOut: isMissingTimeOut(s, now, DTR_SETTINGS.missingTimeOutHours) }));
   }
 
-  /** True if the OJT has an open work session now. The DTR page shows "Time in" or "Time out" from it. */
-  async hasOpenSession(ojtId: string, now: Date = new Date()): Promise<boolean> {
-    return (await this.openSessionOf(ojtId, now)) !== null;
+  /** The open work session now, or null. The DTR page shows "Time in" or "Time out" from it. */
+  async currentOpenSession(ojtId: string, now: Date = new Date()): Promise<WorkSession | null> {
+    return this.openSessionOf(ojtId, now);
+  }
+
+  /** FR-DTR-07: the history by week and by day, with the sync status of each punch. */
+  async history(ojtId: string, now: Date = new Date()): Promise<HistoryWeek[]> {
+    return buildHistory(await this.punches.listByOjt(ojtId), now, DTR_SETTINGS.missingTimeOutHours);
   }
 
   private async openSessionOf(ojtId: string, now: Date): Promise<WorkSession | null> {

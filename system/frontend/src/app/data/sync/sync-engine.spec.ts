@@ -231,6 +231,12 @@ describe('sync engine (offline sync design, sections 4, 5, 8, 12)', () => {
       await engine.requestSync();
       expect(await clockOffsetS(db)).toBe(120);
     });
+
+    it('TC-U-SYNC-07: a sync with nothing to push also stores the offset (from the pull)', async () => {
+      server.pages = [{ ...page([]), server_time: new Date(NOW.getTime() - 30_000).toISOString() }];
+      await engine.requestSync();
+      expect(await clockOffsetS(db)).toBe(-30);
+    });
   });
 
   describe('server epoch change (section 12, TC-SI-SYNC-07 unit part)', () => {

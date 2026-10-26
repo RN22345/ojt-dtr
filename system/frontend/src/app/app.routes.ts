@@ -14,17 +14,17 @@ export const routes: Routes = [
   {
     path: 'ojt',
     canMatch: [groupGuard('ojt')],
-    loadChildren: () => import('./features/ojt/ojt.routes').then((m) => m.routes),
+    loadChildren: () => import('./shells/ojt.routes').then((m) => m.routes),
   },
   {
     path: 'facilitator',
     canMatch: [groupGuard('facilitator')],
-    loadChildren: () => import('./features/facilitator/facilitator.routes').then((m) => m.routes),
+    loadChildren: () => import('./shells/facilitator.routes').then((m) => m.routes),
   },
   {
     path: 'admin',
     canMatch: [groupGuard('admin')],
-    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.routes),
+    loadChildren: () => import('./shells/admin.routes').then((m) => m.routes),
   },
   { path: 'profile', canMatch: [groupGuard('shared')], loadComponent: placeholder, data: { pageKey: 'profile' } },
   {
@@ -36,8 +36,7 @@ export const routes: Routes = [
   {
     path: 'sync-issues',
     canMatch: [groupGuard('shared')],
-    loadComponent: placeholder,
-    data: { pageKey: 'syncIssues' },
+    loadComponent: () => import('./features/sync/sync-issues.page').then((m) => m.SyncIssuesPage),
   },
   // A blocked or unknown URL goes to the start page (TC-ST-ACC-01: a typed URL of another role is blocked).
   { path: '**', redirectTo: '' },
