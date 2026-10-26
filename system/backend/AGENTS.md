@@ -4,7 +4,7 @@ This folder will contain the Supabase backend: migrations, RLS policies, databas
 
 ## Status
 
-Created on 2026-10-25 (S1). The `dev` project has the core schema, RLS, audit triggers, the heartbeat, and the seed accounts. `prod` does not exist yet (D-40). `sync_push`, `sync_pull`, Storage, and Edge Functions come in S2 to S4.
+Created on 2026-10-25 (S1). The `dev` project has the core schema, RLS, audit triggers, the heartbeat, and the seed accounts. `prod` does not exist yet (D-40). `sync_push` and `sync_pull` exist (S2: punches and report content). Storage and Edge Functions come in S2 to S4.
 
 | Project | Ref | URL |
 |---|---|---|
@@ -29,6 +29,8 @@ NOTE: A sign-out with the default (global) scope ends all sessions of that user.
 
 NOTE: The agent applied the migrations with the Supabase connector (`apply_migration`). Each local file name has the version that the connector recorded. Thus `supabase db push` sees them as applied.
 
+NOTE: The sync tests use `ojt4` (facilitator `fac1`) and `ojt6` (facilitator `fac2`). Punches are append-only, so each run leaves about 25 test punches on `dev` (device ID `l2-test-device`). Do not use `ojt4` or `ojt6` for demonstrations.
+
 NOTE: The seed needs the session setting `app.seed_password`. See the header of `supabase/seed.sql`.
 
 ## Folder map (files made in S1)
@@ -38,6 +40,9 @@ NOTE: The seed needs the session setting `app.seed_password`. See the header of 
 | `supabase/config.toml` | CLI configuration. Auth values from QR-SE-03, QR-SE-04, D-22. |
 | `supabase/migrations/20261025134548_core_schema.sql` | Tables, triggers, RLS, audit, heartbeat |
 | `supabase/migrations/20261025134615_restrict_anon_functions.sql` | Removes anonymous EXECUTE grants |
+| `supabase/migrations/20261026070655_sync_functions.sql` | `sync_push`, `sync_pull`, doubtful-time rule (S2) |
+| `supabase/migrations/20261026071035_strict_time_format.sql` | ISO 8601 times only in `sync_push` (DEF-008) |
+| `tests/sync.test.ts` | L2 tests: TC-CI-SYNC-01 to TC-CI-SYNC-04, TC-U-SRV-01, TC-CI-ACL-01 (sync and Data API part) |
 | `supabase/seed.sql` | Seed accounts, companies, batch, assignments (dev and local only) |
 | `supabase/api-contract.md` | The API contract (D-23) |
 | `supabase/auth-settings.md` | Auth settings for each project |

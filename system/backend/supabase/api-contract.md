@@ -2,7 +2,7 @@
 
 This document is the API contract of the OJT-DTR backend (D-23, QR-CO-02). It lists each table, RLS policy, RPC function, and Edge Function. Update it in the same commit as each change to the schema.
 
-Status: S1, migrations `20261025134548_core_schema` and `20261025134615_restrict_anon_functions`.
+Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, and `20261026071035_strict_time_format`.
 
 ## 1. Interfaces
 
@@ -71,8 +71,38 @@ An inactive account (`profiles.status = 'inactive'`) gets no role. Thus it reads
 | `heartbeat` | `source text`, `secret text` | `timestamptz` | `anon`, `authenticated` (needs the keep-alive secret) | Keep-alive write (runbook, section 3.1). `source`: 1 to 32 letters, digits, `_`, `-`. Wrong secret: error `28000`. |
 | `heartbeat_status` | None | Table of `source`, `last_at` | `authenticated` (rows only for admin) | Newest heartbeat of each source |
 | `server_epoch` | None | `uuid` | `authenticated` | Current server epoch (D-19) |
-| `sync_push` | Planned (S2) | | | Offline sync design, section 4 |
-| `sync_pull` | Planned (S2) | | | Offline sync design, section 5 |
+| `sync_push` | `p_ops jsonb`, `p_device_now timestamptz` (optional) | `jsonb` (see 5.1) | `authenticated`: active OJT and facilitator only | Offline sync design, section 4 |
+| `sync_pull` | `p_cursor bigint` (default 0), `p_epoch uuid` (default null), `p_limit int` (1 to 500, default 500) | `jsonb` (see 5.2) | `authenticated`: active OJT and facilitator only | Offline sync design, section 5 |
+
+### 5.1 `sync_push`
+
+Request: `p_ops` is an array of 1 to 50 operations. Each operation is `{op_id, entity, entity_id, op_type, payload, base_version}`. `p_device_now` is the device clock at the send time (for the doubtful-time rule). A larger batch or a wrong type gives error `22023` for the whole call. An admin or inactive account gives error `42501`.
+
+Response: `{server_time, results: [{op_id, result, cause, record}]}`, one result for each operation, in the request order. Each operation runs in its own subtransaction.
+
+| Result | Meaning | `record` |
+|---|---|---|
+| `applied` | The server applied the change. | The server record (with `version`, `server_received_at`, `doubtful_time`) |
+| `duplicate` | The `op_id` or the record ID is already applied (FR-SYNC-05, section 12). | The current server record |
+| `conflict` | `base_version` is old (cause `version`), or a report exists for that week (cause `week_exists`). | The current server record |
+| `rejected` | The operation is not valid. | None |
+
+Cause codes of `rejected`: `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type).
+
+Entities in S2:
+
+| Entity | Operations | Rules |
+|---|---|---|
+| `punches` | `create` | OJT only. `ojt_id` must be the caller. Times: ISO 8601 with a time zone. The server sets `server_received_at`, `doubtful_time` (offline sync design, section 8), `approved`, `version`. |
+| `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. Status changes come in S3. |
+
+### 5.2 `sync_pull`
+
+Response: `{epoch, epoch_changed, server_time, records: [{entity, change_seq, data}], cursor, has_more}`. The function runs as the caller, so the RLS select policies give the scope. Records come in `change_seq` order. Soft-deleted records come as tombstones (`data.deleted_at` is set). Rows changed in the last 2 seconds wait for the next call, so that a transaction that is not committed yet cannot leave a gap. If `p_epoch` is not the current epoch, the response has `epoch_changed: true`, no records, and cursor 0 (section 12).
+
+Entities in the pull: `profiles`, `companies`, `batches`, `ojt_assignments`, `punches`, `weekly_reports`, `report_events`, `correction_requests`, `attachments`, `notifications`.
+
+NOTE: When an assignment ends, the records of that OJT leave the scope of the facilitator. The pull does not send tombstones for them. The client must remove them when the assignment record changes (S3).
 
 ## 6. Edge Functions
 
@@ -82,7 +112,8 @@ Planned: `admin-users` (S3), `export-csv` (S4), `push-notify` (S4). See `system/
 
 | Note | Reason |
 |---|---|
-| `heartbeat`, `heartbeat_status`, `server_epoch` are SECURITY DEFINER functions that signed-in users can call | On purpose. `heartbeat` checks the secret. `heartbeat_status` returns rows only for an admin. `server_epoch` returns one UUID. |
+| `heartbeat`, `heartbeat_status`, `server_epoch`, `sync_push` are SECURITY DEFINER functions that signed-in users can call | On purpose. `heartbeat` checks the secret. `heartbeat_status` returns rows only for an admin. `server_epoch` returns one UUID. `sync_push` checks the role and the owner of each operation itself (TC-CI-ACL-01). |
+| Leaked password protection is off | It needs a paid plan (D-16). Minimum password length 8 (QR-SE-04). |
 | `heartbeat` can be called with the anon key | On purpose. The keep-alive sources have no user account. |
 | Multiple permissive policies on `profiles`, `companies`, `batches`, `ojt_assignments` | Backend rule 3: one policy for one role and one action. The cost is small at this data size. |
 | `processed_ops` has RLS and no policy | On purpose. Only `sync_push` uses it. |

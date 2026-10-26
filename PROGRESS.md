@@ -69,6 +69,7 @@ Open S1 items:
 | 2026-10-26 | ESLint: no import between feature folders (QR-MA-01) and complexity 10 or less (QR-MA-04). A probe file showed that both rules report errors. |
 | 2026-10-26 | TC-SI-PLUG-01 passes on the emulator: 13 of 13 calls for the 9 plugins of the functional requirements, section 13, plus secure storage. Geolocation needs a GPS fix on the emulator. Local reminders use inexact alarms (D-44). Push registration waits for FCM (readiness plan, item 10). Debug APK: 19.5 MB (QR-PE-06 target for the release APK: 25 MB). |
 | 2026-10-26 | Own backup: `backup.yml` (each Sunday 02:17 Manila time; AES-256 GPG archive as a pre-release of the private repository; newest 8 stay). First run passed: release `backup-ojt-dtr-dev-20261026-0657`. A decrypt test with the user's passphrase passed: roles, schema, and data of `public`, `ops`, and `auth` (with `auth.users`). The full restore test is TC-ST-Q-RE-04 (before S4). |
+| 2026-10-26 | S2 (part, D-46): `sync_push` and `sync_pull` on `dev` (migrations `sync_functions`, `strict_time_format`). TC-CI-SYNC-01 to TC-CI-SYNC-04, TC-U-SRV-01, and TC-CI-ACL-01 (sync and Data API part; Storage waits for the first bucket) pass. DEF-008 found and closed. Backend L2: 61 of 61 pass. Archive branch `archive/s1-foundation-2026-10-26`. |
 | 2026-10-26 | Test totals: frontend 90 of 90 pass, 83% line coverage, lint zero errors. Backend L2 24 of 24 pass. |
 
 ## 5. Open issues
