@@ -1,4 +1,4 @@
-﻿# Defect log
+# Defect log
 
 This document records each defect. The severity rules and the procedure are in `test-plan.md`, section 11.
 
