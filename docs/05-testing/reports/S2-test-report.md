@@ -9,7 +9,7 @@ This report gives the results of the S2 tests and the status of the S2 gate. The
 | Stage | S2 |
 | Dates | 2026-11-04 to 2026-11-10 (work started 2026-10-26, D-46) |
 | Build or commit | `3bbe97a` and later on `main` |
-| Gate result | Fail for now (not passed yet). All 31 S2 test cases pass or part pass. The open items are the S1 gate and the backend coverage measure (section 8). |
+| Gate result | Fail for now (not passed yet). All 31 S2 test cases pass or part pass. The open items are the S1 gate and the backend coverage (section 8). |
 | Prepared by | Claude Code (desktop), for the developer |
 
 Test devices: Android 15 emulator (AVD `ojt_dtr_api35`, 1080 x 2400), development build. PC with Node.js for the L2 tests. Supabase project `dev`.
@@ -77,7 +77,7 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | G3 Zero open S1 and S2 defects | Yes | Section 6, `defect-log.md` |
 | G4 Lint, type check, and builds pass | Yes | Lint 0 errors. Web build and Android debug build pass. |
 | G5 Regression suites pass | Yes | CI on each push (lint, L1, L2). Frontend 184 of 184, backend 75 of 75. |
-| G6 Coverage meets QR-MA-05 | Part | Frontend yes (section 5). The backend measure is not decided (S1 report, section 5). |
+| G6 Coverage meets QR-MA-05 | No | Frontend yes (section 5). Backend 66.2% of the rule items (D-52, proposed), target 70%. |
 | G7 This report exists | Yes | This file |
 | G8 `PROGRESS.md` updated | Yes | Test results recorded. The gate result is recorded at the gate check. |
 | G9 Keep-alive check passes | No | Same open S1 items: keep-alive sources B and C, a scheduled run of source A. |
@@ -87,7 +87,7 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | Criterion | Result | Evidence |
 |---|---|---|
 | S1 gate passed (entry criterion) | No | S2 work started early (D-46). |
-| Common gate rules | No | G6 (backend measure) and G9 (section 3) |
+| Common gate rules | No | G6 (backend coverage) and G9 (section 3) |
 | TC-SI-SYNC-02 passes (zero data loss) | Yes | Section 2.3 |
 | TC-SI-SYNC-03 passes (app stop) | Yes | Section 2.3 |
 | TC-SI-SYNC-06 passes (backend not reachable) | Yes | Section 2.3 |
@@ -107,7 +107,7 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | QR-SE-01 | Each user reads and sends only own scope | TC-CI-ACL-01, TC-SI-SYNC-04 | Pass |
 | QR-SF-01, QR-SF-03 | CAUTION before unsynced data is lost; no silent delete | TC-ST-OJT-04, TC-U-SYNC-06 | Pass |
 | QR-SF-02 | Doubtful time is flagged for the facilitator | TC-SI-SYNC-05 | Pass |
-| QR-MA-05 | Coverage: auth 80%, sync 80%, DTR 80%, frontend 60%, backend 70% | `core/auth` 94.5%, `data/sync` 91.8%, `features/dtr` 97.3%, frontend 84.0% lines. Backend not measured. | Part (backend measure open) |
+| QR-MA-05 | Coverage: auth 80%, sync 80%, DTR 80%, frontend 60%, backend 70% | `core/auth` 94.5%, `data/sync` 91.8%, `features/dtr` 97.3%, frontend 84.0% lines. Backend 66.2% of the rule items (45 of 68, D-52). | Fail for the backend |
 
 NOTE: Some files run only on a device: `plugins/` (17% lines), `data/sync/file-upload.ts` (23%), and the canvas part of `shared/utils/jpeg-compress.ts`. TC-SI-PLUG-01, TC-SI-FILE-01, and the compression check on the emulator examined them.
 
@@ -157,7 +157,7 @@ Observations (OBS-S2-01 in `PROGRESS.md`; not defects now):
 The S2 gate does not pass yet. The S2 test results meet the S2 exit criteria. The gate waits for these actions:
 
 1. The S1 gate passes (S1 report, section 5): keep-alive sources B and C, a scheduled run of source A, TC-ST-Q-RE-05.
-2. Decide the backend coverage measure (QR-MA-05).
+2. Backend coverage (QR-MA-05): the user accepts D-52, and L2 tests are added for the open items in `system/backend/tests/coverage-map.json` until 70% or more are covered (now 66.2%).
 3. At the gate check, run the regression suites again.
 
 New gate date: the S2 end date, 2026-11-10, or earlier when items 1 to 3 are done.

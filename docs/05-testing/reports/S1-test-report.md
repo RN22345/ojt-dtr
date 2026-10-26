@@ -29,7 +29,7 @@ This report gives the results of the S1 tests and the status of the S1 gate. It 
 | TC-CI-ACL-03 | L2 | Admin access matrix | Pass. The Edge Function part waits for S3. |
 | TC-SI-AUTH-01 | L3 | Login for each role on the device and the web | Pass (Android emulator and web) |
 | TC-SI-PLUG-01 | L3 | Plugin smoke test | Pass on the emulator: 13 of 13 calls. Run again on a real phone. |
-| TC-ST-Q-RE-05 | L4 | Keep-alive check | Fail now. Source B does not exist (D-45). Source A has no scheduled run yet. The backup part passes: the newest backup is from 2026-10-26. |
+| TC-ST-Q-RE-05 | L4 | Keep-alive check | Fail now. Source B does not exist (D-45). Source A passes: the first scheduled run was on 2026-10-26 at 06:10 UTC (heartbeat `github` on `dev`). The backup part passes: the newest backup is from 2026-10-26. |
 
 | Level | Planned | Run | Pass | Part pass | Fail |
 |---|---|---|---|---|---|
@@ -50,7 +50,7 @@ Automated test totals on 2026-10-26: frontend 90 of 90 pass, backend L2 24 of 24
 | Coverage, `data/sync` | 80% | 100% lines |
 | Coverage, DTR calculation | 80% | 100% lines (`hours.ts`) |
 | Coverage, frontend | 60% | 83.3% lines |
-| Coverage, backend | 70% | Not measured. The backend has SQL only. The L2 tests examine it through the API. Decide a measure before the S2 gate. |
+| Coverage, backend | 70% | 66.2% of the rule items (45 of 68), with the proposed measure D-52. Below the target. |
 | Android debug build | Builds | Builds. 19.5 MB (QR-PE-06 release target: 25 MB). |
 | Web build | Builds | Builds in CI |
 
@@ -73,19 +73,19 @@ No open S1 or S2 defects.
 | G3: zero open S1 and S2 defects | Yes |
 | G4: lint, type check, builds | Yes |
 | G5: regression suites | Yes (CI) |
-| G6: coverage | Yes, except the backend measure |
+| G6: coverage | No. Backend 66.2% (D-52, proposed), target 70%. |
 | G7: this report | Draft |
 | G8: `PROGRESS.md` shows the result | At the gate check |
 | G9: keep-alive check | No |
 | CI on each push | Yes |
 | Login for each role on Android and the web | Yes |
-| Keep-alive sources A, B, and C | A exists. B is deferred (D-45). C is not set up. |
+| Keep-alive sources A, B, and C | A runs (first scheduled run 2026-10-26). B is deferred (D-45). C is not set up. |
 | First own backup | Yes. `backup-ojt-dtr-dev-20261026-0657`, decrypt test passed. |
 
 Open items before the gate:
 
-1. Source A: a scheduled run passes.
+1. Done 2026-10-26: source A had a scheduled run (06:10 UTC, about 5 hours after the cron time).
 2. Source B: set up (runbook, section 3.4).
 3. Source C: calendar reminders on Monday and Thursday.
-4. The backend coverage measure.
+4. The backend coverage: the user accepts D-52, and the L2 tests reach 70% of the items (now 66.2%).
 5. Run TC-ST-Q-RE-05 again.
