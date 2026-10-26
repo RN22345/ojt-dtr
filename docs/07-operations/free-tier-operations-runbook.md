@@ -78,6 +78,28 @@ NOTE: Source B must support custom HTTP headers. The call needs the `apikey` hea
 7. Add the calendar reminders for source C.
 8. Set the Supabase account email to an inbox that you read each day.
 
+### 3.4 Source B settings (cron-job.org)
+
+Make one job for each active project. The person who owns the project account makes the cron-job.org account. Do not put the keep-alive secret in a tracked file. Copy it from `system/backend/.env` (`KEEPALIVE_SECRET`).
+
+| Setting | Value |
+|---|---|
+| Title | `ojt-dtr-<project> heartbeat` (for example `ojt-dtr-dev heartbeat`) |
+| URL | `https://<project ref>.supabase.co/rest/v1/rpc/heartbeat` |
+| Schedule | Each day at 21:17, time zone Asia/Manila |
+| Request method | `POST` |
+| Header 1 | `apikey`: the publishable key of the project |
+| Header 2 | `Content-Type`: `application/json` |
+| Request body | `{"source":"cronjob","secret":"<KEEPALIVE_SECRET>"}` |
+| Notifications | Send an email when an execution fails. Send an email when the job is disabled because of too many failures. |
+| Save responses | On (the response body is the heartbeat time) |
+
+A good call returns HTTP 200 with a time in the body. A wrong secret returns HTTP 403 and writes no row.
+
+To make sure that source B operates, run this SQL on the project (or see the admin dashboard): `select * from public.heartbeat_status();`. The row `cronjob` must show a time of less than 25 hours ago.
+
+NOTE: The keep-alive secret lets a caller write heartbeat rows only. It gives no access to other data. If the secret leaks, make a new one in `ops.settings` and update sources A and B.
+
 ## 4. Layer 2: Tolerance
 
 A paused project is the same as network condition N6 (network up, server down). The offline-first design already protects the data. These rules are mandatory:
