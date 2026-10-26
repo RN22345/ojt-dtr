@@ -27,13 +27,10 @@ This file is the only source for the current project state. Each agent session m
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
 1. User: reset the `dev` database password in the dashboard. Put the session pooler connection string in the GitHub secret `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first own backup.
-2. Agent: SQLite adapter and local migrations (TC-CI-DB-01, TC-CI-DB-02).
-3. Agent: plugin test builds (TC-SI-PLUG-01). The secure storage plugin is selected (D-42).
-4. Agent: TC-U-AUTH-01, TC-U-AUTH-02, TC-U-AUTH-04 (Auth settings and rate limit).
-5. Agent: TC-CI-AUTH-03 (logout and password change now, admin reset when `admin-users` exists).
-6. Agent: ESLint rule for the feature import ban (QR-MA-01) and the complexity rule (QR-MA-04).
-7. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists.
-8. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
+2. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists. Make sure that the first scheduled `keepalive.yml` run passes.
+3. Agent: S1 gate check and the S1 test report (`docs/05-testing/reports/S1-test-report.md`).
+4. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
+5. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
 
 ## 4. Completed work
 
@@ -64,6 +61,11 @@ The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, sec
 | 2026-10-25 | Auth settings pushed to `dev` (JWT 900 s, sign-up off, minimum password 8). DEF-007 closed: test design fault, test corrected (D-41). Backend L2: 19 of 19 pass. |
 | 2026-10-25 | Frontend: Supabase client, secure token storage (D-42), login with the platform check (D-38), route guards, wireframe role shells. TC-U-AUTH-03 and TC-CI-AUTH-02 (fake client) pass: frontend 74 of 74 tests pass, 85% line coverage, lint zero errors. |
 | 2026-10-25 | TC-SI-AUTH-01 passes: OJT and facilitator log in on the Android emulator, admin logs in on the web app. Each sees only the tabs of the role. An admin login on Android is refused and stores no session. A typed URL of another role goes back to the home of the role. |
+| 2026-10-26 | Local database: `LocalDb` adapter (SQLite plugin on mobile, sql.js in tests), local schema v1 (10 tables), migrations, outbox, profile cache, punch repository. TC-CI-DB-01 and TC-CI-DB-02 pass. On the emulator: `user_version` 1, 10 tables, cached profile row. |
+| 2026-10-26 | Auth tests: TC-U-AUTH-01, TC-U-AUTH-02, TC-U-AUTH-04 pass (TC-U-AUTH-04 in a separate suite, D-43). TC-CI-AUTH-03 passes for logout and password change (client and server). The admin reset part waits for the `admin-users` Edge Function (S3). |
+| 2026-10-26 | ESLint: no import between feature folders (QR-MA-01) and complexity 10 or less (QR-MA-04). A probe file showed that both rules report errors. |
+| 2026-10-26 | TC-SI-PLUG-01 passes on the emulator: 13 of 13 calls for the 9 plugins of the functional requirements, section 13, plus secure storage. Geolocation needs a GPS fix on the emulator. Local reminders use inexact alarms (D-44). Push registration waits for FCM (readiness plan, item 10). Debug APK: 19.5 MB (QR-PE-06 target for the release APK: 25 MB). |
+| 2026-10-26 | Test totals: frontend 90 of 90 pass, 83% line coverage, lint zero errors. Backend L2 24 of 24 pass. |
 
 ## 5. Open issues
 
@@ -99,3 +101,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-25 | Claude Code (desktop) | Installed the prerequisites (D-36). Ran the S0 reviews, fixed six document defects, passed the S0 gate. Started S1 without the backend (D-39): made the frontend app, the Android build, and the layer 0 hours utilities with tests. Restored `docs/deliverables/`. Made the local git repository. | `.gitignore`, `AGENTS.md`, `PROGRESS.md`, `docs/AGENTS.md`, decision log (D-33 to D-39), readiness plan, FR-DTR-09, QR-SE-03, system modules 6.1, data model, network doc, test plan, test cases, defect log, `docs/05-testing/reports/S0-test-report.md`, `docs/deliverables/*`, `system/frontend/*` |
 | 2026-10-25 | Claude Code (desktop) | Made `ojt-dtr-dev` in the same Supabase account (D-40). Applied the core schema and RLS, seeded the test accounts, added the heartbeat and the smoke test. Made the private GitHub repository, the CI and keep-alive workflows, and the GitHub secrets. Wrote the L2 tests: TC-CI-ACL-03 passes, TC-CI-AUTH-01 finds DEF-007. | `system/backend/*`, `.github/workflows/*`, decision log (D-40), runbook section 2, readiness plan, defect log, root `AGENTS.md`, `PROGRESS.md` |
 | 2026-10-25 | Claude Code (desktop) | Pushed the Auth settings to `dev`. Found that the first push turned off email login (`[auth.email] enable_signup`) and fixed it at once. Closed DEF-007 as a test design fault (D-41). Built login, guards, and role shells. Selected the secure storage plugin (D-42). Ran TC-SI-AUTH-01 on the emulator and the web. | `system/backend/supabase/config.toml`, `auth-settings.md`, `tests/auth.test.ts`, `system/frontend/src/*`, `system/frontend/AGENTS.md`, `system/backend/AGENTS.md`, decision log (D-41, D-42), defect log, test cases, readiness plan, `.claude/launch.json`, root `AGENTS.md`, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | Built the local database, the outbox, and the repositories. Added the Auth account tests and the separate rate-limit suite (D-43). Added the ESLint module and complexity rules. Installed the Capacitor plugins and ran TC-SI-PLUG-01 on the emulator. Found that exact reminders open a system screen (D-44). Added `user_id` to the outbox design. | `system/frontend/*`, `system/backend/tests/auth-account.test.ts`, `system/backend/tests-ratelimit/*`, `system/backend/package.json`, decision log (D-43, D-44), offline sync design 2.1, both `system/*/AGENTS.md`, `PROGRESS.md` |

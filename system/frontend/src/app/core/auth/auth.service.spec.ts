@@ -23,22 +23,29 @@ function fakeSupabase(opts: { error?: Partial<AuthError>; sessionUserId?: string
   return { auth };
 }
 
-function setup(platform: AppPlatform, profile: Profile | null | Error, client = fakeSupabase()) {
+function setup(
+  platform: AppPlatform,
+  profile: Profile | null | Error,
+  client = fakeSupabase(),
+  localProfile: Profile | null = null,
+) {
   const fetchById = vi.fn(async () => {
     if (profile instanceof Error) {
       throw profile;
     }
     return profile;
   });
+  const cacheLocal = vi.fn(async () => undefined);
+  const getLocal = vi.fn(async () => localProfile);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
       { provide: SUPABASE, useValue: client },
       { provide: PlatformService, useValue: { platform } },
-      { provide: ProfileRepository, useValue: { fetchById } },
+      { provide: ProfileRepository, useValue: { fetchById, cacheLocal, getLocal } },
     ],
   });
-  return { service: TestBed.inject(AuthService), client, fetchById };
+  return { service: TestBed.inject(AuthService), client, fetchById, cacheLocal, getLocal };
 }
 
 const profileOf = (role: Role, status: Profile['status'] = 'active'): Profile => ({
@@ -110,6 +117,43 @@ describe('AuthService login results (FR-AUTH-01, QR-IC-04)', () => {
   });
 });
 
+describe('TC-CI-AUTH-03 password change needs the old password (FR-AUTH-06)', () => {
+  function clientWith(opts: { oldOk: boolean; updateError?: Partial<AuthError> }) {
+    const client = fakeSupabase();
+    const auth = client.auth as Record<string, unknown>;
+    auth['getUser'] = vi.fn(async () => ({ data: { user: { id: 'u1', email: 'ojt5@test.local' } }, error: null }));
+    auth['signInWithPassword'] = vi.fn(async () =>
+      opts.oldOk
+        ? { data: { user: { id: 'u1' }, session: {} }, error: null }
+        : { data: { user: null, session: null }, error: { status: 400, code: 'invalid_credentials' } as AuthError },
+    );
+    auth['updateUser'] = vi.fn(async () => ({ data: {}, error: (opts.updateError as AuthError) ?? null }));
+    return client;
+  }
+
+  it('TC-CI-AUTH-03 a wrong old password stops the change', async () => {
+    const client = clientWith({ oldOk: false });
+    const { service } = setup('mobile', profileOf('ojt'), client);
+    expect(await service.changePassword('wrong', 'new-password-1')).toEqual({ ok: false, reason: 'wrong-old-password' });
+    expect((client.auth as Record<string, ReturnType<typeof vi.fn>>)['updateUser']).not.toHaveBeenCalled();
+  });
+
+  it('TC-CI-AUTH-03 the correct old password lets the change continue', async () => {
+    const client = clientWith({ oldOk: true });
+    const { service } = setup('mobile', profileOf('ojt'), client);
+    expect(await service.changePassword('old', 'new-password-1')).toEqual({ ok: true });
+    expect((client.auth as Record<string, ReturnType<typeof vi.fn>>)['updateUser']).toHaveBeenCalledWith({
+      password: 'new-password-1',
+    });
+  });
+
+  it('TC-CI-AUTH-03 a weak new password gives the cause', async () => {
+    const client = clientWith({ oldOk: true, updateError: { status: 422, code: 'weak_password' } });
+    const { service } = setup('mobile', profileOf('ojt'), client);
+    expect(await service.changePassword('old', 'short')).toEqual({ ok: false, reason: 'weak-password' });
+  });
+});
+
 describe('AuthService session restore (frontend rule 12, QR-RE-08)', () => {
   it('restores the role of a stored session', async () => {
     const { service } = setup('mobile', profileOf('ojt'), fakeSupabase({ sessionUserId: 'u1' }));
@@ -121,6 +165,24 @@ describe('AuthService session restore (frontend rule 12, QR-RE-08)', () => {
     const { service, client } = setup('mobile', new Error('fetch failed'), fakeSupabase({ sessionUserId: 'u1' }));
     await service.ready();
     expect(client.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('uses the local copy of the profile when the network fails (FR-AUTH-04)', async () => {
+    const { service, getLocal } = setup(
+      'mobile',
+      new Error('fetch failed'),
+      fakeSupabase({ sessionUserId: 'u1' }),
+      profileOf('ojt'),
+    );
+    await service.ready();
+    expect(getLocal).toHaveBeenCalledWith('u1');
+    expect(service.role()).toBe('ojt');
+  });
+
+  it('keeps a local copy of the profile after a login', async () => {
+    const { service, cacheLocal } = setup('mobile', profileOf('facilitator'));
+    await service.signIn('fac1@test.local', 'x');
+    expect(cacheLocal).toHaveBeenCalledWith(profileOf('facilitator'));
   });
 
   it('ends a stored session of a role that is wrong for the platform', async () => {

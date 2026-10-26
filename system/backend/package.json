@@ -6,6 +6,7 @@
   "description": "OJT-DTR Supabase backend: migrations, seed, L2 tests, operation scripts",
   "scripts": {
     "test": "vitest run",
+    "test:ratelimit": "vitest run --config vitest.ratelimit.config.ts",
     "smoke": "node --env-file=.env ops/smoke-test.mjs"
   },
   "devDependencies": {

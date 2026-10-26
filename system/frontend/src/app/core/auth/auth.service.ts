@@ -16,6 +16,10 @@ export type SignInFailure =
 
 export type SignInResult = { ok: true; home: string } | { ok: false; reason: SignInFailure };
 
+export type PasswordChangeResult =
+  | { ok: true }
+  | { ok: false; reason: 'wrong-old-password' | 'weak-password' | 'not-signed-in' | 'network' | 'unknown' };
+
 /** Maps a Supabase Auth error to a cause that the login page can show (QR-IC-04). */
 export function signInFailureOf(error: AuthError): SignInFailure {
   if (error.status === 429) {
@@ -74,7 +78,34 @@ export class AuthService {
     }
 
     this.profileState.set(profile);
+    try {
+      await this.profiles.cacheLocal(profile);
+    } catch {
+      // The login still works. Only the offline open (FR-AUTH-04) needs the local copy.
+    }
     return { ok: true, home: homePath(profile.role) };
+  }
+
+  /**
+   * FR-AUTH-06. Supabase Auth does not ask for the old password, so the client examines it first
+   * with a sign-in (TC-CI-AUTH-03). The server rejects a password shorter than 8 characters (QR-SE-04).
+   */
+  async changePassword(oldPassword: string, newPassword: string): Promise<PasswordChangeResult> {
+    const { data } = await this.supabase.auth.getUser();
+    const email = data.user?.email;
+    if (!email) {
+      return { ok: false, reason: 'not-signed-in' };
+    }
+    const check = await this.supabase.auth.signInWithPassword({ email, password: oldPassword });
+    if (check.error) {
+      const cause = signInFailureOf(check.error);
+      return { ok: false, reason: cause === 'invalid-credentials' ? 'wrong-old-password' : cause === 'network' ? 'network' : 'unknown' };
+    }
+    const { error } = await this.supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      return { ok: false, reason: error.code === 'weak_password' || error.status === 422 ? 'weak-password' : 'unknown' };
+    }
+    return { ok: true };
   }
 
   /** FR-AUTH-05. S2 adds the CAUTION with the count of unsynced changes (QR-SF-01). */
@@ -103,7 +134,11 @@ export class AuthService {
       }
     } catch {
       // Network or server error: keep the session (frontend rule 12, QR-RE-08).
-      // S2: read the profile from the local database here, so that the app opens offline (FR-AUTH-04).
+      // Use the local copy of the profile, so that the app opens offline (FR-AUTH-04).
+      const cached = await this.profiles.getLocal(userId).catch(() => null);
+      if (cached && cached.status === 'active' && roleAllowedOn(cached.role, this.platform)) {
+        this.profileState.set(cached);
+      }
     }
   }
 }

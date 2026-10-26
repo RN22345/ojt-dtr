@@ -38,4 +38,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- FR-DTR-04: location of each punch (@capacitor/geolocation). A denied permission does not stop a punch (QR-SF-05). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <!-- FR-NOTI-01 to FR-NOTI-04: local reminders and push notifications (Android 13 and later). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

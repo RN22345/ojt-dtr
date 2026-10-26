@@ -18,7 +18,8 @@ Run these commands in `system/backend/`. Copy `.env.example` to `.env` first.
 
 | Task | Command |
 |---|---|
-| L2 tests against `dev` | `npx vitest run` |
+| L2 tests against `dev` | `npm test` |
+| Rate-limit test (TC-U-AUTH-04, by hand only, D-43) | `npm run test:ratelimit`. After it, logins from your IP address fail for 5 minutes. |
 | Smoke test (runbook, procedure A) | `npm run smoke` |
 | Apply the Auth settings of `config.toml` | `supabase config push --project-ref bclcgckflztfyxqaqvqt`. Answer "n" first to see the difference. The CLI is logged in. |
 
@@ -41,6 +42,8 @@ NOTE: The seed needs the session setting `app.seed_password`. See the header of 
 | `supabase/api-contract.md` | The API contract (D-23) |
 | `supabase/auth-settings.md` | Auth settings for each project |
 | `tests/helpers.ts`, `tests/auth.test.ts`, `tests/acl-admin.test.ts` | L2 tests: TC-CI-AUTH-01, TC-CI-ACL-03 |
+| `tests/auth-account.test.ts` | L2 tests: TC-U-AUTH-01, TC-U-AUTH-02, TC-CI-AUTH-03 (logout and password change) |
+| `tests-ratelimit/rate-limit.test.ts`, `vitest.ratelimit.config.ts` | TC-U-AUTH-04, separate suite (D-43) |
 | `ops/smoke-test.mjs` | Smoke test: heartbeat, test login, server epoch |
 | `vitest.config.ts`, `package.json`, `.env.example` | Test setup |
 | `../../.github/workflows/ci.yml`, `keepalive.yml` | CI and keep-alive source A |

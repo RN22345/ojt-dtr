@@ -4,13 +4,18 @@ This folder will contain the Ionic Angular app. One codebase makes three builds:
 
 ## Status
 
-Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. Data is read from the server only. The local database and the outbox come next (S1 and S2).
+Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations, the outbox, and the profile and punch repositories exist. The sync engine comes in S2. All Capacitor plugins of the functional requirements, section 13, are installed (TC-SI-PLUG-01 passes).
+
+NOTE: Local reminders must use `isExactNotification: false` (D-44). Else `LocalNotifications.schedule` opens the Android "Alarms & reminders" screen and waits.
+
+NOTE: On a cold emulator, geolocation has no position. Send `adb emu geo fix <lng> <lat>` first.
 
 ## How the app was made
 
 1. `ionic start frontend tabs --type=angular-standalone --capacitor --package-id=ph.edu.plv.ojtdtr` (Ionic CLI 7.2.1).
 2. `npm install @capacitor/android@8.5.3`, then `npx cap add android`.
 3. `npm install -D @vitest/coverage-v8@5.0.5` for coverage (QR-MA-05).
+4. `npm install` of the plugins in the versions table, then `npx cap sync android`. `npm install -D sql.js@1.15.1 @types/sql.js` for the local database tests.
 
 NOTE: You need macOS and Xcode to build the iOS app. iOS is optional (D-15). Add iOS only if a Mac is available: `npx cap add ios`.
 
@@ -42,7 +47,17 @@ Run these commands in `system/frontend/`.
 | `src/app/core/auth/auth.service.ts`, `auth.service.spec.ts` | Login, restore, logout, platform check. TC-CI-AUTH-02 (fake client). |
 | `src/app/core/auth/auth.guards.ts` | `groupGuard`, `startGuard`, `loginGuard` |
 | `src/app/core/auth/token-storage.ts` | Secure storage on mobile, `sessionStorage` on web (D-42) |
-| `src/app/data/repositories/profile.repository.ts` | Profile reads |
+| `src/app/data/local-db/local-db.ts` | `LocalDb` adapter interface and SQL value helpers |
+| `src/app/data/local-db/schema.ts`, `migrate.ts` | Local tables (offline sync design, section 2) and migrations with `PRAGMA user_version` |
+| `src/app/data/local-db/capacitor-sqlite.db.ts`, `sqljs.db.ts` | Adapters: SQLite plugin on mobile, sql.js in tests |
+| `src/app/data/local-db/local-db.service.ts` | Opens the local database once (`LOCAL_DB_OPENER` token) |
+| `src/app/data/local-db/migrate.spec.ts` | TC-CI-DB-01 |
+| `src/app/data/sync/outbox.ts` | Outbox: add, list, and count operations |
+| `src/app/data/repositories/profile.repository.ts` | Profile reads from the server and the local cache |
+| `src/app/data/repositories/punch.repository.ts` | Punch save (record and outbox operation in one transaction) and reads |
+| `src/app/data/repositories/repositories.spec.ts` | TC-CI-DB-02 |
+| `src/app/shared/utils/uuid.ts` | Record IDs and ISO times |
+| `eslint.config.js` | Lint rules: no import between feature folders (QR-MA-01), complexity 10 or less (QR-MA-04) |
 | `src/app/features/auth/login.page.ts` | Login page |
 | `src/app/features/{ojt,facilitator,admin}/*.routes.ts` | Role shells: the tabs of each role |
 | `src/app/shared/strings.ts` | All UI text (D-31) |
@@ -87,7 +102,7 @@ system/frontend/src/app/
 
 ## Versions
 
-Recorded on 2026-10-25. Update this table when a version changes.
+Recorded on 2026-10-25 and 2026-10-26. Update this table when a version changes.
 
 | Package | Version |
 |---|---|
@@ -96,6 +111,14 @@ Recorded on 2026-10-25. Update this table when a version changes.
 | @capacitor/core, @capacitor/android, @capacitor/cli | 8.5.3 |
 | typescript | 6.0.3 |
 | vitest | 5.0.5 |
-| @capacitor-community/sqlite | Not installed yet |
+| @capacitor-community/sqlite | 8.1.1 |
 | @supabase/supabase-js | 2.118.0 |
 | @aparajita/capacitor-secure-storage | 8.0.1 |
+| @capacitor/network | 8.0.1 |
+| @capacitor/geolocation | 8.2.4 |
+| @capacitor/camera | 8.2.6 |
+| @capacitor/local-notifications | 8.3.1 |
+| @capacitor/push-notifications | 8.1.3 |
+| @capacitor/filesystem | 8.1.5 |
+| @capacitor/share | 8.0.3 |
+| sql.js (dev, tests only) | 1.15.1 |

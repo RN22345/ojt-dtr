@@ -33,6 +33,7 @@ Each synced table has these columns: `id` (UUID), `version`, `updated_at`, `dele
 | Column | Meaning |
 |---|---|
 | `op_id` | UUID of the operation. The client makes it (D-10). |
+| `user_id` | UUID of the user who made the change. The sync engine sends only the operations of the logged-in user (section 9, item 5). |
 | `entity` | Table name, for example `punches` |
 | `entity_id` | UUID of the record |
 | `op_type` | `create`, `update`, or `delete` |
