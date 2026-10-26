@@ -6,9 +6,9 @@ This file is the only source for the current project state. Each agent session m
 
 | Item | Value |
 |---|---|
-| Stage | S1: Foundation (started early, D-39) |
-| Stage dates | 2026-10-28 to 2026-11-03 (work started 2026-10-25) |
-| Gate status | Open |
+| Stage | S2: Offline core (started early, D-46). The S1 gate is still open. |
+| Stage dates | S1: 2026-10-28 to 2026-11-03. S2: 2026-11-04 to 2026-11-10 (work started 2026-10-26). |
+| Gate status | S1 open (operation items only). S2 open. |
 | Gate criteria | `docs/05-testing/test-plan.md`, section 8 |
 
 ## 2. Stage tracker
@@ -16,15 +16,19 @@ This file is the only source for the current project state. Each agent session m
 | Stage | Name | Dates | Status |
 |---|---|---|---|
 | S0 | Plan and design | 2026-10-21 to 2026-10-27 | Gate passed 2026-10-25 (`docs/05-testing/reports/S0-test-report.md`) |
-| S1 | Foundation | 2026-10-28 to 2026-11-03 | In work. `dev` exists. `prod` comes before S5 (D-40). |
-| S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | Not started |
+| S1 | Foundation | 2026-10-28 to 2026-11-03 | Code tests pass. Gate open: keep-alive B and C, a scheduled run of A, backend coverage measure. `prod` comes before S5 (D-40). |
+| S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | In work (D-46) |
 | S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Not started |
 | S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | Not started |
 | S5 | Release and documentation | 2026-11-19 to 2026-11-21 | Not started |
 
-## 3. Next tasks (stage S1)
+## 3. Next tasks (stages S1 and S2)
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
+
+S2 order (bottom-up, system modules section 2): `sync_push` and `sync_pull` (TC-CI-SYNC-*, TC-U-SRV-01), then the client adapters (network, location, device ID, request timeout O-5), then the sync engine in layer 2 (TC-U-SYNC-*), then the repositories, then the DTR service in layer 4 (TC-U-DTR-*), then the DTR pages.
+
+Open S1 items:
 
 1. Keep-alive. Source A (`keepalive.yml`) exists. Source B is deferred (D-45): set it up (runbook, section 3.4) if source A has no scheduled run by 2026-10-28, and in all cases before the S1 gate. Source C: calendar reminders (Monday and Thursday). Make sure that the first scheduled `keepalive.yml` run passes. On 2026-10-26 at 05:05 UTC, no scheduled run had started (the cron time is 01:17 UTC). GitHub can delay or skip scheduled runs. If no run starts by 2026-10-28, source B becomes urgent.
 2. Agent: the S1 test report draft exists (`docs/05-testing/reports/S1-test-report.md`). Close its open items (section 5), then do the gate check. Decide a backend coverage measure (QR-MA-05) before the S2 gate.
