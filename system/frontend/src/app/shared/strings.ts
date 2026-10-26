@@ -61,6 +61,16 @@ export const STRINGS = {
     noLocationFlag: 'No location',
     status: { pending: 'Pending sync', synced: 'Synced', issue: 'Sync issue' },
   },
+  // FR-DTR-10 and FR-DTR-11: the facilitator view of the assigned OJTs.
+  facilitator: {
+    noOjts: 'No OJT is assigned to you. Pull down to sync.',
+    thisWeek: (time: string) => `This week: ${time}`,
+    doubtful: (count: number) => `${count} doubtful ${count === 1 ? 'time' : 'times'}`,
+    missing: (count: number) => `${count} missing ${count === 1 ? 'time-out' : 'time-outs'}`,
+    notAssigned: 'This OJT is not assigned to you, or the data is not on this device yet. Pull down to sync.',
+    doubtfulNote:
+      'Doubtful time: the device clock can be wrong for this punch. Examine the punch before you approve the week.',
+  },
   // FR-SYNC-06: the change, the cause, and the possible user actions.
   issues: {
     none: 'No sync issues. The server accepted all your changes.',

@@ -1,6 +1,15 @@
 import { Punch } from '../../data/repositories/punch.repository';
 import { dateLabel, duration, timeOfDay } from '../../shared/utils/format';
-import { buildHistory } from './dtr-history';
+import { buildHistory, summarize } from './dtr-history';
+
+/** Last week: one open session (Missing time-out). This week: 2 hours, with one doubtful punch. */
+function buildHistoryInput(): Punch[] {
+  return [
+    punch('x', 'in', '2026-10-27T00:00:00Z'),
+    punch('g', 'in', '2026-11-02T00:00:00Z', { doubtfulTime: true }),
+    punch('h', 'out', '2026-11-02T02:00:00Z'),
+  ];
+}
 
 const punch = (id: string, type: 'in' | 'out', deviceTime: string, over: Partial<Punch> = {}): Punch => ({
   id,
@@ -60,6 +69,15 @@ describe('DTR history (FR-DTR-06, FR-DTR-07)', () => {
     const [s] = week.days[0].sessions;
     expect(s).toMatchObject({ timeOut: null, minutes: 0, missingTimeOut: true });
     expect(week.minutes).toBe(0);
+  });
+
+  it('TC-SI-SYNC-05 (unit part): the summary gives the hours of this week and the marks to examine (FR-DTR-11)', () => {
+    const summary = buildHistoryInput();
+    expect(summarize(summary, new Date('2026-11-04T00:00:00Z'), 16)).toEqual({
+      weekMinutes: 120,
+      doubtfulPunches: 1,
+      missingTimeOuts: 1,
+    });
   });
 
   it('TC-ST-OJT-01 (unit part): no punches give an empty history', () => {

@@ -4,7 +4,7 @@ This folder will contain the Ionic Angular app. One codebase makes three builds:
 
 ## Status
 
-Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations (version 2), the outbox, the repositories, the sync engine, and the DTR service exist (S2). The OJT DTR page, the sync status bar, the "Sync issues" screen, and the logout CAUTION exist. `SyncSessionService` starts the sync after login. The facilitator DTR view and photos come next.
+Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations (version 2), the outbox, the repositories, the sync engine, and the DTR service exist (S2). The OJT DTR page, the sync status bar, the "Sync issues" screen, and the logout CAUTION exist. `SyncSessionService` starts the sync after login. The facilitator "My OJTs" list and OJT DTR view exist. Photos come next.
 
 NOTE: `environment.ts` has `faultInjection: true`. A dev build gives `window.ojtFaults.set({ drop, serverError })` for the device fault tests. `environment.prod.ts` has it false. `ng build` uses the production settings, so build with `--configuration development` for the fault tests. All Capacitor plugins of the functional requirements, section 13, are installed (TC-SI-PLUG-01 passes).
 
@@ -74,7 +74,10 @@ Run these commands in `system/frontend/`.
 | `src/app/features/auth/login.page.ts` | Login page |
 | `src/app/shells/{ojt,facilitator,admin}.routes.ts` | Role shells: the tabs of each role. They are outside `features/`, because a shell puts features together (QR-MA-01). |
 | `src/app/features/dtr/dtr.page.ts` | OJT DTR page: time-in, time-out, history by week and day with sync status, pull-to-refresh |
-| `src/app/features/dtr/dtr-history.ts`, `dtr-history.spec.ts` | History by week and day (FR-DTR-07) |
+| `src/app/features/dtr/dtr-history.ts`, `dtr-history.spec.ts` | History by week and day (FR-DTR-07), summary for the facilitator list |
+| `src/app/features/dtr/dtr-history.component.ts` | History list. The doubtful-time flag shows only for the facilitator (FR-DTR-11). |
+| `src/app/features/dtr/my-ojts.page.ts`, `ojt-dtr.page.ts` | Facilitator: "My OJTs" list and the DTR of one OJT (FR-DTR-10, FR-DTR-11) |
+| `src/app/data/repositories/assignment.repository.ts`, `assignment.repository.spec.ts` | Active OJTs of a facilitator from the local data |
 | `src/app/features/sync/sync-issues.page.ts`, `sync-issue-text.ts`, `sync-issue-text.spec.ts` | "Sync issues" screen (FR-SYNC-06, DEF-009) |
 | `src/app/data/repositories/sync-issue.repository.ts`, `sync-issue.repository.spec.ts` | Sync issue list, "Try again", "Discard my change" |
 | `src/app/core/auth/logout.service.ts`, `logout.service.spec.ts` | Logout with the unsynced-changes check (FR-AUTH-05, QR-SF-01) |

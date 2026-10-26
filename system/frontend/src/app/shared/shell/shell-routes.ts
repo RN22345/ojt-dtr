@@ -1,8 +1,9 @@
 // Makes the child routes of a role shell. A tab opens its feature page, or a wireframe page until the feature exists.
-import { Routes } from '@angular/router';
+// `extra`: more pages inside the shell that are not tabs, for example a detail page.
+import { Route, Routes } from '@angular/router';
 import { ShellTab } from './tab-shell.page';
 
-export function shellRoutes(tabs: ShellTab[], slot: 'bottom' | 'top' = 'bottom'): Routes {
+export function shellRoutes(tabs: ShellTab[], slot: 'bottom' | 'top' = 'bottom', extra: Route[] = []): Routes {
   return [
     {
       path: '',
@@ -14,6 +15,7 @@ export function shellRoutes(tabs: ShellTab[], slot: 'bottom' | 'top' = 'bottom')
           loadComponent: tab.load ?? (() => import('../placeholder/placeholder.page').then((m) => m.PlaceholderPage)),
           data: { pageKey: tab.pageKey },
         })),
+        ...extra,
         { path: '', pathMatch: 'full' as const, redirectTo: tabs[0].path },
       ],
     },

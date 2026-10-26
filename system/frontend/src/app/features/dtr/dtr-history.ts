@@ -23,6 +23,25 @@ export interface HistoryWeek {
   days: HistoryDay[];
 }
 
+/** The facts of one OJT that the facilitator list shows (FR-DTR-10, FR-DTR-11). */
+export interface DtrSummary {
+  /** Minutes of the closed sessions of the week that contains `now`. */
+  weekMinutes: number;
+  doubtfulPunches: number;
+  missingTimeOuts: number;
+}
+
+export function summarize(punches: readonly Punch[], now: Date, missingTimeOutHours: number): DtrSummary {
+  const thisWeek = weekStart(now);
+  const weeks = buildHistory(punches, now, missingTimeOutHours);
+  const sessions = weeks.flatMap((w) => w.days.flatMap((d) => d.sessions));
+  return {
+    weekMinutes: weeks.find((w) => w.weekStart === thisWeek)?.minutes ?? 0,
+    doubtfulPunches: punches.filter((p) => p.doubtfulTime).length,
+    missingTimeOuts: sessions.filter((s) => s.missingTimeOut).length,
+  };
+}
+
 export function buildHistory(punches: readonly Punch[], now: Date, missingTimeOutHours: number): HistoryWeek[] {
   const byId = new Map(punches.map((p) => [p.id, p]));
   const sessions = buildSessions(
