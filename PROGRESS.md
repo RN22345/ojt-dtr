@@ -17,7 +17,7 @@ This file is the only source for the current project state. Each agent session m
 |---|---|---|---|
 | S0 | Plan and design | 2026-10-21 to 2026-10-27 | Gate passed 2026-10-25 (`docs/05-testing/reports/S0-test-report.md`) |
 | S1 | Foundation | 2026-10-28 to 2026-11-03 | Code tests pass. Gate open: keep-alive B and C, a scheduled run of A, backend coverage measure. `prod` comes before S5 (D-40). |
-| S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | In work (D-46) |
+| S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | All S2 tests pass (`S2-test-report.md`). Gate open: waits for the S1 gate and the backend coverage measure. |
 | S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Not started |
 | S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | Not started |
 | S5 | Release and documentation | 2026-11-19 to 2026-11-21 | Not started |
@@ -33,7 +33,7 @@ S2 next (in order):
 2. Done 2026-10-26: facilitator "My OJTs" list and OJT DTR view with the doubtful-time flag.
 3. Done 2026-10-26: photo upload and the Storage bucket (TC-CI-FILE-01, TC-SI-FILE-01, FR-DTR-05, D-49, D-50), with the Storage part of TC-CI-ACL-01.
 4. Done 2026-10-26: S2 device system tests on the emulator. All pass after six defect fixes (DEF-011 to DEF-016, D-51). See section 4.
-5. Agent: S2 test report.
+5. Done 2026-10-26: S2 test report (`docs/05-testing/reports/S2-test-report.md`). All 31 S2 test cases pass or part pass. The S2 gate waits for the S1 gate and the backend coverage measure (report, section 8).
 
 Open S1 items:
 
@@ -129,3 +129,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-26 | Claude Code (desktop) | Built the facilitator "My OJTs" list and OJT DTR view (FR-DTR-10, FR-DTR-11). Made a shared history component. Hid the doubtful-time flag from the OJT. Tested as `fac1` on the emulator, online and offline. | `system/frontend/src/*`, `system/frontend/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Built the photo upload: Storage bucket and attachment sync (backend), camera and file wrappers, compression, upload before the push, selfie when the company requires it. Recorded D-49 and D-50 and open issue BK-01. Tested as `ojt6` on the emulator (TC-SI-FILE-01 passes). | `system/backend/supabase/*`, `system/backend/tests/files.test.ts`, `system/frontend/src/*`, decision log (D-49, D-50), offline sync design, both `system/*/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Ran the S2 device system tests on the emulator (TC-SI-AUTH-02, TC-SI-SYNC-01 to 07, TC-ST-OJT-01, 03, 04, TC-ST-Q-PE-01). Found and fixed DEF-011 to DEF-016. Recorded D-51 and observation OBS-S2-01. Closed O-5. | `system/frontend/src/*`, defect log, decision log (D-51), offline sync design (section 13), `system/frontend/AGENTS.md`, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | Wrote the S2 test report from the template. Gate result: not passed yet (S1 gate and backend coverage measure open). | `docs/05-testing/reports/S2-test-report.md`, `docs/AGENTS.md`, `PROGRESS.md` |
