@@ -1,10 +1,11 @@
 // Punch repository: the only path to punch data (frontend rule 3).
 // A new punch goes to the local database and the outbox in one transaction (FR-SYNC-01, D-05).
-// The DTR rules (FR-DTR-08 and others) are in the DTR service (S2), not here.
+// The DTR rules (FR-DTR-08 and others) are in the DTR service (layer 4), not here.
 import { Injectable, inject } from '@angular/core';
-import { LocalDb, fromSqlBool, toSqlBool } from '../local-db/local-db';
+import { LocalDb, Row, fromSqlBool, toSqlBool } from '../local-db/local-db';
 import { LocalDbService } from '../local-db/local-db.service';
 import { enqueue } from '../sync/outbox';
+import { createPayload } from '../sync/payloads';
 
 export type SyncStatus = 'pending' | 'synced' | 'issue';
 
@@ -52,8 +53,8 @@ interface PunchRow {
   sync_status: string;
 }
 
-/** The fields that sync_push needs (S2). The local-only columns are not sent. */
-function payloadOf(p: NewPunch): Record<string, unknown> {
+/** The columns of a new punch, with the server names. */
+function rowOf(p: NewPunch): Row {
   return {
     id: p.id,
     ojt_id: p.ojtId,
@@ -121,7 +122,7 @@ export class PunchRepository {
           toSqlBool(false),
         ],
       );
-      await enqueue(tx, { userId, entity: 'punches', entityId: punch.id, opType: 'create', payload: payloadOf(punch) });
+      await enqueue(tx, { userId, entity: 'punches', entityId: punch.id, opType: 'create', payload: createPayload('punches', rowOf(punch)) });
     });
     const saved = await this.getById(punch.id);
     if (!saved) {

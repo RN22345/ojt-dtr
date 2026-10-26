@@ -78,6 +78,17 @@ describe('TC-CI-DB-02 repositories with the SQLite adapter (FR-SYNC-01, FR-AUTH-
     expect(ops[0].payload).toMatchObject({ id: 'p-1', ojt_id: OJT, type: 'in', device_id: 'device-1', lat: 14.7 });
   });
 
+  it('TC-U-SYNC-01: a local save makes status pending and one outbox operation with a unique op_id', async () => {
+    const repo = TestBed.inject(PunchRepository);
+    await repo.saveNew(punch('p-1'), OJT);
+    await repo.saveNew(punch('p-2', { type: 'out' }), OJT);
+    const local = await TestBed.inject(LocalDbService).db();
+    const ops = await listOutbox(local, OJT);
+    expect(ops.map((o) => o.entityId)).toEqual(['p-1', 'p-2']);
+    expect(new Set(ops.map((o) => o.opId)).size).toBe(2);
+    expect((await repo.listByOjt(OJT)).map((p) => p.syncStatus)).toEqual(['pending', 'pending']);
+  });
+
   it('TC-CI-DB-02 a failed save leaves no punch and no outbox operation', async () => {
     const repo = TestBed.inject(PunchRepository);
     await repo.saveNew(punch('p-1'), OJT);

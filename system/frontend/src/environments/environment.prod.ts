@@ -8,4 +8,6 @@ export const environment = {
   supabaseUrl: 'https://bclcgckflztfyxqaqvqt.supabase.co',
   supabaseKey: 'sb_publishable_UT6bIX3kMHBi_pND9NKlrw_f8HH_zZg',
   platformOverride: null as AppPlatform | null,
+  // The fault injector (D-20) is for test builds only. Never true in a release build.
+  faultInjection: false,
 };

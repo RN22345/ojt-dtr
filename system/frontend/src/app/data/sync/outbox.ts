@@ -49,13 +49,8 @@ export async function enqueue(
   return opId;
 }
 
-/** The operations of one user, oldest first. The outbox of a different user is never given (offline sync design 9.5). */
-export async function listOutbox(db: LocalDb, userId: string): Promise<OutboxOp[]> {
-  const rows = await db.query<OutboxRow>(
-    'select * from outbox where user_id = ? order by created_at, rowid',
-    [userId],
-  );
-  return rows.map((r) => ({
+function fromRow(r: OutboxRow): OutboxOp {
+  return {
     opId: r.op_id,
     userId: r.user_id,
     entity: r.entity,
@@ -67,7 +62,65 @@ export async function listOutbox(db: LocalDb, userId: string): Promise<OutboxOp[
     attempts: r.attempts,
     lastError: r.last_error,
     status: r.status as OutboxStatus,
-  }));
+  };
+}
+
+/** The operations of one user, oldest first. The outbox of a different user is never given (offline sync design 9.5). */
+export async function listOutbox(db: LocalDb, userId: string): Promise<OutboxOp[]> {
+  const rows = await db.query<OutboxRow>(
+    'select * from outbox where user_id = ? order by created_at, rowid',
+    [userId],
+  );
+  return rows.map(fromRow);
+}
+
+/** Push step 1 and 2 (section 4): takes up to `limit` queued operations and sets them to `sending`. */
+export async function takeQueued(db: LocalDb, userId: string, limit: number): Promise<OutboxOp[]> {
+  return db.transaction(async (tx) => {
+    const rows = await tx.query<OutboxRow>(
+      "select * from outbox where user_id = ? and status = 'queued' order by created_at, rowid limit ?",
+      [userId, limit],
+    );
+    for (const r of rows) {
+      await tx.run("update outbox set status = 'sending' where op_id = ?", [r.op_id]);
+    }
+    return rows.map((r) => ({ ...fromRow(r), status: 'sending' as const }));
+  });
+}
+
+/** Push step 7: the request failed. The operations go back to the queue with one more attempt. */
+export async function requeue(db: LocalDb, opIds: readonly string[], error: string): Promise<void> {
+  for (const id of opIds) {
+    await db.run(
+      "update outbox set status = 'queued', attempts = attempts + 1, last_error = ? where op_id = ?",
+      [error, id],
+    );
+  }
+}
+
+/**
+ * Operations with status `sending` at the start of a sync were in a sync that stopped (app stop, TC-SI-SYNC-03).
+ * They go back to the queue. The server gives `duplicate` if it applied them already.
+ */
+export async function recoverSending(db: LocalDb, userId: string): Promise<void> {
+  await db.run("update outbox set status = 'queued' where user_id = ? and status = 'sending'", [userId]);
+}
+
+export async function removeOp(db: LocalDb, opId: string): Promise<void> {
+  await db.run('delete from outbox where op_id = ?', [opId]);
+}
+
+export async function markOpIssue(db: LocalDb, opId: string, cause: string): Promise<void> {
+  await db.run("update outbox set status = 'issue', last_error = ? where op_id = ?", [cause, opId]);
+}
+
+/** True if other operations of the same record wait in the outbox. Then the record stays `pending`. */
+export async function hasOtherOps(db: LocalDb, entity: string, entityId: string): Promise<boolean> {
+  const rows = await db.query<{ n: number }>(
+    'select count(*) as n from outbox where entity = ? and entity_id = ?',
+    [entity, entityId],
+  );
+  return Number(rows[0]?.n ?? 0) > 0;
 }
 
 /** The number of unsynced changes of one user (FR-SYNC-04, QR-SF-01). */

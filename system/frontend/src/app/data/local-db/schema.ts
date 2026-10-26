@@ -138,6 +138,53 @@ export const LOCAL_MIGRATIONS: readonly LocalMigration[] = [
       );
     `,
   },
+  {
+    version: 2,
+    description: 'Pulled reference data: profiles, assignments, companies, batches (S2)',
+    sql: `
+      create table profiles (
+        id text primary key,
+        role text not null,
+        full_name text not null default '',
+        contact_no text,
+        status text not null,
+        created_at text,
+        ${SYNC_COLUMNS}
+      );
+
+      create table ojt_assignments (
+        id text primary key,
+        ojt_id text not null,
+        facilitator_id text not null,
+        company_id text not null,
+        batch_id text not null,
+        active integer not null default 1,
+        created_at text,
+        ${SYNC_COLUMNS}
+      );
+      create index ojt_assignments_facilitator on ojt_assignments (facilitator_id);
+
+      create table companies (
+        id text primary key,
+        name text not null,
+        address text not null default '',
+        photo_required integer not null default 0,
+        location_required integer not null default 0,
+        created_at text,
+        ${SYNC_COLUMNS}
+      );
+
+      create table batches (
+        id text primary key,
+        name text not null,
+        start_date text not null,
+        end_date text not null,
+        required_hours integer not null,
+        created_at text,
+        ${SYNC_COLUMNS}
+      );
+    `,
+  },
 ];
 
 /** The newest local schema version. */
