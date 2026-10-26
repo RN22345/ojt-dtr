@@ -8,6 +8,7 @@ import { OWN_ENTITIES, createPayload } from './payloads';
 import { logSync } from './sync-log';
 import { getState, setClockOffsetS, setState, userKey } from './sync-state';
 import { PushResult, SyncTransport, TransportError, TransportErrorKind } from './sync-transport';
+import { FileUploader } from './file-upload';
 
 export const PUSH_BATCH = 50;
 export const PULL_PAGE = 500;
@@ -21,7 +22,23 @@ export interface SyncDeps {
   transport: SyncTransport;
   /** The logged-in user. Only the outbox of this user is sent (section 9, item 5). */
   userId: () => string | null;
+  /** Uploads the photo files before the push (section 10). Without it, no file is uploaded. */
+  files?: FileUploader;
   now?: () => Date;
+}
+
+/** Section 12: the columns that select the own records of the last 30 days, for each entity. */
+const RESEND_COLUMNS: Readonly<Record<string, { owner: string; time: string; dateOnly: boolean }>> = {
+  attachments: { owner: 'owner_id', time: 'updated_at', dateOnly: false },
+  punches: { owner: 'ojt_id', time: 'device_time', dateOnly: false },
+  weekly_reports: { owner: 'ojt_id', time: 'week_start', dateOnly: true },
+};
+
+interface UploadRow {
+  [key: string]: string | number | null;
+  id: string;
+  local_path: string;
+  storage_key: string;
 }
 
 export interface SyncOutcome {
@@ -79,6 +96,7 @@ export class SyncEngine {
     await recoverSending(db, userId);
     const counts = { pushed: 0, pulled: 0, issues: 0 };
     try {
+      await this.uploadFiles(db, userId);
       await this.pushAll(db, userId, counts);
       await this.pullAll(db, userId, counts);
       await setState(db, userKey.lastSyncAt(userId), this.now().toISOString());
@@ -88,6 +106,36 @@ export class SyncEngine {
       const kind = error instanceof TransportError ? error.kind : 'unknown';
       await logSync(db, 'sync-failed', { kind, message: String(error), ...counts });
       return { ok: false, ...counts, error: kind };
+    }
+  }
+
+  /**
+   * Section 10, step 3 (TC-SI-FILE-01): the files of the user go to Storage before the push of their records.
+   * If the server is not reachable, the sync stops, and the retry sends the files again. If the server refuses
+   * one file, the other files continue. The push then gives `file_missing`, and the photo shows as a sync issue.
+   */
+  private async uploadFiles(db: LocalDb, userId: string): Promise<void> {
+    const files = this.deps.files;
+    if (!files) {
+      return;
+    }
+    const rows = await db.query<UploadRow>(
+      `select id, local_path, storage_key from attachments
+        where owner_id = ? and upload_status = 'local' and local_path is not null and storage_key is not null
+        order by rowid`,
+      [userId],
+    );
+    for (const row of rows) {
+      try {
+        await files.upload(row.local_path, row.storage_key);
+      } catch (error) {
+        if (error instanceof TransportError && error.kind === 'refused') {
+          await logSync(db, 'upload-refused', { id: row.id, message: error.message });
+          continue;
+        }
+        throw error;
+      }
+      await db.run("update attachments set upload_status = 'uploaded' where id = ?", [row.id]);
     }
   }
 
@@ -199,16 +247,21 @@ export class SyncEngine {
     const since = new Date(this.now().getTime() - RESEND_DAYS * 86_400_000).toISOString();
     await db.transaction(async (tx) => {
       for (const entity of OWN_ENTITIES) {
-        const timeColumn = entity === 'punches' ? 'device_time' : 'week_start';
+        const { owner, time, dateOnly } = RESEND_COLUMNS[entity];
         const rows = await tx.query<Row>(
-          `select * from ${entity} where ojt_id = ? and sync_status = 'synced' and ${timeColumn} >= ?`,
-          [userId, entity === 'punches' ? since : since.slice(0, 10)],
+          `select * from ${entity} where ${owner} = ? and sync_status = 'synced' and ${time} >= ?`,
+          [userId, dateOnly ? since.slice(0, 10) : since],
         );
         for (const row of rows) {
           await enqueue(tx, { userId, entity, entityId: String(row['id']), opType: 'create', payload: createPayload(entity, row) });
           await tx.run(`update ${entity} set sync_status = 'pending' where id = ?`, [row['id']]);
         }
       }
+      // The rebuilt backend can be without the files. Upload them again. A file that exists counts as uploaded.
+      await tx.run(
+        "update attachments set upload_status = 'local' where owner_id = ? and sync_status = 'pending' and local_path is not null",
+        [userId],
+      );
       await setState(tx, userKey.cursor(userId), '0');
       await setState(tx, userKey.epoch(userId), epoch);
     });

@@ -2,17 +2,23 @@
 // A punch goes to the local database and the outbox first (FR-SYNC-01). It does not need the network.
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { AssignmentRepository } from '../../data/repositories/assignment.repository';
+import { AttachmentRepository, LocalPhoto } from '../../data/repositories/attachment.repository';
 import { DeviceContext, DeviceRepository } from '../../data/repositories/device.repository';
 import { NewPunch, Punch, PunchRepository } from '../../data/repositories/punch.repository';
 import { SyncService } from '../../data/sync/sync.service';
+import { CAMERA } from '../../plugins/camera.plugin';
 import { GEOLOCATION, Location } from '../../plugins/geolocation.plugin';
 import { DTR_SETTINGS } from '../../shared/config/dtr-settings';
 import { WorkSession, buildSessions, isMissingTimeOut, openSession } from '../../shared/utils/hours';
 import { newId } from '../../shared/utils/uuid';
 import { DtrSummary, HistoryWeek, buildHistory, summarize } from './dtr-history';
 
-/** `session-open`: FR-DTR-08. `no-open-session`: FR-DTR-02. `not-ojt`: only an OJT records punches. */
-export type PunchFailure = 'session-open' | 'no-open-session' | 'not-ojt';
+/**
+ * `session-open`: FR-DTR-08. `no-open-session`: FR-DTR-02. `not-ojt`: only an OJT records punches.
+ * `photo-*`: FR-DTR-05. The company requires a photo, and the camera gave none. The punch is not saved.
+ */
+export type PunchFailure = 'session-open' | 'no-open-session' | 'not-ojt' | 'photo-cancelled' | 'photo-denied' | 'photo-failed';
 
 export type PunchResult = { ok: true; punch: Punch; noLocation: boolean } | { ok: false; reason: PunchFailure };
 
@@ -27,6 +33,9 @@ export class DtrService {
   private readonly punches = inject(PunchRepository);
   private readonly device = inject(DeviceRepository);
   private readonly geolocation = inject(GEOLOCATION);
+  private readonly camera = inject(CAMERA);
+  private readonly assignments = inject(AssignmentRepository);
+  private readonly attachments = inject(AttachmentRepository);
   private readonly sync = inject(SyncService);
 
   /** FR-DTR-01. Rejected when a work session is open (FR-DTR-08, TC-U-DTR-01). */
@@ -74,13 +83,28 @@ export class DtrService {
     if (failure) {
       return { ok: false, reason: failure };
     }
-    const [context, location] = await Promise.all([
-      this.device.context(),
-      this.geolocation.currentLocation(DTR_SETTINGS.locationWaitMs, DTR_SETTINGS.locationMaxAgeMs),
-    ]);
-    const punch = await this.punches.saveNew(newPunch(profile.id, type, now, context, location), profile.id);
+    // The location search runs while the camera is open.
+    const locating = this.geolocation.currentLocation(DTR_SETTINGS.locationWaitMs, DTR_SETTINGS.locationMaxAgeMs);
+    const photo = await this.selfieIfRequired(profile.id);
+    if (photo === 'cancelled' || photo === 'denied' || photo === 'failed') {
+      return { ok: false, reason: `photo-${photo}` };
+    }
+    const [context, location] = await Promise.all([this.device.context(), locating]);
+    const punch = await this.punches.saveNew(newPunch(profile.id, type, now, context, location, photo), profile.id, photo);
     this.sync.changed();
     return { ok: true, punch, noLocation: location === null };
+  }
+
+  /** FR-DTR-05: null if the company does not require a photo. Else the stored photo, or the camera failure. */
+  private async selfieIfRequired(ojtId: string): Promise<LocalPhoto | null | 'cancelled' | 'denied' | 'failed'> {
+    if (!(await this.assignments.photoRequired(ojtId))) {
+      return null;
+    }
+    const selfie = await this.camera.takeSelfie();
+    if (!selfie.ok) {
+      return selfie.reason;
+    }
+    return this.attachments.storePhoto(ojtId, selfie.jpeg);
   }
 }
 
@@ -96,7 +120,14 @@ function ruleFailure(type: 'in' | 'out', open: WorkSession | null): PunchFailure
 }
 
 /** FR-DTR-03 and FR-DTR-04. A null location gives the "no location" flag (QR-SF-05). */
-function newPunch(ojtId: string, type: 'in' | 'out', now: Date, context: DeviceContext, location: Location | null): NewPunch {
+function newPunch(
+  ojtId: string,
+  type: 'in' | 'out',
+  now: Date,
+  context: DeviceContext,
+  location: Location | null,
+  photo: LocalPhoto | null,
+): NewPunch {
   return {
     id: newId(),
     ojtId,
@@ -107,7 +138,7 @@ function newPunch(ojtId: string, type: 'in' | 'out', now: Date, context: DeviceC
     lat: location?.lat ?? null,
     lng: location?.lng ?? null,
     accuracyM: location?.accuracyM ?? null,
-    photoId: null,
+    photoId: photo?.id ?? null,
     deviceId: context.deviceId,
     correctsPunchId: null,
   };

@@ -2,7 +2,7 @@
 
 This document is the API contract of the OJT-DTR backend (D-23, QR-CO-02). It lists each table, RLS policy, RPC function, and Edge Function. Update it in the same commit as each change to the schema.
 
-Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, and `20261026071035_strict_time_format`.
+Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, and `20261026080316_attachments_storage`.
 
 ## 1. Interfaces
 
@@ -11,6 +11,7 @@ Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_an
 | Data API (PostgREST) | `/rest/v1/<table>` | REST with JSON. Supabase JWT in `Authorization`. Project key in `apikey`. |
 | RPC | `/rest/v1/rpc/<function>` | POST with a JSON body |
 | Auth | `/auth/v1/*` | Supabase Auth |
+| Storage | `/storage/v1/object/attachments/<owner_id>/<id>.jpg` | Upload (POST) and download (GET). See section 3.1. |
 | Edge Functions | `/functions/v1/<name>` | Not deployed yet (S3, S4) |
 
 The Data API exposes only the `public` schema. The `private` and `ops` schemas are not exposed.
@@ -53,6 +54,17 @@ The mobile app writes only through `sync_push` (S2). Thus mobile roles have no o
 
 An inactive account (`profiles.status = 'inactive'`) gets no role. Thus it reads only its own profile row.
 
+### 3.1 Storage bucket `attachments`
+
+The bucket is private. File limit: 512000 bytes (500 KB, QR-PE-05). Content type: `image/jpeg` only. The file name must be `<owner_id>/<attachment_id>.jpg` (two UUIDs). `private.attachment_owner(name)` gives the owner from the name, or null for a different name.
+
+| Policy | Action | Who |
+|---|---|---|
+| `attachments_insert_own` | INSERT | An active OJT, into its own folder only |
+| `attachments_select` | SELECT | The owner OJT, its active facilitator, admin (`private.can_read_ojt`) |
+
+There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (D-05). An upload of a file that exists gives an error (HTTP 400 or 409, "already exists"). The client counts that as uploaded.
+
 ## 4. Server rules (triggers)
 
 | Trigger | Table | Rule |
@@ -87,7 +99,7 @@ Response: `{server_time, results: [{op_id, result, cause, record}]}`, one result
 | `conflict` | `base_version` is old (cause `version`), or a report exists for that week (cause `week_exists`). | The current server record |
 | `rejected` | The operation is not valid. | None |
 
-Cause codes of `rejected`: `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type).
+Cause codes of `rejected`: `file_missing` (attachment: no file in Storage at `storage_key`; the client must upload the file first), `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch or attachment update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type).
 
 Entities in S2:
 
@@ -95,6 +107,7 @@ Entities in S2:
 |---|---|---|
 | `punches` | `create` | OJT only. `ojt_id` must be the caller. Times: ISO 8601 with a time zone. The server sets `server_received_at`, `doubtful_time` (offline sync design, section 8), `approved`, `version`. |
 | `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. Status changes come in S3. |
+| `attachments` | `create` | OJT only. `owner_id` must be the caller. `storage_key` must be `<owner_id>/<id>.jpg`. The file must be in Storage. The server sets `size_bytes` from the Storage file. `report_id` is ignored in S2 (the report link comes in S3). An update gives `append_only`. Send the attachment operation before the punch or report that refers to it. |
 
 ### 5.2 `sync_pull`
 

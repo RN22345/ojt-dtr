@@ -4,7 +4,7 @@ This folder will contain the Supabase backend: migrations, RLS policies, databas
 
 ## Status
 
-Created on 2026-10-25 (S1). The `dev` project has the core schema, RLS, audit triggers, the heartbeat, and the seed accounts. `prod` does not exist yet (D-40). `sync_push` and `sync_pull` exist (S2: punches and report content). Storage and Edge Functions come in S2 to S4.
+Created on 2026-10-25 (S1). The `dev` project has the core schema, RLS, audit triggers, the heartbeat, and the seed accounts. `prod` does not exist yet (D-40). `sync_push` and `sync_pull` exist (S2: punches, report content, and photo records). The private Storage bucket `attachments` exists (D-49). Edge Functions come in S3 and S4.
 
 | Project | Ref | URL |
 |---|---|---|
@@ -42,7 +42,9 @@ NOTE: The seed needs the session setting `app.seed_password`. See the header of 
 | `supabase/migrations/20261025134615_restrict_anon_functions.sql` | Removes anonymous EXECUTE grants |
 | `supabase/migrations/20261026070655_sync_functions.sql` | `sync_push`, `sync_pull`, doubtful-time rule (S2) |
 | `supabase/migrations/20261026071035_strict_time_format.sql` | ISO 8601 times only in `sync_push` (DEF-008) |
+| `supabase/migrations/20261026080316_attachments_storage.sql` | Storage bucket `attachments` and its policies, photo records in `sync_push` (D-49) |
 | `tests/sync.test.ts` | L2 tests: TC-CI-SYNC-01 to TC-CI-SYNC-04, TC-U-SRV-01, TC-CI-ACL-01 (sync and Data API part) |
+| `tests/files.test.ts` | L2 tests: TC-CI-FILE-01, TC-CI-ACL-01 (Storage part). Files cannot be deleted, so each run leaves about 540 KB in the bucket. |
 | `supabase/seed.sql` | Seed accounts, companies, batch, assignments (dev and local only) |
 | `supabase/api-contract.md` | The API contract (D-23) |
 | `supabase/auth-settings.md` | Auth settings for each project |

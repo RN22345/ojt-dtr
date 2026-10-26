@@ -6,6 +6,7 @@ import { LocalDb, Row, fromSqlBool, toSqlBool } from '../local-db/local-db';
 import { LocalDbService } from '../local-db/local-db.service';
 import { enqueue } from '../sync/outbox';
 import { createPayload } from '../sync/payloads';
+import { LocalPhoto, insertPhoto } from './attachment.repository';
 
 export type SyncStatus = 'pending' | 'synced' | 'issue';
 
@@ -97,10 +98,16 @@ function fromRow(r: PunchRow): Punch {
 export class PunchRepository {
   private readonly local = inject(LocalDbService);
 
-  /** Saves a new punch with sync status `pending` and adds one `create` operation to the outbox. */
-  async saveNew(punch: NewPunch, userId: string): Promise<Punch> {
+  /**
+   * Saves a new punch with sync status `pending` and adds one `create` operation to the outbox.
+   * A photo (FR-DTR-05) gets its record and operation in the same transaction, before the punch operation.
+   */
+  async saveNew(punch: NewPunch, userId: string, photo: LocalPhoto | null = null): Promise<Punch> {
     const db = await this.local.db();
     await db.transaction(async (tx: LocalDb) => {
+      if (photo) {
+        await insertPhoto(tx, photo, userId);
+      }
       await tx.run(
         `insert into punches (id, ojt_id, type, device_time, time_zone, clock_offset_s, lat, lng, accuracy_m,
            photo_id, device_id, corrects_punch_id, doubtful_time, approved, version, sync_status)

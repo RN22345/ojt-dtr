@@ -1,6 +1,7 @@
 import { LocalDb, Row } from '../local-db/local-db';
 import { migrate } from '../local-db/migrate';
 import { SqlJsDb } from '../local-db/sqljs.db';
+import { FileUploader } from './file-upload';
 import { enqueue, listOutbox } from './outbox';
 import { SyncEngine } from './sync-engine';
 import { clockOffsetS, getState, setState, userKey } from './sync-state';
@@ -285,6 +286,105 @@ describe('sync engine (offline sync design, sections 4, 5, 8, 12)', () => {
       await engine.requestSync();
       expect(server.pushed).toHaveLength(0);
       expect(engine.lastOutcome).toMatchObject({ ok: false, error: 'no-user' });
+    });
+  });
+
+  describe('photo files (section 10, TC-SI-FILE-01 unit part)', () => {
+    /** A fake Storage. It records each call, and the order of the uploads and the pushes. */
+    let events: string[];
+    let uploadFailure: TransportError | null;
+    const uploader: FileUploader = {
+      upload: async (localPath, storageKey) => {
+        events.push(`upload ${storageKey}`);
+        if (uploadFailure) {
+          throw uploadFailure;
+        }
+      },
+    };
+
+    /** A photo and its punch, as the punch repository saves them in one transaction. */
+    async function localPhotoPunch(photoId: string, punchId: string, userId = OJT): Promise<void> {
+      await db.run(
+        `insert into attachments (id, owner_id, storage_key, local_path, upload_status, sync_status)
+         values (?, ?, ?, ?, 'local', 'pending')`,
+        [photoId, userId, `${userId}/${photoId}.jpg`, `photos/${userId}/${photoId}.jpg`],
+      );
+      await enqueue(db, {
+        userId, entity: 'attachments', entityId: photoId, opType: 'create',
+        payload: { id: photoId, owner_id: userId, report_id: null, storage_key: `${userId}/${photoId}.jpg` },
+      });
+      await localPunch(db, punchId, userId);
+    }
+
+    const uploadStatus = async (id: string) =>
+      (await db.query<{ upload_status: string }>('select upload_status from attachments where id = ?', [id]))[0]?.upload_status;
+
+    beforeEach(() => {
+      events = [];
+      uploadFailure = null;
+      const push = server.push.bind(server);
+      server.push = async (ops) => {
+        events.push(`push ${ops.map((o) => o.entity_id).join(',')}`);
+        return push(ops);
+      };
+      engine = new SyncEngine({ db: async () => db, transport: server, files: uploader, userId: () => user, now: () => NOW });
+    });
+
+    it('TC-SI-FILE-01 (unit part): the file uploads before the push, and the photo operation goes before the punch', async () => {
+      await localPhotoPunch('f1', 'p1');
+      await engine.requestSync();
+      expect(events).toEqual([`upload ${OJT}/f1.jpg`, 'push f1,p1']);
+      expect(await uploadStatus('f1')).toBe('uploaded');
+      expect(await listOutbox(db, OJT)).toEqual([]);
+    });
+
+    it('TC-SI-FILE-01 (unit part): an uploaded file is not uploaded again', async () => {
+      await localPhotoPunch('f1', 'p1');
+      server.decide = (op) => (op.entity === 'punches' ? 'rejected' : 'applied');
+      await engine.requestSync();
+      events = [];
+      await engine.requestSync();
+      expect(events.filter((e) => e.startsWith('upload'))).toEqual([]);
+    });
+
+    it('TC-SI-FILE-01 (unit part): with no server, nothing is pushed, and the next sync uploads the file', async () => {
+      await localPhotoPunch('f1', 'p1');
+      uploadFailure = new TransportError('unreachable', 'no answer');
+      await engine.requestSync();
+      expect(engine.lastOutcome).toMatchObject({ ok: false, error: 'unreachable' });
+      expect(events).toEqual([`upload ${OJT}/f1.jpg`]);
+      expect(await uploadStatus('f1')).toBe('local');
+      expect(await listOutbox(db, OJT)).toHaveLength(2);
+
+      uploadFailure = null;
+      await engine.requestSync();
+      expect(events.slice(1)).toEqual([`upload ${OJT}/f1.jpg`, 'push f1,p1']);
+      expect(await listOutbox(db, OJT)).toEqual([]);
+    });
+
+    it('TC-SI-FILE-01 (unit part): a refused file does not stop the other changes', async () => {
+      await localPhotoPunch('f1', 'p1');
+      uploadFailure = new TransportError('refused', 'too large');
+      await engine.requestSync();
+      expect(events).toEqual([`upload ${OJT}/f1.jpg`, 'push f1,p1']);
+      expect(engine.lastOutcome).toMatchObject({ ok: true });
+      expect(await uploadStatus('f1')).toBe('local');
+    });
+
+    it('TC-SI-FILE-01 (unit part): the files of a different user are not uploaded', async () => {
+      await localPhotoPunch('f2', 'p2', OTHER);
+      await engine.requestSync();
+      expect(events).toEqual([]);
+    });
+
+    it('TC-SI-SYNC-07 (unit part): after an epoch change, the photo is uploaded and sent again before its punch', async () => {
+      await localPhotoPunch('f1', 'p1');
+      await engine.requestSync();
+      await db.run("update attachments set updated_at = '2026-10-26T00:00:05.000Z'");
+      server.pages = [{ ...page([]), epoch: 'new-epoch', epoch_changed: true, cursor: 0, has_more: true }];
+      events = [];
+      await engine.requestSync();
+      expect(events).toEqual([`upload ${OJT}/f1.jpg`, 'push f1,p1']);
     });
   });
 });

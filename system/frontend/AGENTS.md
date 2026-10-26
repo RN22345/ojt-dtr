@@ -4,13 +4,15 @@ This folder will contain the Ionic Angular app. One codebase makes three builds:
 
 ## Status
 
-Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations (version 2), the outbox, the repositories, the sync engine, and the DTR service exist (S2). The OJT DTR page, the sync status bar, the "Sync issues" screen, and the logout CAUTION exist. `SyncSessionService` starts the sync after login. The facilitator "My OJTs" list and OJT DTR view exist. Photos come next.
+Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations (version 2), the outbox, the repositories, the sync engine, and the DTR service exist (S2). The OJT DTR page, the sync status bar, the "Sync issues" screen, and the logout CAUTION exist. `SyncSessionService` starts the sync after login. The facilitator "My OJTs" list and OJT DTR view exist. Photos exist: a selfie for each punch when the company requires it (FR-DTR-05, D-50), uploaded before the push (D-49).
 
 NOTE: `environment.ts` has `faultInjection: true`. A dev build gives `window.ojtFaults.set({ drop, serverError })` for the device fault tests. `environment.prod.ts` has it false. `ng build` uses the production settings, so build with `--configuration development` for the fault tests. All Capacitor plugins of the functional requirements, section 13, are installed (TC-SI-PLUG-01 passes).
 
 NOTE: Local reminders must use `isExactNotification: false` (D-44). Else `LocalNotifications.schedule` opens the Android "Alarms & reminders" screen and waits.
 
-NOTE: On a cold emulator, geolocation has no position. Send `adb emu geo fix <lng> <lat>` first.
+NOTE: On a cold emulator, geolocation has no position. Start a location request (for example, open the DTR page), then send `adb emu geo fix <lng> <lat>` while it waits. A fix sent before the request can be lost.
+
+NOTE: The emulator AVD has no front camera (`hw.camera.front=none`). The camera screen uses the emulated back camera. Its photos are small (about 20 KB). To test the compression of a large photo, bundle `shared/utils/jpeg-compress.ts` with esbuild and run it in the WebView through the DevTools protocol.
 
 ## How the app was made
 
@@ -63,7 +65,10 @@ Run these commands in `system/frontend/`.
 | `src/app/data/repositories/device.repository.ts` | Device ID and clock offset for a new punch |
 | `src/app/features/dtr/dtr.service.ts`, `dtr.service.spec.ts` | DTR rules: time-in, time-out, sessions, "Missing time-out". TC-U-DTR-01 to 04. |
 | `src/app/core/http/fetch-wrapper.ts`, `fetch-wrapper.spec.ts` | Request timeout (O-5) and the fault injector of test builds (D-20) |
-| `src/app/plugins/` | Wrappers: network, app lifecycle, geolocation (frontend rule 5) |
+| `src/app/plugins/` | Wrappers: network, app lifecycle, geolocation, camera (selfie, compressed), files (app data folder) (frontend rule 5) |
+| `src/app/shared/utils/jpeg-compress.ts`, `jpeg-compress.spec.ts` | Photo compression to 500 KB or less, canvas encoder, base64 helpers. TC-CI-FILE-01 (client part). |
+| `src/app/data/repositories/attachment.repository.ts` | Photo files on the device, photo record and outbox operation (D-49) |
+| `src/app/data/sync/file-upload.ts` | Upload of one photo file to Storage (offline sync design, section 10) |
 | `src/app/shared/config/dtr-settings.ts` | DTR settings: "Missing time-out" hours, location wait (D-30, D-37, D-48) |
 | `src/app/shared/utils/retry.ts` | Retry delays (offline sync design 6) |
 | `src/app/data/repositories/profile.repository.ts` | Profile reads from the server and the local cache |

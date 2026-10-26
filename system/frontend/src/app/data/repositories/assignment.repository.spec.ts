@@ -50,4 +50,15 @@ describe('Assigned OJTs of a facilitator (FR-DTR-10)', () => {
     expect(await repo.ojtOf(FAC, 'o3')).toBeNull();
     expect(await repo.ojtOf(FAC, 'o4')).toBeNull();
   });
+
+  it('TC-SI-FILE-01 (unit part): the photo setting comes from the company of the active assignment (FR-DTR-05)', async () => {
+    const local = await TestBed.inject(LocalDbService).db();
+    const repo = TestBed.inject(AssignmentRepository);
+    expect(await repo.photoRequired('o1')).toBe(false);
+    await mergePulled(local, 'companies', { id: 'c1', name: 'Company A', address: '', photo_required: true, location_required: false, version: 2 });
+    expect(await repo.photoRequired('o1')).toBe(true);
+    // o3 has only an assignment that ended. o9 has no data on the device.
+    expect(await repo.photoRequired('o3')).toBe(false);
+    expect(await repo.photoRequired('o9')).toBe(false);
+  });
 });

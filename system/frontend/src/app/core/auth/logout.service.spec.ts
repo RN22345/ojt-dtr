@@ -4,6 +4,7 @@ import { LOCAL_DB_OPENER, LocalDbService } from '../../data/local-db/local-db.se
 import { SqlJsDb } from '../../data/local-db/sqljs.db';
 import { countOutbox, enqueue } from '../../data/sync/outbox';
 import { SyncService } from '../../data/sync/sync.service';
+import { FILES } from '../../plugins/files.plugin';
 import { PlatformService } from '../platform.service';
 import { AuthService } from './auth.service';
 import { LogoutService } from './logout.service';
@@ -15,6 +16,7 @@ describe('Logout with unsynced changes (FR-AUTH-05, QR-SF-01)', () => {
   const signOut = vi.fn(async () => undefined);
   const trigger = vi.fn(async () => undefined);
   const stop = vi.fn();
+  const removeFolder = vi.fn(async () => undefined);
 
   function setup(platform: 'mobile' | 'web' = 'mobile') {
     TestBed.resetTestingModule();
@@ -24,6 +26,7 @@ describe('Logout with unsynced changes (FR-AUTH-05, QR-SF-01)', () => {
         { provide: LOCAL_DB_OPENER, useValue: () => Promise.resolve(db as LocalDb) },
         { provide: AuthService, useValue: { profile: () => ({ id: OJT, role: 'ojt' }), signOut } },
         { provide: SyncService, useValue: { trigger, stop } },
+        { provide: FILES, useValue: { removeFolder } },
       ],
     });
     return TestBed.inject(LogoutService);
@@ -31,7 +34,7 @@ describe('Logout with unsynced changes (FR-AUTH-05, QR-SF-01)', () => {
 
   beforeEach(async () => {
     db = await SqlJsDb.create();
-    [signOut, trigger, stop].forEach((f) => f.mockClear());
+    [signOut, trigger, stop, removeFolder].forEach((f) => f.mockClear());
   });
   afterEach(async () => {
     await db.close();
@@ -55,6 +58,7 @@ describe('Logout with unsynced changes (FR-AUTH-05, QR-SF-01)', () => {
     await pendingPunch();
     expect(await service.logout(false)).toBe(false);
     expect(signOut).not.toHaveBeenCalled();
+    expect(removeFolder).not.toHaveBeenCalled();
     expect(await countOutbox(await TestBed.inject(LocalDbService).db(), OJT)).toBe(1);
   });
 
@@ -65,6 +69,8 @@ describe('Logout with unsynced changes (FR-AUTH-05, QR-SF-01)', () => {
     expect(signOut).toHaveBeenCalledTimes(1);
     expect(stop).toHaveBeenCalledTimes(1);
     expect(await countOutbox(await TestBed.inject(LocalDbService).db(), OJT)).toBe(0);
+    // The photo files of the user go with the records.
+    expect(removeFolder).toHaveBeenCalledWith('photos/ojt-1');
   });
 
   it('TC-ST-OJT-04 (unit part): with no unsynced changes, the logout needs no confirmation', async () => {

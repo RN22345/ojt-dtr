@@ -7,6 +7,7 @@ import { NETWORK } from '../../plugins/network.plugin';
 import { retryDelayMs } from '../../shared/utils/retry';
 import { countOutbox } from './outbox';
 import { SyncDeps, SyncEngine, SyncOutcome } from './sync-engine';
+import { FILE_UPLOADER } from './file-upload';
 import { SYNC_TRANSPORT } from './sync-transport';
 
 /** `unreachable`: the network is available, but the server does not answer (FR-SYNC-08). */
@@ -32,6 +33,7 @@ export class SyncService {
   private readonly network = inject(NETWORK);
   private readonly lifecycle = inject(APP_LIFECYCLE);
   private readonly transport = inject(SYNC_TRANSPORT);
+  private readonly files = inject(FILE_UPLOADER);
   private readonly engineFactory = inject(SYNC_ENGINE_FACTORY);
 
   readonly connection = signal<ConnectionState>('online');
@@ -57,7 +59,12 @@ export class SyncService {
     this.stop();
     this.userId = userId;
     this.sessionRejected.set(false);
-    this.engine = this.engineFactory({ db: () => this.local.db(), transport: this.transport, userId: () => this.userId });
+    this.engine = this.engineFactory({
+      db: () => this.local.db(),
+      transport: this.transport,
+      files: this.files,
+      userId: () => this.userId,
+    });
     this.connection.set((await this.network.isOnline()) ? 'online' : 'offline');
     this.stops.push(await this.network.onChange((online) => this.onNetworkChange(online)));
     this.stops.push(await this.lifecycle.onResume(() => void this.trigger()));

@@ -8,6 +8,7 @@ import { NETWORK } from '../../plugins/network.plugin';
 import { RETRY_DELAYS_MS, retryDelayMs } from '../../shared/utils/retry';
 import { SyncOutcome } from './sync-engine';
 import { SYNC_ENGINE_FACTORY, SyncRunner, SyncService } from './sync.service';
+import { FILE_UPLOADER } from './file-upload';
 import { SYNC_TRANSPORT } from './sync-transport';
 
 const FAIL: SyncOutcome = { ok: false, pushed: 0, pulled: 0, issues: 0, error: 'unreachable' };
@@ -37,6 +38,7 @@ describe('sync triggers and retry (offline sync design, section 6)', () => {
         { provide: PlatformService, useValue: { platform: 'mobile' } },
         { provide: LOCAL_DB_OPENER, useValue: () => Promise.resolve(db as LocalDb) },
         { provide: SYNC_TRANSPORT, useValue: {} },
+        { provide: FILE_UPLOADER, useValue: {} },
         { provide: SYNC_ENGINE_FACTORY, useValue: () => runner },
         {
           provide: NETWORK,

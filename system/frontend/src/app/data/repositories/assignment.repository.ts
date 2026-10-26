@@ -35,6 +35,23 @@ export class AssignmentRepository {
     return rows.map((r) => ({ ojtId: r.ojt_id, fullName: r.full_name ?? '', companyName: r.company_name ?? '' }));
   }
 
+  /**
+   * FR-DTR-05: true if the company of the active assignment of the OJT requires a photo for each punch.
+   * False if the device has no assignment or company data yet (no pull since the first login).
+   */
+  async photoRequired(ojtId: string): Promise<boolean> {
+    const db = await this.local.db();
+    const rows = await db.query<{ photo_required: number }>(
+      `select c.photo_required
+         from ojt_assignments a
+         join companies c on c.id = a.company_id and c.deleted_at is null
+        where a.ojt_id = ? and a.active = 1 and a.deleted_at is null
+        limit 1`,
+      [ojtId],
+    );
+    return rows[0]?.photo_required === 1;
+  }
+
   /** The assigned OJT, or null if the OJT is not an active OJT of this facilitator. */
   async ojtOf(facilitatorId: string, ojtId: string): Promise<AssignedOjt | null> {
     return (await this.ojtsOf(facilitatorId)).find((o) => o.ojtId === ojtId) ?? null;

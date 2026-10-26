@@ -3,6 +3,7 @@
 // `logout(true)` only after the user confirms.
 import { Injectable, inject } from '@angular/core';
 import { LocalDbService } from '../../data/local-db/local-db.service';
+import { AttachmentRepository } from '../../data/repositories/attachment.repository';
 import { UnsyncedDataError, clearLocalData, unsyncedCount } from '../../data/sync/local-data';
 import { SyncService } from '../../data/sync/sync.service';
 import { AuthService } from './auth.service';
@@ -12,6 +13,7 @@ export class LogoutService {
   private readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
   private readonly local = inject(LocalDbService);
+  private readonly attachments = inject(AttachmentRepository);
 
   /** Tries one sync (if online), then gives the number of unsynced changes. Always 0 on the admin web app. */
   async unsyncedBeforeLogout(): Promise<number> {
@@ -32,6 +34,8 @@ export class LogoutService {
     if (userId && this.local.available) {
       try {
         await clearLocalData(await this.local.db(), userId, { discardUnsynced });
+        // The photo records are gone, so the photo files of the user go too (QR-SF-01).
+        await this.attachments.removeFilesOf(userId);
       } catch (error) {
         if (error instanceof UnsyncedDataError) {
           return false;

@@ -141,8 +141,9 @@ CAUTION: If a user logs out with unsynced changes, these changes can be lost. Th
 
 1. The app compresses each photo to 500 KB or less (QR-PE-05).
 2. The app stores the photo in the app data folder. The `attachments` table stores the local path.
-3. The sync engine uploads the file to Supabase Storage before it pushes the operation that refers to the file.
-4. Storage returns the object path. The app puts the path in the operation payload.
+3. The sync engine uploads the file to Supabase Storage before it pushes the operation that refers to the file. If the server is not reachable, the sync stops and the retry uploads the file again. A file that exists in Storage counts as uploaded.
+4. The Storage path is fixed: `<owner_id>/<attachment_id>.jpg` (D-49). The app makes the path offline and puts it in the operation payload. The `attachments` operation goes before the punch or report operation that refers to the photo. `sync_push` rejects an attachment record with no file (cause `file_missing`).
+5. Logout removes the photo folder of the user (`photos/<owner_id>/`) with the local data.
 
 ## 11. Admin web app
 

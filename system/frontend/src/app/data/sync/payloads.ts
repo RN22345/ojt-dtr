@@ -3,8 +3,12 @@
 // epoch change (offline sync design, section 12). Local-only columns are not sent.
 import { Row } from '../local-db/local-db';
 
-/** The columns that the client sends for each entity. The server sets all other columns. */
+/**
+ * The columns that the client sends for each entity. The server sets all other columns.
+ * `attachments` is first, so that an epoch change sends a photo before the punch that refers to it.
+ */
 export const PAYLOAD_COLUMNS: Readonly<Record<string, readonly string[]>> = {
+  attachments: ['id', 'owner_id', 'report_id', 'storage_key'],
   punches: [
     'id', 'ojt_id', 'type', 'device_time', 'time_zone', 'clock_offset_s',
     'lat', 'lng', 'accuracy_m', 'photo_id', 'device_id', 'corrects_punch_id',
