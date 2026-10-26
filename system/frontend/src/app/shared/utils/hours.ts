@@ -94,6 +94,23 @@ export function buildSessions(
   return sessions;
 }
 
+/**
+ * FR-DTR-09, D-37: true if the session has no time-out `limitHours` or more after its time-in.
+ * A session across midnight with a time-out does not get the mark (TC-U-DTR-03).
+ */
+export function isMissingTimeOut(session: WorkSession, now: string | Date, limitHours: number): boolean {
+  return session.timeOut === null && toMs(now) - toMs(session.timeIn.time) >= limitHours * 3_600_000;
+}
+
+/**
+ * The open work session for FR-DTR-02 and FR-DTR-08: the newest session with no time-out and without the
+ * "Missing time-out" mark (D-47). Null if there is none.
+ */
+export function openSession(sessions: readonly WorkSession[], now: string | Date, limitHours: number): WorkSession | null {
+  const last = sessions[sessions.length - 1];
+  return last && last.timeOut === null && !isMissingTimeOut(last, now, limitHours) ? last : null;
+}
+
 function sumBy(sessions: readonly WorkSession[], key: (s: WorkSession) => string): Map<string, number> {
   const totals = new Map<string, number>();
   for (const s of sessions) {

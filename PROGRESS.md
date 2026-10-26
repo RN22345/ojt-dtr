@@ -26,7 +26,14 @@ This file is the only source for the current project state. Each agent session m
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
-S2 order (bottom-up, system modules section 2): `sync_push` and `sync_pull` (TC-CI-SYNC-*, TC-U-SRV-01), then the client adapters (network, location, device ID, request timeout O-5), then the sync engine in layer 2 (TC-U-SYNC-*), then the repositories, then the DTR service in layer 4 (TC-U-DTR-*), then the DTR pages.
+S2 done so far: `sync_push` and `sync_pull`, client adapters, request timeout, sync engine, DTR service. All L1 and L2 tests of these parts pass.
+
+S2 next (in order):
+1. Agent: DTR pages (time-in and time-out, history by day and week with sync status, FR-DTR-07), the sync status bar (network state and unsynced count, FR-SYNC-04, FR-SYNC-08), pull-to-refresh (FR-SYNC-03), the "Sync issues" screen (FR-SYNC-06), and the logout CAUTION (FR-AUTH-05, QR-SF-01). Call `SyncService.start()` after login.
+2. Agent: facilitator DTR view of each assigned OJT (FR-DTR-10) with the doubtful-time flag (FR-DTR-11).
+3. Agent: photo upload and the Storage bucket (TC-CI-FILE-01, TC-SI-FILE-01, FR-DTR-05). Then the Storage part of TC-CI-ACL-01.
+4. Agent and emulator: TC-SI-AUTH-02, TC-SI-SYNC-01 to TC-SI-SYNC-07, TC-ST-OJT-01, 03, 04, TC-ST-Q-PE-01 (first measure).
+5. Agent: S2 test report.
 
 Open S1 items:
 
@@ -70,6 +77,7 @@ Open S1 items:
 | 2026-10-26 | TC-SI-PLUG-01 passes on the emulator: 13 of 13 calls for the 9 plugins of the functional requirements, section 13, plus secure storage. Geolocation needs a GPS fix on the emulator. Local reminders use inexact alarms (D-44). Push registration waits for FCM (readiness plan, item 10). Debug APK: 19.5 MB (QR-PE-06 target for the release APK: 25 MB). |
 | 2026-10-26 | Own backup: `backup.yml` (each Sunday 02:17 Manila time; AES-256 GPG archive as a pre-release of the private repository; newest 8 stay). First run passed: release `backup-ojt-dtr-dev-20261026-0657`. A decrypt test with the user's passphrase passed: roles, schema, and data of `public`, `ops`, and `auth` (with `auth.users`). The full restore test is TC-ST-Q-RE-04 (before S4). |
 | 2026-10-26 | S2 (part, D-46): `sync_push` and `sync_pull` on `dev` (migrations `sync_functions`, `strict_time_format`). TC-CI-SYNC-01 to TC-CI-SYNC-04, TC-U-SRV-01, and TC-CI-ACL-01 (sync and Data API part; Storage waits for the first bucket) pass. DEF-008 found and closed. Backend L2: 61 of 61 pass. Archive branch `archive/s1-foundation-2026-10-26`. |
+| 2026-10-26 | S2 (part): client layer 1 (network, app lifecycle, and geolocation wrappers; request timeout 15 s, O-5 fixed in code; fault injector for test builds, D-20), local migration 2, sync engine and sync service (layer 2), device repository, DTR service (layer 4, D-47, D-48). TC-U-SYNC-01 to TC-U-SYNC-07 and TC-U-DTR-01 to TC-U-DTR-04 pass. Frontend: 134 of 134 pass, 84% line coverage (`data/sync` 91%, `features/dtr` 96%), lint zero errors, web build passes. |
 | 2026-10-26 | Test totals: frontend 90 of 90 pass, 83% line coverage, lint zero errors. Backend L2 24 of 24 pass. |
 
 ## 5. Open issues
@@ -82,7 +90,7 @@ Open S1 items:
 | ENV-01 | `ojt-dtr-dev` exists (D-40). `ojt-dtr-prod` comes before S5. Then pause KitaFix (ask its team) or `dev`. | User | Watch |
 | ENV-02 | The GitHub repository exists. The weekly backup waited for the `dev` database password (readiness plan, item 4b). `backup.yml` exists and the first backup passed on 2026-10-26. | User | Closed |
 | ENV-04 | The `dev` Auth settings were the Supabase defaults. Pushed on 2026-10-25. | Agent | Closed |
-| O-5 | supabase-js has no request timeout. On the emulator just after a cold boot, the first login waited about 25 s, and one attempt ended with "Server not reachable". Add a timeout to the fetch wrapper in S2 (with the fault injector, D-20; offline sync design, section 13). | Agent | Open |
+| O-5 | supabase-js had no request timeout. The fetch wrapper now stops each request after 15 s (`core/http/fetch-wrapper.ts`, unit tests pass). Close it after TC-SI-SYNC-06 on the emulator. | Agent | Watch |
 | DM-01 | The data model has no punch type for a correction request of kind `add`. The server cannot make the new punch without it. Decide in S3 before COR work (add `requested_type`, then update the data model). | Agent | Open |
 | KA-01 | QR-RE-06 (Must) needs two automatic keep-alive sources. Only source A exists, and it has no scheduled run yet (the workflow is active; the GitHub scheduler skipped the 2026-10-26 run). Source B is deferred (D-45). The S1 gate cannot pass without source B. | User and agent | Open |
 | ENV-03 | The `docs/deliverables/` files were lost in the D-28 move. They were restored from `OJT-Appdev-Project.zip`. The path in `extract_test_cases.py` was fixed again. The Google Doc tabs do not show the S0 review fixes yet. | Agent | Watch |
@@ -110,3 +118,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-26 | Claude Code (desktop) | Built the local database, the outbox, and the repositories. Added the Auth account tests and the separate rate-limit suite (D-43). Added the ESLint module and complexity rules. Installed the Capacitor plugins and ran TC-SI-PLUG-01 on the emulator. Found that exact reminders open a system screen (D-44). Added `user_id` to the outbox design. | `system/frontend/*`, `system/backend/tests/auth-account.test.ts`, `system/backend/tests-ratelimit/*`, `system/backend/package.json`, decision log (D-43, D-44), offline sync design 2.1, both `system/*/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Wrote the source B settings (runbook 3.4). The user deferred source B (D-45); it is still necessary for the S1 gate (QR-RE-06). Examined source A: the workflow is active, the scheduler skipped the first run. Wrote the S1 test report draft. | runbook, decision log (D-45), `docs/05-testing/reports/S1-test-report.md`, `docs/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | The user set `DB_URL_DEV` and `BACKUP_PASSPHRASE`. Added `backup.yml`, ran the first backup, and did a decrypt test. | `.github/workflows/backup.yml`, runbook 6.2 and 6.3, `system/backend/AGENTS.md`, S1 report, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | Started S2 early (D-46). Made the archive branch. Built `sync_push` and `sync_pull` with L2 tests, found and fixed DEF-008. Built the client sync engine, the plugin wrappers, the request timeout, and the DTR service with unit tests. Recorded D-47 and D-48. | `system/backend/supabase/migrations/*`, `system/backend/tests/*`, `api-contract.md`, `system/frontend/src/*`, decision log (D-46 to D-48), defect log, offline sync design, both `system/*/AGENTS.md`, `PROGRESS.md` |

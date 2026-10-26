@@ -4,7 +4,9 @@ This folder will contain the Ionic Angular app. One codebase makes three builds:
 
 ## Status
 
-Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations, the outbox, and the profile and punch repositories exist. The sync engine comes in S2. All Capacitor plugins of the functional requirements, section 13, are installed (TC-SI-PLUG-01 passes).
+Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations (version 2), the outbox, the repositories, the sync engine, and the DTR service exist (S2). The DTR pages, the sync status bar, and the "Sync issues" screen come next. `SyncService.start()` is not called by the app yet.
+
+NOTE: `environment.ts` has `faultInjection: true`. A dev build gives `window.ojtFaults.set({ drop, serverError })` for the device fault tests. `environment.prod.ts` has it false. `ng build` uses the production settings, so build with `--configuration development` for the fault tests. All Capacitor plugins of the functional requirements, section 13, are installed (TC-SI-PLUG-01 passes).
 
 NOTE: Local reminders must use `isExactNotification: false` (D-44). Else `LocalNotifications.schedule` opens the Android "Alarms & reminders" screen and waits.
 
@@ -52,7 +54,18 @@ Run these commands in `system/frontend/`.
 | `src/app/data/local-db/capacitor-sqlite.db.ts`, `sqljs.db.ts` | Adapters: SQLite plugin on mobile, sql.js in tests |
 | `src/app/data/local-db/local-db.service.ts` | Opens the local database once (`LOCAL_DB_OPENER` token) |
 | `src/app/data/local-db/migrate.spec.ts` | TC-CI-DB-01 |
-| `src/app/data/sync/outbox.ts` | Outbox: add, list, and count operations |
+| `src/app/data/sync/outbox.ts` | Outbox: add, list, count, take, requeue, and finish operations |
+| `src/app/data/sync/sync-engine.ts`, `sync-engine.spec.ts` | Push, pull, clock offset, epoch change (S2). TC-U-SYNC-02, 04, 05, 07. |
+| `src/app/data/sync/sync.service.ts`, `sync.service.spec.ts` | Triggers, retry delays, connection state, unsynced count. TC-U-SYNC-03. |
+| `src/app/data/sync/sync-transport.ts` | `sync_push` and `sync_pull` calls, error kinds (offline sync design 13) |
+| `src/app/data/sync/local-merge.ts`, `payloads.ts`, `sync-state.ts`, `sync-log.ts` | Pull merge rules, create payloads, cursor and device values, sync log |
+| `src/app/data/sync/local-data.ts`, `local-data.spec.ts` | Clear local data with the unsynced check. TC-U-SYNC-06. |
+| `src/app/data/repositories/device.repository.ts` | Device ID and clock offset for a new punch |
+| `src/app/features/dtr/dtr.service.ts`, `dtr.service.spec.ts` | DTR rules: time-in, time-out, sessions, "Missing time-out". TC-U-DTR-01 to 04. |
+| `src/app/core/http/fetch-wrapper.ts`, `fetch-wrapper.spec.ts` | Request timeout (O-5) and the fault injector of test builds (D-20) |
+| `src/app/plugins/` | Wrappers: network, app lifecycle, geolocation (frontend rule 5) |
+| `src/app/shared/config/dtr-settings.ts` | DTR settings: "Missing time-out" hours, location wait (D-30, D-37, D-48) |
+| `src/app/shared/utils/retry.ts` | Retry delays (offline sync design 6) |
 | `src/app/data/repositories/profile.repository.ts` | Profile reads from the server and the local cache |
 | `src/app/data/repositories/punch.repository.ts` | Punch save (record and outbox operation in one transaction) and reads |
 | `src/app/data/repositories/repositories.spec.ts` | TC-CI-DB-02 |
