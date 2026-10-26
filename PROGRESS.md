@@ -27,7 +27,7 @@ This file is the only source for the current project state. Each agent session m
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
 1. User: reset the `dev` database password in the dashboard. Put the session pooler connection string in the GitHub secret `DB_URL_DEV`. Then the agent adds `backup.yml` and makes the first own backup.
-2. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists. Make sure that the first scheduled `keepalive.yml` run passes.
+2. Agent and user: keep-alive source B (external cron service) and source C (calendar reminders). Source A (`keepalive.yml`) exists. Make sure that the first scheduled `keepalive.yml` run passes. On 2026-10-26 at 05:05 UTC, no scheduled run had started (the cron time is 01:17 UTC). GitHub can delay or skip scheduled runs. If no run starts by 2026-10-28, source B becomes urgent.
 3. Agent: S1 gate check and the S1 test report (`docs/05-testing/reports/S1-test-report.md`).
 4. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
 5. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
