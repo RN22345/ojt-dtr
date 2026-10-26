@@ -144,6 +144,22 @@ export class PunchRepository {
     return rows[0] ? fromRow(rows[0]) : null;
   }
 
+  /**
+   * The punch that was recorded last (D-51): synced punches in the order that the server received them, then the
+   * unsynced punches in the order that this device saved them. The device time is not used, because the device
+   * clock can be wrong (QR-SF-02).
+   */
+  async lastRecorded(ojtId: string): Promise<Punch | null> {
+    const db = await this.local.db();
+    const rows = await db.query<PunchRow>(
+      `select * from punches where ojt_id = ? and deleted_at is null
+        order by server_received_at is null desc, server_received_at desc, rowid desc
+        limit 1`,
+      [ojtId],
+    );
+    return rows[0] ? fromRow(rows[0]) : null;
+  }
+
   /** The punches of one OJT in time order (FR-DTR-07). */
   async listByOjt(ojtId: string): Promise<Punch[]> {
     const db = await this.local.db();

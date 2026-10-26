@@ -168,8 +168,10 @@ A paused Supabase project, a server fault, and a timeout are the same for the ap
 |---|---|---|
 | The network plugin reports no network | No network | Wait for the network event |
 | Timeout, no response, DNS error, or 5xx error | Server not reachable (FR-SYNC-08) | Retry with the delays of section 6. Keep the session. |
-| Access token expired | Normal | Refresh the token, then send again |
+| Access token expired (HTTP 401) | Normal | Refresh the token one time, then send again. A refresh with no network or a 5xx error is "Server not reachable". |
 | Supabase Auth rejects the refresh token as invalid | Session ended | Show the login screen. Keep the outbox. |
 | Operation result `rejected` or `conflict` | Sync issue | Show the record on the "Sync issues" screen |
 
 The tolerance rules are also in the runbook, section 4.
+
+NOTE: The app keeps the token expiry in device time (`expires_at` = device time at arrival + `expires_in`). Thus a device clock that is wrong does not make each new token look expired (DEF-012). With no network, a request fails at once (DEF-014). Only a change from offline to online starts a sync; the Android plugin repeats "connected" events (DEF-011).

@@ -12,6 +12,8 @@ NOTE: Local reminders must use `isExactNotification: false` (D-44). Else `LocalN
 
 NOTE: On a cold emulator, geolocation has no position. Start a location request (for example, open the DTR page), then send `adb emu geo fix <lng> <lat>` while it waits. A fix sent before the request can be lost.
 
+NOTE: Device test tools: `adb root` works on this AVD (for `date` and `settings put global auto_time`). In the dev build, `ng.getComponent(document.querySelector('app-dtr-page')).punch()` runs the real punch action through the DevTools protocol. Do not name a PowerShell function `Kill`: the `kill` alias wins.
+
 NOTE: The emulator AVD has no front camera (`hw.camera.front=none`). The camera screen uses the emulated back camera. Its photos are small (about 20 KB). To test the compression of a large photo, bundle `shared/utils/jpeg-compress.ts` with esbuild and run it in the WebView through the DevTools protocol.
 
 ## How the app was made
@@ -50,7 +52,7 @@ Run these commands in `system/frontend/`.
 | `src/app/core/auth/access.ts`, `access.spec.ts` | Role and platform access table. TC-U-AUTH-03. |
 | `src/app/core/auth/auth.service.ts`, `auth.service.spec.ts` | Login, restore, logout, platform check. TC-CI-AUTH-02 (fake client). |
 | `src/app/core/auth/auth.guards.ts` | `groupGuard`, `startGuard`, `loginGuard` |
-| `src/app/core/auth/token-storage.ts` | Secure storage on mobile, `sessionStorage` on web (D-42) |
+| `src/app/core/auth/token-storage.ts`, `token-storage.spec.ts` | Secure storage on mobile, `sessionStorage` on web (D-42). Keeps the token expiry in device time (DEF-012). |
 | `src/app/data/local-db/local-db.ts` | `LocalDb` adapter interface and SQL value helpers |
 | `src/app/data/local-db/schema.ts`, `migrate.ts` | Local tables (offline sync design, section 2) and migrations with `PRAGMA user_version` |
 | `src/app/data/local-db/capacitor-sqlite.db.ts`, `sqljs.db.ts` | Adapters: SQLite plugin on mobile, sql.js in tests |
@@ -59,7 +61,7 @@ Run these commands in `system/frontend/`.
 | `src/app/data/sync/outbox.ts` | Outbox: add, list, count, take, requeue, and finish operations |
 | `src/app/data/sync/sync-engine.ts`, `sync-engine.spec.ts` | Push, pull, clock offset, epoch change (S2). TC-U-SYNC-02, 04, 05, 07. |
 | `src/app/data/sync/sync.service.ts`, `sync.service.spec.ts` | Triggers, retry delays, connection state, unsynced count. TC-U-SYNC-03. |
-| `src/app/data/sync/sync-transport.ts` | `sync_push` and `sync_pull` calls, error kinds (offline sync design 13) |
+| `src/app/data/sync/sync-transport.ts`, `sync-transport.spec.ts` | `sync_push` and `sync_pull` calls, error kinds, one refresh and resend after a 401 (offline sync design 13, DEF-012) |
 | `src/app/data/sync/local-merge.ts`, `payloads.ts`, `sync-state.ts`, `sync-log.ts` | Pull merge rules, create payloads, cursor and device values, sync log |
 | `src/app/data/sync/local-data.ts`, `local-data.spec.ts` | Clear local data with the unsynced check. TC-U-SYNC-06. |
 | `src/app/data/repositories/device.repository.ts` | Device ID and clock offset for a new punch |

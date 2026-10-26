@@ -35,6 +35,49 @@ export class SessionAuthStorage implements AuthStorage {
   }
 }
 
+/**
+ * DEF-012 (QR-RE-08, QR-SF-02): supabase-js keeps the server `expires_at` and compares it with the device clock.
+ * With a device clock that is wrong by more than the token life, each new token looks expired, and a failed
+ * refresh then removes the session. This wrapper stores `expires_at` as device time now + `expires_in`, so the
+ * expiry check uses only the device clock. The server still checks the real expiry.
+ */
+export class DeviceClockExpiry implements AuthStorage {
+  constructor(
+    private readonly inner: AuthStorage,
+    private readonly nowMs: () => number = Date.now,
+  ) {}
+
+  getItem(key: string): Promise<string | null> {
+    return this.inner.getItem(key);
+  }
+
+  setItem(key: string, value: string): Promise<void> {
+    return this.inner.setItem(key, withDeviceExpiry(value, this.nowMs()));
+  }
+
+  removeItem(key: string): Promise<void> {
+    return this.inner.removeItem(key);
+  }
+}
+
+/** A session JSON gets a device-time `expires_at`. Other values do not change. */
+export function withDeviceExpiry(value: string, nowMs: number): string {
+  let data: unknown;
+  try {
+    data = JSON.parse(value);
+  } catch {
+    return value;
+  }
+  if (!data || typeof data !== 'object') {
+    return value;
+  }
+  const session = data as Record<string, unknown>;
+  if (typeof session['access_token'] !== 'string' || typeof session['expires_in'] !== 'number') {
+    return value;
+  }
+  return JSON.stringify({ ...session, expires_at: Math.floor(nowMs / 1000) + session['expires_in'] });
+}
+
 export function authStorageFor(platform: AppPlatform): AuthStorage {
-  return platform === 'mobile' ? new SecureAuthStorage() : new SessionAuthStorage();
+  return new DeviceClockExpiry(platform === 'mobile' ? new SecureAuthStorage() : new SessionAuthStorage());
 }

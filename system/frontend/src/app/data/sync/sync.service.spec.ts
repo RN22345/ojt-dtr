@@ -86,6 +86,36 @@ describe('sync triggers and retry (offline sync design, section 6)', () => {
     expect(callTimes(start)).toEqual([0, 5_000, 20_000, 25_000, 30_000]);
   });
 
+  it('TC-U-SYNC-03: a repeated online event with no change does not start a sync or reset the delay (DEF-011)', async () => {
+    const service = TestBed.inject(SyncService);
+    const start = Date.now();
+    await service.start('u1');
+    await vi.advanceTimersByTimeAsync(25_000); // syncs at 0, 5 s, 20 s. The next retry waits 60 s.
+    // The Android plugin sends "connected" again every few seconds with no change.
+    for (let i = 0; i < 10; i++) {
+      networkListener(true);
+      await vi.advanceTimersByTimeAsync(3_000);
+    }
+    await vi.advanceTimersByTimeAsync(25_000);
+    expect(callTimes(start)).toEqual([0, 5_000, 20_000, 80_000]);
+    expect(service.connection()).toBe('unreachable');
+  });
+
+  it('TC-ST-OJT-01 (unit part): a sync that fails after the network went away keeps "No network" (DEF-015)', async () => {
+    const service = TestBed.inject(SyncService);
+    let release: () => void = () => undefined;
+    runner.requestSync = function () {
+      this.calls.push(Date.now());
+      (this as { lastOutcome: SyncOutcome | null }).lastOutcome = FAIL;
+      return new Promise<void>((r) => (release = r));
+    };
+    await service.start('u1');
+    networkListener(false);
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(service.connection()).toBe('offline');
+  });
+
   it('TC-U-SYNC-03: no sync while offline, and the 5-minute timer and the app resume start a sync', async () => {
     runner.outcome = OK;
     const service = TestBed.inject(SyncService);

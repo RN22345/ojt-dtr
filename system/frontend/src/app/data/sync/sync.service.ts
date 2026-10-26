@@ -50,6 +50,8 @@ export class SyncService {
   private userId: string | null = null;
   private engine: SyncRunner | null = null;
   private failures = 0;
+  /** The last network state from the plugin. */
+  private networkOnline = true;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private intervalTimer: ReturnType<typeof setInterval> | null = null;
   private stops: (() => void)[] = [];
@@ -65,7 +67,8 @@ export class SyncService {
       files: this.files,
       userId: () => this.userId,
     });
-    this.connection.set((await this.network.isOnline()) ? 'online' : 'offline');
+    this.networkOnline = await this.network.isOnline();
+    this.connection.set(this.networkOnline ? 'online' : 'offline');
     this.stops.push(await this.network.onChange((online) => this.onNetworkChange(online)));
     this.stops.push(await this.lifecycle.onResume(() => void this.trigger()));
     this.intervalTimer = setInterval(() => void this.trigger(), SYNC_INTERVAL_MS);
@@ -127,14 +130,22 @@ export class SyncService {
     }
     // Section 13: no answer, a timeout, or a 5xx error. Keep the session and retry later (QR-RE-08).
     this.failures++;
-    if (outcome.error === 'unreachable') {
+    // A sync that fails because the network went away during it does not hide "No network".
+    if (outcome.error === 'unreachable' && this.connection() !== 'offline') {
       this.connection.set('unreachable');
     }
     this.retryTimer = setTimeout(() => void this.trigger(), retryDelayMs(this.failures));
   }
 
-  /** Section 6: a network-online event resets the retry delay and starts a sync. */
+  /**
+   * Section 6: a network-online event resets the retry delay and starts a sync. Only a change counts: the Android
+   * plugin sends "connected" again every few seconds with no change (DEF-011).
+   */
   private onNetworkChange(online: boolean): void {
+    if (online === this.networkOnline) {
+      return;
+    }
+    this.networkOnline = online;
     this.clearRetry();
     this.failures = 0;
     this.connection.set(online ? 'online' : 'offline');

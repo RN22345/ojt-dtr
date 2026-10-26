@@ -21,6 +21,7 @@ export const STRINGS = {
     },
   },
   logout: 'Log out',
+  loggingOut: 'Logging out...',
   // FR-AUTH-05, QR-SF-01: the CAUTION before a logout with unsynced changes.
   logoutCaution: {
     header: 'CAUTION',

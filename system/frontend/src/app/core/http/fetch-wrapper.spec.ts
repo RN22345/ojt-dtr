@@ -25,6 +25,12 @@ describe('fetch wrapper', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('TC-ST-OJT-04 (unit part): with no network, a request fails at once, not after the time limit (DEF-014)', async () => {
+    const base = vi.fn<typeof fetch>();
+    await expect(withTimeout(base, 15_000, () => true)('https://example.test')).rejects.toBeInstanceOf(TypeError);
+    expect(base).not.toHaveBeenCalled();
+  });
+
   it("TC-SI-SYNC-06 (unit part): the caller's own abort still stops the request", async () => {
     const outer = new AbortController();
     const request = withTimeout(hangingFetch, 60_000)('https://example.test', { signal: outer.signal });

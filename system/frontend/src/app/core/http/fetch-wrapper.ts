@@ -8,9 +8,18 @@ export type FetchFn = typeof fetch;
 /** The time limit of one request. Login and sync requests are small. */
 export const REQUEST_TIMEOUT_MS = 15_000;
 
-/** Gives a fetch that stops each request after `timeoutMs`. The caller's own abort signal still works. */
-export function withTimeout(base: FetchFn, timeoutMs: number = REQUEST_TIMEOUT_MS): FetchFn {
+/** True when the WebView knows that the device has no network (for example, airplane mode). */
+const browserOffline = () => typeof navigator !== 'undefined' && navigator.onLine === false;
+
+/**
+ * Gives a fetch that stops each request after `timeoutMs`. The caller's own abort signal still works.
+ * With no network, a request fails at once. Else an offline logout waits for the full time limit (DEF-014).
+ */
+export function withTimeout(base: FetchFn, timeoutMs: number = REQUEST_TIMEOUT_MS, offline: () => boolean = browserOffline): FetchFn {
   return (input, init) => {
+    if (offline()) {
+      return Promise.reject(new TypeError('No network'));
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(new DOMException('Request timeout', 'TimeoutError')), timeoutMs);
     const outer = init?.signal;

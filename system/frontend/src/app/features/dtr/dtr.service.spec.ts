@@ -151,6 +151,18 @@ describe('DTR service (FR-DTR-01 to FR-DTR-04, FR-DTR-08, FR-DTR-09)', () => {
     role = 'facilitator';
     expect(await service().timeIn(at('2026-10-26T00:00:00Z'))).toEqual({ ok: false, reason: 'not-ojt' });
   });
+  it('TC-SI-SYNC-05 (unit part): punches made with a clock 2 hours ahead do not block the next time-out (D-51, DEF-013)', async () => {
+    // Real time 09:00 UTC. The device clock shows 11:00, then the user corrects it.
+    await service().timeIn(at('2026-10-26T11:00:00Z'));
+    await service().timeOut(at('2026-10-26T11:04:00Z'));
+    const now = at('2026-10-26T09:20:00Z');
+    expect(await service().currentOpenSession(OJT, now)).toBeNull();
+    expect((await service().timeIn(now)).ok).toBe(true);
+    expect(await service().currentOpenSession(OJT, at('2026-10-26T09:21:00Z'))).toMatchObject({ timeIn: { time: now.toISOString() } });
+    expect(await service().timeIn(at('2026-10-26T09:21:00Z'))).toEqual({ ok: false, reason: 'session-open' });
+    expect((await service().timeOut(at('2026-10-26T09:25:00Z'))).ok).toBe(true);
+  });
+
   describe('FR-DTR-05 selfie when the company requires a photo (TC-SI-FILE-01 unit part)', () => {
     async function company(photoRequired: boolean): Promise<void> {
       const local = await TestBed.inject(LocalDbService).db();

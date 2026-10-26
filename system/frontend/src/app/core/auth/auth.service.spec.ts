@@ -192,6 +192,20 @@ describe('AuthService session restore (frontend rule 12, QR-RE-08)', () => {
     expect(client.auth.signOut).toHaveBeenCalled();
   });
 
+  it('TC-SI-AUTH-02 (unit part): with a local profile, the start does not wait for the server (DEF-016)', async () => {
+    const { service, fetchById } = setup('mobile', profileOf('ojt'), fakeSupabase({ sessionUserId: 'u1' }), profileOf('ojt'));
+    fetchById.mockImplementation(() => new Promise(() => undefined)); // The server never answers.
+    await service.ready();
+    expect(service.role()).toBe('ojt');
+  });
+
+  it('TC-SI-AUTH-02 (unit part): the server check after the start still ends the session of an inactive account', async () => {
+    const { service, client } = setup('mobile', profileOf('ojt', 'inactive'), fakeSupabase({ sessionUserId: 'u1' }), profileOf('ojt'));
+    await service.ready();
+    await vi.waitFor(() => expect(client.auth.signOut).toHaveBeenCalled());
+    expect(service.role()).toBeNull();
+  });
+
   it('does nothing when no session is stored', async () => {
     const { service, fetchById } = setup('mobile', profileOf('ojt'));
     await service.ready();

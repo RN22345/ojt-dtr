@@ -125,6 +125,19 @@ export class AuthService {
     if (!userId) {
       return;
     }
+    // FR-AUTH-04 (DEF-016): open from the local profile at once. The server check runs after it. Else an
+    // offline start waits for the retries of the profile request (about 7 s).
+    const local = await this.profiles.getLocal(userId).catch(() => null);
+    if (local && local.status === 'active' && roleAllowedOn(local.role, this.platform)) {
+      this.profileState.set(local);
+      void this.checkServerProfile(userId);
+      return;
+    }
+    await this.checkServerProfile(userId);
+  }
+
+  /** The server copy of the profile wins. An inactive account or a wrong platform ends the session. */
+  private async checkServerProfile(userId: string): Promise<void> {
     try {
       const profile = await this.profiles.fetchById(userId);
       if (profile && profile.status === 'active' && roleAllowedOn(profile.role, this.platform)) {

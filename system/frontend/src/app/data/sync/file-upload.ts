@@ -4,7 +4,7 @@ import { InjectionToken, inject } from '@angular/core';
 import { SUPABASE } from '../../core/supabase.client';
 import { FILES } from '../../plugins/files.plugin';
 import { base64ToBytes } from '../../shared/utils/jpeg-compress';
-import { TransportError, errorKindOf } from './sync-transport';
+import { TransportError, errorKindOf, refreshSession } from './sync-transport';
 
 export const ATTACHMENT_BUCKET = 'attachments';
 
@@ -23,6 +23,11 @@ interface StorageErrorShape {
   code?: string;
 }
 
+/** Storage gives an expired token as 401, or as 400 with the message "jwt expired". */
+function tokenExpired(error: StorageErrorShape): boolean {
+  return error.status === 401 || error.statusCode === '401' || /jwt.*expired/i.test(error.message ?? '');
+}
+
 function alreadyExists(error: StorageErrorShape): boolean {
   return error.statusCode === '409' || error.code === 'Duplicate' || error.code === 'ResourceAlreadyExists';
 }
@@ -38,15 +43,22 @@ export const FILE_UPLOADER = new InjectionToken<FileUploader>('FILE_UPLOADER', {
         if (base64 === null) {
           throw new TransportError('refused', `Local file ${localPath} not found`);
         }
-        let result;
-        try {
-          result = await supabase.storage
-            .from(ATTACHMENT_BUCKET)
-            .upload(storageKey, base64ToBytes(base64), { contentType: 'image/jpeg', upsert: false });
-        } catch (error) {
-          throw new TransportError('unreachable', String(error));
+        const bytes = base64ToBytes(base64);
+        const once = async () => {
+          try {
+            const result = await supabase.storage
+              .from(ATTACHMENT_BUCKET)
+              .upload(storageKey, bytes, { contentType: 'image/jpeg', upsert: false });
+            return result.error as StorageErrorShape | null;
+          } catch (error) {
+            throw new TransportError('unreachable', String(error));
+          }
+        };
+        let error = await once();
+        if (error && tokenExpired(error)) {
+          await refreshSession(supabase);
+          error = await once();
         }
-        const error = result.error as StorageErrorShape | null;
         if (error && !alreadyExists(error)) {
           // A network failure has no status. Then the kind is `unreachable`.
           throw new TransportError(errorKindOf(error.status ?? 0), error.message ?? 'Upload failed');

@@ -10,6 +10,7 @@ import {
   IonHeader,
   IonTitle,
   IonToolbar,
+  LoadingController,
 } from '@ionic/angular';
 import { LogoutService } from '../../core/auth/logout.service';
 import { SyncStatusBarComponent } from '../sync-status/sync-status-bar.component';
@@ -45,6 +46,7 @@ export class PageHeaderComponent {
   protected readonly busy = signal(false);
   private readonly logouts = inject(LogoutService);
   private readonly alerts = inject(AlertController);
+  private readonly loadings = inject(LoadingController);
   private readonly router = inject(Router);
 
   async logout(): Promise<void> {
@@ -54,8 +56,15 @@ export class PageHeaderComponent {
       if (unsynced > 0 && !(await this.confirmLoss(unsynced))) {
         return;
       }
-      if (await this.logouts.logout(unsynced > 0)) {
-        await this.router.navigateByUrl('/login', { replaceUrl: true });
+      // The page must not take taps while the local data is removed (DEF-014).
+      const blocker = await this.loadings.create({ message: this.strings.loggingOut });
+      await blocker.present();
+      try {
+        if (await this.logouts.logout(unsynced > 0)) {
+          await this.router.navigateByUrl('/login', { replaceUrl: true });
+        }
+      } finally {
+        await blocker.dismiss();
       }
     } finally {
       this.busy.set(false);

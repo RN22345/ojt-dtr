@@ -70,8 +70,18 @@ export class DtrService {
     return summarize(await this.punches.listByOjt(ojtId), now, DTR_SETTINGS.missingTimeOutHours);
   }
 
+  /**
+   * D-51 (DEF-013): the session is open if the punch that was recorded last is a time-in without the
+   * "Missing time-out" mark. The device time does not decide, so a punch made with a wrong device clock
+   * cannot block the next time-out.
+   */
   private async openSessionOf(ojtId: string, now: Date): Promise<WorkSession | null> {
-    return openSession(await this.sessions(ojtId, now), now, DTR_SETTINGS.missingTimeOutHours);
+    const last = await this.punches.lastRecorded(ojtId);
+    if (!last || last.type !== 'in') {
+      return null;
+    }
+    const sessions = buildSessions([{ id: last.id, type: 'in', time: last.deviceTime, correctsPunchId: null }]);
+    return openSession(sessions, now, DTR_SETTINGS.missingTimeOutHours);
   }
 
   private async record(type: 'in' | 'out', now: Date): Promise<PunchResult> {
