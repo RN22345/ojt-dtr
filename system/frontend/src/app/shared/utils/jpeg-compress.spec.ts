@@ -3,7 +3,8 @@ import { JpegEncoder, PHOTO_LIMIT_BYTES, PhotoTooLargeError, base64ToBytes, blob
 
 /**
  * A fake encoder. The file size grows with the pixel count and the quality, like a real JPEG.
- * `bytesPerPixel` at quality 1 sets the size of the source photo.
+ * `bytesPerPixel` at quality 1 sets the size of the source photo. The result has only a size: a real Blob of
+ * that size can be near 1 GB, and CI stops the test (DEF-010). `compressJpeg` reads only the size.
  */
 function fakeEncoder(width: number, height: number, bytesPerPixel: number) {
   const calls: { side: number; quality: number }[] = [];
@@ -13,7 +14,7 @@ function fakeEncoder(width: number, height: number, bytesPerPixel: number) {
       calls.push({ side, quality });
       const scale = Math.min(1, side / Math.max(width, height));
       const size = Math.round(width * scale * height * scale * bytesPerPixel * quality);
-      return new Blob([new Uint8Array(size)], { type: 'image/jpeg' });
+      return { size, type: 'image/jpeg' } as Blob;
     },
   };
   return { encoder, calls };
