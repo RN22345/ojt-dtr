@@ -13,7 +13,7 @@ This file is the agent memory for all folders in `docs/`. The subfolders do not 
 | `04-uiux/` | Not created. Another team makes the UI/UX design. | S0 |
 | `deliverables/` | Final DOCX, PDF, PPTX outputs and build sources (moved here by D-28). The files were lost in the move and restored from `OJT-Appdev-Project.zip` on 2026-10-25. `source/tc.json` is a generated file and git ignores it. | All |
 | `05-testing/` | `test-plan.md`, `test-cases.md`, `defect-log.md`, `reports/` (stage test reports: `stage-test-report-template.md`, `S0-test-report.md`, `S1-test-report.md` (draft), `S2-test-report.md` (gate not passed yet)) | All |
-| `06-user-docs/` | Not created. User manuals, install guide, developer setup, API reference. | S5 |
+| `06-user-docs/` | `how-to-run-guide.md`: how to install and use the test version, for non-technical users (first version, S2). Later: user manuals, install guide, developer setup, API reference. | S5 |
 | `07-operations/` | `free-tier-operations-runbook.md`: keep-alive, backups, resume, rebuild | S1, then all stages |
 
 Create a folder only when its first file is ready.
