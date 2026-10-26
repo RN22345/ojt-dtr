@@ -137,6 +137,14 @@ describe('TC-CI-ACL-01 OJT data scope (Storage part)', () => {
     expect(data?.size).toBe(20_000);
   });
 
+  it('TC-CI-ACL-01: only the owner and its facilitator read the attachment record', async () => {
+    for (const [client, rows] of [[ojt4, 1], [fac1, 1], [ojt6, 0], [fac2, 0]] as const) {
+      const { data, error } = await client.from('attachments').select('id').eq('id', photoId);
+      expect(error).toBeNull();
+      expect(data).toHaveLength(rows);
+    }
+  });
+
   it('TC-CI-ACL-01: a facilitator cannot upload a photo', async () => {
     const { error } = await upload(fac1, keyOf(SEED.fac1.id, randomUUID()), 1_000);
     expect(error).not.toBeNull();

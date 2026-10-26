@@ -110,6 +110,8 @@ These conditions apply to all measures in this document, unless a requirement gi
 | QR-MA-04 | Modifiability | The code must be clean and typed. | Zero lint errors. TypeScript strict mode on. Cyclomatic complexity 10 or less for each function. | Must |
 | QR-MA-05 | Testability | The code must have automated tests. | Line coverage: 80% or more for `data/sync`, DTR calculation, and auth guards. 70% or more for the backend. 60% or more for the frontend. | Must |
 
+NOTE: For the backend, QR-MA-05 uses rule-item coverage, not line coverage (D-52). The items are the functions, the RLS and Storage policies, and the `sync_push` cause codes in the migrations. The list is `system/backend/tests/coverage-map.json`.
+
 ## 10. Flexibility (FL)
 
 | ID | Sub-characteristic | Requirement | Measure and target | Priority |

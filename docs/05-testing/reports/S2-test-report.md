@@ -9,7 +9,7 @@ This report gives the results of the S2 tests and the status of the S2 gate. The
 | Stage | S2 |
 | Dates | 2026-11-04 to 2026-11-10 (work started 2026-10-26, D-46) |
 | Build or commit | `3bbe97a` and later on `main` |
-| Gate result | Fail for now (not passed yet). All 31 S2 test cases pass or part pass. The open items are the S1 gate and the backend coverage (section 8). |
+| Gate result | Fail for now (not passed yet). All 31 S2 test cases pass or part pass. The open item is the S1 gate (section 8). |
 | Prepared by | Claude Code (desktop), for the developer |
 
 Test devices: Android 15 emulator (AVD `ojt_dtr_api35`, 1080 x 2400), development build. PC with Node.js for the L2 tests. Supabase project `dev`.
@@ -26,7 +26,7 @@ Test devices: Android 15 emulator (AVD `ojt_dtr_api35`, 1080 x 2400), developmen
 
 The two part passes are TC-CI-FILE-01 and TC-SI-FILE-01. Their DTR photo part passes. Their weekly report photo part (FR-RPT-03, "Should") is S3 work.
 
-Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 75 pass. CI passes on `3bbe97a`.
+Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 75 pass. CI passes on `3bbe97a`. After the coverage tests (D-52): backend L2 92 of 92 pass.
 
 ### 2.1 Level 1: unit tests
 
@@ -40,10 +40,12 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 
 | Test case | Title | Result |
 |---|---|---|
-| TC-CI-ACL-01 | OJT data scope | Pass: sync, Data API, and Storage parts |
+| TC-CI-ACL-01 | OJT data scope | Pass: sync, Data API, and Storage parts. Assignments, device records, and attachment records added for the backend coverage (D-52). |
 | TC-CI-SYNC-01 to TC-CI-SYNC-03 | Idempotent push, version conflict, pull scope and pages | Pass |
 | TC-CI-SYNC-04 | Invalid payload | Pass, after DEF-008 |
 | TC-CI-FILE-01 | Photo upload | Part pass. A photo of 500 KB or less is accepted; a larger file and a file that is not JPEG are rejected; a file cannot be replaced or deleted; the client compression makes a large photo 500 KB or less. The report photo part comes in S3. |
+
+NOTE: For the backend coverage (D-52), the database parts of three S3 test cases ran early: TC-CI-ACL-02 (a facilitator reads only its assignments), TC-CI-ADM-01 (an assignment must link an OJT account to a facilitator account), and TC-CI-AUD-01 (a company change makes an audit entry). All pass. These test cases are run in full in S3. `keepalive.test.ts` examines the heartbeat functions that TC-ST-Q-RE-05 uses.
 
 ### 2.3 Level 3: subsystem integration tests (emulator)
 
@@ -76,8 +78,8 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | G2 "Must" test cases pass | Yes | The two part passes are for FR-RPT-03 ("Should", S3). |
 | G3 Zero open S1 and S2 defects | Yes | Section 6, `defect-log.md` |
 | G4 Lint, type check, and builds pass | Yes | Lint 0 errors. Web build and Android debug build pass. |
-| G5 Regression suites pass | Yes | CI on each push (lint, L1, L2). Frontend 184 of 184, backend 75 of 75. |
-| G6 Coverage meets QR-MA-05 | No | Frontend yes (section 5). Backend 66.2% of the rule items (D-52, proposed), target 70%. |
+| G5 Regression suites pass | Yes | CI on each push (lint, L1, L2). Frontend 184 of 184, backend 92 of 92. |
+| G6 Coverage meets QR-MA-05 | Yes | Frontend yes (section 5). Backend 88.2% of the rule items (D-52, accepted), target 70%. |
 | G7 This report exists | Yes | This file |
 | G8 `PROGRESS.md` updated | Yes | Test results recorded. The gate result is recorded at the gate check. |
 | G9 Keep-alive check passes | No | Same open S1 items: keep-alive sources B and C, a scheduled run of source A. |
@@ -87,7 +89,7 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | Criterion | Result | Evidence |
 |---|---|---|
 | S1 gate passed (entry criterion) | No | S2 work started early (D-46). |
-| Common gate rules | No | G6 (backend coverage) and G9 (section 3) |
+| Common gate rules | No | G9 (section 3) |
 | TC-SI-SYNC-02 passes (zero data loss) | Yes | Section 2.3 |
 | TC-SI-SYNC-03 passes (app stop) | Yes | Section 2.3 |
 | TC-SI-SYNC-06 passes (backend not reachable) | Yes | Section 2.3 |
@@ -107,7 +109,7 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | QR-SE-01 | Each user reads and sends only own scope | TC-CI-ACL-01, TC-SI-SYNC-04 | Pass |
 | QR-SF-01, QR-SF-03 | CAUTION before unsynced data is lost; no silent delete | TC-ST-OJT-04, TC-U-SYNC-06 | Pass |
 | QR-SF-02 | Doubtful time is flagged for the facilitator | TC-SI-SYNC-05 | Pass |
-| QR-MA-05 | Coverage: auth 80%, sync 80%, DTR 80%, frontend 60%, backend 70% | `core/auth` 94.5%, `data/sync` 91.8%, `features/dtr` 97.3%, frontend 84.0% lines. Backend 66.2% of the rule items (45 of 68, D-52). | Fail for the backend |
+| QR-MA-05 | Coverage: auth 80%, sync 80%, DTR 80%, frontend 60%, backend 70% | `core/auth` 94.5%, `data/sync` 91.8%, `features/dtr` 97.3%, frontend 84.0% lines. Backend 88.2% of the rule items (60 of 68, D-52). | Pass |
 
 NOTE: Some files run only on a device: `plugins/` (17% lines), `data/sync/file-upload.ts` (23%), and the canvas part of `shared/utils/jpeg-compress.ts`. TC-SI-PLUG-01, TC-SI-FILE-01, and the compression check on the emulator examined them.
 
@@ -157,7 +159,7 @@ Observations (OBS-S2-01 in `PROGRESS.md`; not defects now):
 The S2 gate does not pass yet. The S2 test results meet the S2 exit criteria. The gate waits for these actions:
 
 1. The S1 gate passes (S1 report, section 5): keep-alive sources B and C, a scheduled run of source A, TC-ST-Q-RE-05.
-2. Backend coverage (QR-MA-05): the user accepts D-52, and L2 tests are added for the open items in `system/backend/tests/coverage-map.json` until 70% or more are covered (now 66.2%).
+2. Done 2026-10-26: backend coverage (QR-MA-05). The user accepted D-52. 13 L2 tests were added; 88.2% of the items are covered (60 of 68).
 3. At the gate check, run the regression suites again.
 
-New gate date: the S2 end date, 2026-11-10, or earlier when items 1 to 3 are done.
+New gate date: the S2 end date, 2026-11-10, or earlier when items 1 and 3 are done.

@@ -50,7 +50,7 @@ Automated test totals on 2026-10-26: frontend 90 of 90 pass, backend L2 24 of 24
 | Coverage, `data/sync` | 80% | 100% lines |
 | Coverage, DTR calculation | 80% | 100% lines (`hours.ts`) |
 | Coverage, frontend | 60% | 83.3% lines |
-| Coverage, backend | 70% | 66.2% of the rule items (45 of 68), with the proposed measure D-52. Below the target. |
+| Coverage, backend | 70% | 88.2% of the rule items (60 of 68), with the measure D-52 (accepted 2026-10-26). First value 66.2%; 13 L2 tests were added. |
 | Android debug build | Builds | Builds. 19.5 MB (QR-PE-06 release target: 25 MB). |
 | Web build | Builds | Builds in CI |
 
@@ -73,7 +73,7 @@ No open S1 or S2 defects.
 | G3: zero open S1 and S2 defects | Yes |
 | G4: lint, type check, builds | Yes |
 | G5: regression suites | Yes (CI) |
-| G6: coverage | No. Backend 66.2% (D-52, proposed), target 70%. |
+| G6: coverage | Yes. Backend 88.2% of the rule items (D-52), target 70%. |
 | G7: this report | Draft |
 | G8: `PROGRESS.md` shows the result | At the gate check |
 | G9: keep-alive check | No |
@@ -87,5 +87,5 @@ Open items before the gate:
 1. Done 2026-10-26: source A had a scheduled run (06:10 UTC, about 5 hours after the cron time).
 2. Source B: set up (runbook, section 3.4).
 3. Source C: calendar reminders on Monday and Thursday.
-4. The backend coverage: the user accepts D-52, and the L2 tests reach 70% of the items (now 66.2%).
+4. Done 2026-10-26: the backend coverage. The user accepted D-52. The L2 tests cover 88.2% of the items (60 of 68).
 5. Run TC-ST-Q-RE-05 again.

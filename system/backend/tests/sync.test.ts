@@ -201,6 +201,7 @@ describe('TC-CI-SYNC-04 invalid payload', () => {
     ['client correction punch', () => createOp('punches', punchPayload(SEED.ojt4.id, { corrects_punch_id: randomUUID() })), 'forbidden'],
     ['punch update', () => createOp('punches', punchPayload(SEED.ojt4.id), { op_type: 'update' }), 'append_only'],
     ['unknown entity', () => createOp('devices', { id: randomUUID() }), 'unsupported'],
+    ['update of a report that does not exist', () => createOp('weekly_reports', { tasks_done: 'x' }, { entity_id: randomUUID(), op_type: 'update', base_version: 1 }), 'not_found'],
     ['missing op_id', () => createOp('punches', punchPayload(SEED.ojt4.id), { op_id: null }), 'invalid_data'],
   ];
 

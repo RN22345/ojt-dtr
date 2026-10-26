@@ -45,7 +45,9 @@ NOTE: The seed needs the session setting `app.seed_password`. See the header of 
 | `supabase/migrations/20261026080316_attachments_storage.sql` | Storage bucket `attachments` and its policies, photo records in `sync_push` (D-49) |
 | `tests/sync.test.ts` | L2 tests: TC-CI-SYNC-01 to TC-CI-SYNC-04, TC-U-SRV-01, TC-CI-ACL-01 (sync and Data API part) |
 | `tests/coverage-map.json`, `tests/coverage-map.test.ts` | Backend coverage (QR-MA-05, D-52): each function, policy, and `sync_push` cause code with the L2 tests that cover it. The test fails if the map misses an item of the migrations. When you add an item or a test, update the map. |
-| `tests/files.test.ts` | L2 tests: TC-CI-FILE-01, TC-CI-ACL-01 (Storage part). Files cannot be deleted, so each run leaves about 540 KB in the bucket. |
+| `tests/files.test.ts` | L2 tests: TC-CI-FILE-01, TC-CI-ACL-01 (Storage part and attachment records). Files cannot be deleted, so each run leaves about 540 KB in the bucket. |
+| `tests/acl-scope.test.ts` | L2 tests: TC-CI-ACL-01 (assignments and device records), TC-CI-ACL-02 (assignments part). Each run leaves one `devices` row of `ojt1`. |
+| `tests/keepalive.test.ts` | L2 tests of `heartbeat` and `heartbeat_status` (keep-alive, TC-ST-Q-RE-05). Each run adds one heartbeat with the source `l2-test`. |
 | `supabase/seed.sql` | Seed accounts, companies, batch, assignments (dev and local only) |
 | `supabase/api-contract.md` | The API contract (D-23) |
 | `supabase/auth-settings.md` | Auth settings for each project |
