@@ -47,6 +47,7 @@ NOTE: The seed needs the session setting `app.seed_password`. See the header of 
 | `ops/smoke-test.mjs` | Smoke test: heartbeat, test login, server epoch |
 | `vitest.config.ts`, `package.json`, `.env.example` | Test setup |
 | `../../.github/workflows/ci.yml`, `keepalive.yml` | CI and keep-alive source A |
+| `../../.github/workflows/backup.yml` | Encrypted own backup each Sunday, kept as private releases (runbook, section 6) |
 
 ## Stack
 

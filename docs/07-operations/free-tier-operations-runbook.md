@@ -167,9 +167,13 @@ CAUTION: The backup contains personal data and password hashes. Encrypt the arch
 2. Put the archive in a private location: a private repository release, or the private Google Drive of the developer.
 3. Keep the newest 8 backups. Delete older backups.
 
+The workflow `backup.yml` does steps 1 to 3. It puts each archive in a pre-release with the tag `backup-ojt-dtr-<project>-<UTC date and time>` in the private repository `RN22345/ojt-dtr`. It needs the GitHub secrets `DB_URL_<PROJECT>` (session pooler connection string) and `BACKUP_PASSPHRASE`. Storage files are not in the archive until the first bucket exists (S2).
+
+CAUTION: Keep `BACKUP_PASSPHRASE` in a password manager also. GitHub does not show a secret again. Without the passphrase, no backup can be restored.
+
 ### 6.3 Restore
 
-1. Decrypt the archive.
+1. Decrypt the archive: `gpg -d -o backup.tar.gz <name>.tar.gz.gpg`, then `tar -xzf backup.tar.gz`. The archive has `roles.sql`, `schema.sql`, `data.sql`, and `meta.txt`.
 2. Restore the data with `psql` and the session pooler connection string of the target project.
 3. Upload the storage files with the `system/backend/ops/restore-storage` script.
 4. Run the smoke test.
