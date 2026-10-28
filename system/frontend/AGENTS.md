@@ -47,6 +47,7 @@ Run these commands in `system/frontend/`.
 
 | Path | Contents |
 |---|---|
+| `UI-GUIDE.md` | Guide for the UI/UX team: dev server, which file changes colors, text, font, and logo |
 | `src/app/shared/utils/hours.ts` | Layer 0: work sessions and hours from punches, Asia/Manila dates and weeks |
 | `src/app/shared/utils/hours.spec.ts` | TC-U-UTIL-01 to TC-U-UTIL-05 |
 | `src/app/core/platform.service.ts` | Mobile or web platform (one place) |

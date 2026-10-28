@@ -31,3 +31,8 @@ docs/deliverables/source/tc.json
 *.log
 Thumbs.db
 .DS_Store
+
+# Agent memory files (local only)
+CLAUDE.md
+GEMINI.md
+AGENTS.md
