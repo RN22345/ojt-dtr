@@ -42,6 +42,11 @@ Open S1 items:
 3. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
 4. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
 
+IT-EL-5 track (accepted, `docs/01-project/it-el-5-plan.md`, D-53 to D-62). ON HOLD: do not start until the user says so.
+
+1. Done 2026-10-26: the user accepted the plan and answered section 9. Priority: ETL and data analysis first; the full warehouse is a "nice to have" (D-62).
+2. Agent, when the user says to start: stage E0. Write FR-ETL, FR-DW, FR-ANA and the test cases, add the module codes (D-54) and the risks R-12 to R-16, update the documents of plan section 7.1, and give the E stages their dates in `timeline.md`.
+
 ## 4. Completed work
 
 | Date | Item |
@@ -101,6 +106,7 @@ Open S1 items:
 | KA-01 | QR-RE-06 (Must) needs two automatic keep-alive sources. Source A runs (first scheduled run 2026-10-26, 06:10 UTC). Source B is deferred (D-45). The S1 gate cannot pass without source B. | User and agent | Open |
 | BK-01 | The weekly backup (`backup.yml`) does not contain the Storage files (photos). After a rebuild, devices upload the photos of the last 30 days again (offline sync design, section 12). Older photos are lost. Decide before TC-ST-Q-RE-04: add a Storage copy to the backup, or accept the gap with a decision. | Agent | Open |
 | OBS-S2-01 | Observations from the S2 device tests, for the S2 report: (1) The offline time-in median is 940 ms with no GPS position: the 800 ms location wait (D-48) leaves only 60 ms of margin to QR-PE-01. Measure again on a real phone (S4). (2) The WebView `navigator.onLine` turns true some seconds after the network plugin event, so the first sync after the network returns can wait for the retries (about 30 s). (3) The punch message covers the "Log out" button for 2.5 s. (4) TC-SI-SYNC-06 ran 17 minutes, not a simulated 24 hours: the app has no test clock. (5) Punches with a wrong clock still pair by device time in the hours (D-51); the facilitator corrects them. | Agent | Open |
+| EL5-01 | IT-EL-5 (second subject) adds an ETL, a data warehouse, and an analytics dashboard. The plan is `docs/01-project/it-el-5-plan.md`. The user accepted it on 2026-10-26 (D-53 to D-62). The work is on hold until the user says to start stage E0. No requirement or code changes before E0 (rule 11). | User | Watch |
 | ENV-03 | The `docs/deliverables/` files were lost in the D-28 move. They were restored from `OJT-Appdev-Project.zip`. The path in `extract_test_cases.py` was fixed again. The Google Doc tabs do not show the S0 review fixes yet. | Agent | Watch |
 
 ## 6. Session log
@@ -136,3 +142,7 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-26 | Claude Code (desktop) | The user accepted D-52. Added 13 backend L2 tests for the open coverage items; backend coverage now 88.2% (60 of 68). G6 passes for S1 and S2. | `system/backend/tests/*`, decision log (D-52), QR-MA-05 NOTE, S1 and S2 reports, `system/backend/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Wrote the first how-to-run guide for non-technical users (Android app install and use, web app on the developer PC, what is not available yet). | `docs/06-user-docs/how-to-run-guide.md`, `docs/AGENTS.md`, `PROGRESS.md` |
 | 2026-10-26 | Claude Code (desktop) | Made a Figma starter file of the app UI for the UI/UX team (D-26): [OJT-DTR App - UI Starter (from code)](https://www.figma.com/design/0STcZXRJO5eLpSn2d9ff2p). Built screens are copied from the code (Ionic default theme). Screens not built yet are mockups. 104 prototype links, local components, and color variables. No repository file changed except this row. | Figma file `0STcZXRJO5eLpSn2d9ff2p` (team "W's team"), `PROGRESS.md` |
+| 2026-10-26 | Claude Haiku 5.5 (desktop) | Wrote a preliminary draft of the IT-EL-5 scope (ETL, data warehouse, analytics added by another subject). Lists the facts, the project rules that apply, the constraints, five options, and questions for the user. No decision recorded; a planning agent must review it. | `docs/01-project/it-el-5-scope-draft.md`, `docs/AGENTS.md`, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | Reviewed the IT-EL-5 draft and wrote the proposed IT-EL-5 plan: `dw` star schema in the same database, SQL ETL with `pg_cron`, dashboard in the admin web app, demo data, draft FR-ETL, FR-DW, FR-ANA and test cases, track stages E0 to E3, proposed D-53 to D-61 and R-12 to R-16. Added open issue EL5-01. No decision recorded yet. | `docs/01-project/it-el-5-plan.md`, `docs/AGENTS.md`, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | The user accepted the IT-EL-5 plan and answered the questions: same database, no fixed chart list, no fixed ETL tool, demo data accepted, warehouse not required. Recorded D-53 to D-62 (D-62: ETL and analysis first, dimension tables Should). Updated the plan: analysis requirements FR-ANA-10 to FR-ANA-14, TC-CI-ANA-01, stage E2b, E stages on hold. | `docs/01-project/decision-log.md`, `docs/01-project/it-el-5-plan.md`, `docs/AGENTS.md`, `PROGRESS.md` |
+| 2026-10-26 | Claude Code (desktop) | The user answered plan question 5: IT-EL-5 has its own document (`docs/08-analysis/it-el-5-report.md`, deliverable `OJT-DTR - IT-EL-5 ETL and Data Analysis - Rev <n>`). Confirmed that S3 does not wait for or change because of the IT-EL-5 track (D-53). | `docs/01-project/it-el-5-plan.md`, `PROGRESS.md` |

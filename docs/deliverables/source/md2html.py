@@ -10,7 +10,7 @@ def mermaid_img(src):
     tmp = tempfile.mkdtemp()
     mmd, png = os.path.join(tmp, 'd.mmd'), os.path.join(tmp, 'd.png')
     open(mmd, 'w', encoding='utf-8').write(src)
-    cmd = [MMDC, '-i', mmd, '-o', png, '-b', 'white', '-w', '1400', '-s', '2']
+    cmd = [MMDC, '-i', mmd, '-o', png, '-b', 'white', '-s', '2']
     if MMDC_PUPPETEER:
         cmd += ['-p', MMDC_PUPPETEER]
     subprocess.run(cmd, check=True, shell=True, capture_output=True)

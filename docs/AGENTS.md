@@ -7,7 +7,7 @@ This file is the agent memory for all folders in `docs/`. The subfolders do not 
 | Folder | Files | Stage |
 |---|---|---|
 | `00-standards/` | `ste100-writing-rules.md`: rules for all text, project technical names | All |
-| `01-project/` | `project-charter.md`, `timeline.md`, `decision-log.md`, `tldr-summary.md` (plain summary), `uiux-moodboard-summary.md` (summary of the UI/UX team design), `presentation-plan.md` (5-minute S0 presentation, not in the Google Doc), `readiness-and-stage-plan.md` (prerequisites and stage plan) | S0, updated in all stages |
+| `01-project/` | `project-charter.md`, `timeline.md`, `decision-log.md`, `tldr-summary.md` (plain summary), `uiux-moodboard-summary.md` (summary of the UI/UX team design), `presentation-plan.md` (5-minute S0 presentation, not in the Google Doc), `readiness-and-stage-plan.md` (prerequisites and stage plan), `it-el-5-scope-draft.md` (draft analysis of the IT-EL-5 scope; not a decision), `it-el-5-plan.md` (accepted IT-EL-5 plan: ETL, data analysis, dashboard, optional warehouse; D-53 to D-62; on hold) | S0, updated in all stages |
 | `02-requirements/` | `functional-requirements.md` (FR), `quality-requirements-iso25010.md` (QR) | S0 |
 | `03-architecture/` | `system-modules.md`, `offline-sync-design.md`, `network-infrastructure.md`, `data-model.md` | S0 |
 | `04-uiux/` | Not created. Another team makes the UI/UX design. | S0 |
