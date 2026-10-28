@@ -2,8 +2,6 @@
 import { Routes } from '@angular/router';
 import { groupGuard, loginGuard, startGuard } from './core/auth/auth.guards';
 
-const placeholder = () => import('./shared/placeholder/placeholder.page').then((m) => m.PlaceholderPage);
-
 export const routes: Routes = [
   { path: '', pathMatch: 'full', canActivate: [startGuard], children: [] },
   {
@@ -26,12 +24,15 @@ export const routes: Routes = [
     canMatch: [groupGuard('admin')],
     loadChildren: () => import('./shells/admin.routes').then((m) => m.routes),
   },
-  { path: 'profile', canMatch: [groupGuard('shared')], loadComponent: placeholder, data: { pageKey: 'profile' } },
+  {
+    path: 'profile',
+    canMatch: [groupGuard('shared')],
+    loadComponent: () => import('./features/profile/profile.page').then((m) => m.ProfilePage),
+  },
   {
     path: 'notifications',
     canMatch: [groupGuard('shared')],
-    loadComponent: placeholder,
-    data: { pageKey: 'notifications' },
+    loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
   },
   {
     path: 'sync-issues',

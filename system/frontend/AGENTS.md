@@ -6,6 +6,8 @@ This folder will contain the Ionic Angular app. One codebase makes three builds:
 
 Created on 2026-10-25 (S1). The app has the Android platform, the layer 0 hours utilities, login with the platform check (D-38), route guards, and wireframe role shells (D-31). The starter tab pages were removed. The local database (SQLite on mobile, sql.js in tests), the local migrations (version 2), the outbox, the repositories, the sync engine, and the DTR service exist (S2). The OJT DTR page, the sync status bar, the "Sync issues" screen, and the logout CAUTION exist. `SyncSessionService` starts the sync after login. The facilitator "My OJTs" list and OJT DTR view exist. Photos exist: a selfie for each punch when the company requires it (FR-DTR-05, D-50), uploaded before the push (D-49).
 
+NOTE: UI prototype (D-63). The OJT home, progress, reports, corrections, export, the facilitator overview and reviews, the profile, and the notifications use fake data from `data/mock/` (`MockStore`). The data stays in `localStorage` on the device and does not sync. The profile page has "Reset sample data". The facilitator now opens on the "Overview" tab.
+
 NOTE: `environment.ts` has `faultInjection: true`. A dev build gives `window.ojtFaults.set({ drop, serverError })` for the device fault tests. `environment.prod.ts` has it false. `ng build` uses the production settings, so build with `--configuration development` for the fault tests. All Capacitor plugins of the functional requirements, section 13, are installed (TC-SI-PLUG-01 passes).
 
 NOTE: Local reminders must use `isExactNotification: false` (D-44). Else `LocalNotifications.schedule` opens the Android "Alarms & reminders" screen and waits.
@@ -95,6 +97,15 @@ Run these commands in `system/frontend/`.
 | `src/app/shared/strings.ts` | All UI text (D-31) |
 | `src/app/shared/placeholder/` | Placeholder box and wireframe page (D-31) |
 | `src/app/shared/shell/` | Tab shell and its route helper |
+| `src/app/data/mock/mock-data.ts`, `mock-store.service.ts`, `mock-store.service.spec.ts` | UI prototype (D-63): fake data and the store with the rules of the reports, corrections, monitoring, and notifications. Replace with the real repositories in S3. |
+| `src/app/shared/ui/` | Progress ring, bar chart, status badge, stat tile |
+| `src/app/shared/strings-ui.ts`, `strings-ojt.ts`, `strings-fac.ts` | UI text of the prototype screens (shared, OJT, facilitator and profile and notifications) |
+| `src/app/features/monitoring/` | OJT home and progress (FR-MON-01). Facilitator overview and OJT overview (FR-MON-02). |
+| `src/app/features/reports/` | OJT weekly report list and editor (FR-RPT-01 to 08, FR-EXP-02) |
+| `src/app/features/corrections/` | OJT correction request list and form (FR-COR-01, FR-COR-03) |
+| `src/app/features/export/` | OJT DTR export (FR-EXP-01, prototype: no PDF file yet) |
+| `src/app/features/reviews/` | Facilitator review list, report review, correction review (FR-RPT-05, FR-RPT-07, FR-COR-02) |
+| `src/app/features/profile/`, `notifications/` | Profile and password change (FR-PROF-01, 02, FR-AUTH-06). Notification list (FR-NOTI-05). The page header opens them. |
 | `src/environments/` | Supabase URL and publishable key. `environment.prod.ts` points to `dev` until `prod` exists (D-40). |
 | `android/` | Capacitor Android project (Gradle 8.14.3, Android Gradle plugin 8.13.0, minSdk 24, targetSdk 36) |
 
