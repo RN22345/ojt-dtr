@@ -5,8 +5,8 @@ import { Router } from '@angular/router';
 import { AlertController, IonButton, IonCard, IonCardContent, IonContent, IonIcon, IonItem, IonLabel, IonList, IonNote, IonTextarea, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { closeCircle, imageOutline } from 'ionicons/icons';
-import { ME, addDays } from '../../data/mock/mock-data';
-import { MAX_REPORT_PHOTOS, MockStore, ReportContent } from '../../data/mock/mock-store.service';
+import { MAX_REPORT_PHOTOS, ReportContent, addDays } from '../../data/store/store-models';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -22,6 +22,7 @@ const MAX_PHOTO_WIDTH = 800;
 const PHOTO_QUALITY = 0.7;
 
 type TextKey = 'tasksDone' | 'skillsLearned' | 'problems' | 'plansNextWeek';
+type ReportContentFields = Record<TextKey, string>;
 
 /** Reads an image file and gives a small JPEG data URL (maximum 800 px wide). */
 function toSmallDataUrl(file: File): Promise<string> {
@@ -99,8 +100,14 @@ function toSmallDataUrl(file: File): Promise<string> {
         }
 
         <h3>{{ text.photos }}</h3>
-        <p class="hours">{{ text.photoCount(form().photos.length, maxPhotos) }}</p>
-        <div class="photos">
+        <p class="hours">{{ text.photoCount(photoTotal(), maxPhotos) }}</p>
+        <div class="photos anim-stagger">
+          <!-- Saved photos cannot be removed: the server keeps each file (D-05). -->
+          @for (photo of savedPhotos(); track $index) {
+            <div class="photo">
+              <img [src]="photo" alt="" />
+            </div>
+          }
           @for (photo of form().photos; track $index) {
             <div class="photo">
               <img [src]="photo" alt="" />
@@ -114,11 +121,11 @@ function toSmallDataUrl(file: File): Promise<string> {
         </div>
         @if (editable()) {
           <input #file type="file" accept="image/*" hidden (change)="addPhotos($event)" />
-          <ion-button fill="outline" [disabled]="form().photos.length >= maxPhotos" (click)="file.click()">
+          <ion-button fill="outline" [disabled]="photoTotal() >= maxPhotos" (click)="file.click()">
             <ion-icon slot="start" name="image-outline" />
             {{ text.addPhoto }}
           </ion-button>
-          @if (form().photos.length >= maxPhotos) {
+          @if (photoTotal() >= maxPhotos) {
             <ion-note class="block">{{ text.photoMax }}</ion-note>
           }
         }
@@ -155,7 +162,6 @@ function toSmallDataUrl(file: File): Promise<string> {
           }
         </ion-list>
       }
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -236,23 +242,23 @@ export class ReportEditorPage {
     { key: 'plansNextWeek', label: this.text.plans, required: false },
   ];
 
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
   private readonly router = inject(Router);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
 
   protected readonly form = signal<ReportContent>({ tasksDone: '', skillsLearned: '', problems: '', plansNextWeek: '', photos: [] });
 
-  protected readonly valid = computed(() => this.store.weeksOf(ME).includes(this.week()));
-  protected readonly report = computed(() => this.store.reportOrDraft(ME, this.week()));
+  protected readonly valid = computed(() => this.store.weeksOf(this.store.meId()).includes(this.week()));
+  protected readonly report = computed(() => this.store.reportOrDraft(this.store.meId(), this.week()));
   protected readonly editable = computed(() => this.store.canEdit(this.report()));
-  protected readonly minutes = computed(() => this.store.weekMinutes(ME, this.week()));
+  protected readonly minutes = computed(() => this.store.weekMinutes(this.store.meId(), this.week()));
   protected readonly weekText = computed(() => dateLabel(this.week()));
   protected readonly rangeText = computed(() => `${dateLabel(this.week())} - ${dateLabel(addDays(this.week(), 6))}`);
   protected readonly statusText = computed(() => this.ui.status[this.report().status].toLowerCase());
 
   protected readonly bars = computed<BarItem[]>(() =>
-    this.store.weekDays(ME, this.week()).map((d, i) => ({
+    this.store.weekDays(this.store.meId(), this.week()).map((d, i) => ({
       label: UI_STRINGS.weekdayShort[i],
       value: d.minutes / 60,
       valueText: d.minutes ? String(Math.round(d.minutes / 6) / 10) : '',
@@ -268,15 +274,18 @@ export class ReportEditorPage {
     [...this.report().history].reverse().map((h) => ({ ...h, date: localDate(h.at), time: timeOfDay(h.at) })),
   );
 
+  /** FR-RPT-03: the saved photos of the report on this device. */
+  protected readonly savedPhotos = signal<string[]>([]);
+  protected readonly photoTotal = computed(() => Math.max(this.report().photoCount, this.savedPhotos().length) + this.form().photos.length);
+
   protected readonly dirty = computed(() => {
     const stored = this.report();
     const now = this.form();
-    return (
-      this.fields.some((f) => now[f.key] !== stored[f.key]) ||
-      now.photos.length !== stored.photos.length ||
-      now.photos.some((p, i) => p !== stored.photos[i])
-    );
+    return this.fields.some((f) => now[f.key] !== stored[f.key]) || now.photos.length > 0;
   });
+
+  /** The week and the stored version that the form shows. */
+  private shown = '';
 
   protected readonly canSubmit = computed(() => {
     const now = this.form();
@@ -284,19 +293,41 @@ export class ReportEditorPage {
   });
 
   constructor() {
-    // Fill the form when the week changes or the stored report changes.
+    // Fill the form when the week changes, or when the stored report changes and the form has no unsaved change.
+    // A sync can load the report again while the OJT types. Then the typed text stays.
     effect(() => {
       const stored = this.report();
-      untracked(() =>
+      const key = `${stored.weekStart}|${stored.id}|${stored.updatedAt}|${stored.status}`;
+      untracked(() => {
+        const weekChanged = !this.shown.startsWith(`${stored.weekStart}|`);
+        if (key === this.shown || (!weekChanged && this.dirtySinceShown())) {
+          return;
+        }
+        this.shown = key;
+        this.lastStored = stored;
         this.form.set({
           tasksDone: stored.tasksDone,
           skillsLearned: stored.skillsLearned,
           problems: stored.problems,
           plansNextWeek: stored.plansNextWeek,
-          photos: [...stored.photos],
-        }),
-      );
+          photos: [],
+        });
+        void this.loadPhotos(stored.id);
+      });
     });
+  }
+
+  private lastStored: ReportContentFields | null = null;
+
+  /** True if the form differs from the report that it showed last. */
+  private dirtySinceShown(): boolean {
+    const last = this.lastStored;
+    const now = this.form();
+    return !!last && (this.fields.some((f) => now[f.key] !== last[f.key]) || now.photos.length > 0);
+  }
+
+  private async loadPhotos(reportId: string): Promise<void> {
+    this.savedPhotos.set(reportId ? await this.store.photosOf(reportId) : []);
   }
 
   protected setText(key: TextKey, event: Event): void {
@@ -313,7 +344,7 @@ export class ReportEditorPage {
     const files = Array.from(input.files ?? []);
     input.value = '';
     for (const file of files) {
-      if (this.form().photos.length >= MAX_REPORT_PHOTOS) {
+      if (this.photoTotal() >= MAX_REPORT_PHOTOS) {
         await this.toast(this.text.photoMax, 'warning');
         return;
       }
@@ -327,7 +358,10 @@ export class ReportEditorPage {
   }
 
   protected async save(): Promise<void> {
-    const result = this.store.saveDraft(ME, this.week(), this.form());
+    const result = await this.store.saveDraft(this.store.meId(), this.week(), this.form());
+    if (result.ok) {
+      this.shown = '';
+    }
     await this.toast(result.ok ? this.text.saved : this.text.readOnly(this.statusText()), result.ok ? 'success' : 'danger');
   }
 
@@ -352,7 +386,7 @@ export class ReportEditorPage {
   }
 
   private async submit(): Promise<void> {
-    const result = this.store.submit(ME, this.week(), this.form());
+    const result = await this.store.submit(this.store.meId(), this.week(), this.form());
     if (!result.ok) {
       await this.toast(this.text.submitFailed, 'danger');
       return;

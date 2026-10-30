@@ -1,8 +1,8 @@
 // Facilitator: the list of weekly reports and correction requests to review (FR-RPT-05, FR-COR-02).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonContent, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton } from '@ionic/angular';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { IonContent, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton } from '@ionic/angular';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { FAC_STRINGS } from '../../shared/strings-fac';
@@ -16,7 +16,7 @@ type Filter = 'pending' | 'decided';
 @Component({
   selector: 'app-reviews-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonList, IonItem, IonLabel, IonNote, IonSegment, IonSegmentButton, RouterLink, StatusBadgeComponent],
+  imports: [PageHeaderComponent, IonContent, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, RouterLink, StatusBadgeComponent],
   template: `
     <app-page-header [title]="strings.pages.facReviews" />
     <ion-content>
@@ -73,7 +73,6 @@ type Filter = 'pending' | 'decided';
           }
         </ion-list>
       }
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -91,7 +90,7 @@ export class ReviewsPage {
   protected readonly text = FAC_STRINGS.reviews;
   protected readonly common = FAC_STRINGS.common;
   protected readonly ui = UI_STRINGS;
-  protected readonly store = inject(MockStore);
+  protected readonly store = inject(WorkStore);
   protected readonly kind = signal<Kind>('reports');
   protected readonly filter = signal<Filter>('pending');
 

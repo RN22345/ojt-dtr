@@ -3,7 +3,7 @@
 // so that unit tests can run it with sql.js and a fake server. `SyncService` gives the triggers and the retry.
 import { LocalDb, Row } from '../local-db/local-db';
 import { enqueue, hasOtherOps, markOpIssue, recoverSending, removeOp, requeue, takeQueued } from './outbox';
-import { markIssue, markSynced, mergePulled } from './local-merge';
+import { markIssue, markSynced, mergePage } from './local-merge';
 import { OWN_ENTITIES, createPayload } from './payloads';
 import { logSync } from './sync-log';
 import { getState, setClockOffsetS, setState, userKey } from './sync-state';
@@ -214,6 +214,8 @@ export class SyncEngine {
   private async pullAll(db: LocalDb, userId: string, counts: { pulled: number }): Promise<void> {
     let cursor = Number((await getState(db, userKey.cursor(userId))) ?? 0);
     let epoch = await getState(db, userKey.epoch(userId));
+    // A pull from cursor 0 gets all records in the scope. Then a new OJT in the scope needs no second pull.
+    let fullPull = cursor === 0;
 
     for (let page = 0; page < MAX_PULL_PAGES; page++) {
       const sentAt = this.now();
@@ -223,19 +225,25 @@ export class SyncEngine {
       if (res.epoch_changed) {
         await this.handleEpochChange(db, userId, res.epoch);
         cursor = 0;
+        fullPull = true;
         epoch = res.epoch;
         continue;
       }
-      await db.transaction(async (tx) => {
-        for (const r of res.records) {
-          await mergePulled(tx, r.entity, r.data);
-        }
-        await setState(tx, userKey.cursor(userId), String(res.cursor));
+      const repull = !fullPull;
+      const newScope = await db.transaction(async (tx) => {
+        const started = (await mergePage(tx, res.records, userId)) && repull;
+        // A new OJT in the scope: pull again from 0 to get its older records. The merge is safe to repeat.
+        await setState(tx, userKey.cursor(userId), started ? '0' : String(res.cursor));
         await setState(tx, userKey.epoch(userId), res.epoch);
+        return started;
       });
+      fullPull ||= newScope;
       counts.pulled += res.records.length;
-      cursor = res.cursor;
+      cursor = newScope ? 0 : res.cursor;
       epoch = res.epoch;
+      if (newScope) {
+        continue;
+      }
       // has_more with no records: the server holds back rows of the last 2 seconds. The next sync gets them.
       if (!res.has_more || res.records.length === 0) {
         return;

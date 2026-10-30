@@ -1,9 +1,8 @@
 // OJT progress: hours, expected last day, and hours for each week with the report status (FR-MON-01).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonCard, IonCardContent, IonContent, IonItem, IonLabel, IonList, IonNote } from '@ionic/angular';
-import { ME } from '../../data/mock/mock-data';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { IonCard, IonCardContent, IonContent, IonItem, IonLabel, IonList } from '@ionic/angular';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
@@ -27,7 +26,6 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     IonList,
     IonItem,
     IonLabel,
-    IonNote,
     RouterLink,
     ProgressRingComponent,
     StatTileComponent,
@@ -94,7 +92,6 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
         }
       </ion-list>
 
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -178,9 +175,9 @@ export class ProgressPage {
   protected readonly dateLabel = dateLabel;
   protected readonly selected = signal<number | null>(null);
 
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
 
-  protected readonly progress = computed(() => this.store.progress(ME));
+  protected readonly progress = computed(() => this.store.progress(this.store.meId()));
   protected readonly endText = computed(() => {
     const end = this.progress().projectedEnd;
     return end ? dateLabel(end) : this.text.noProjection;
@@ -188,10 +185,10 @@ export class ProgressPage {
 
   /** Newest first, for the list. */
   protected readonly rows = computed(() =>
-    this.store.weeksOf(ME).map((week) => ({
+    this.store.weeksOf(this.store.meId()).map((week) => ({
       week,
-      minutes: this.store.weekMinutes(ME, week),
-      status: this.store.report(ME, week)?.status ?? 'none',
+      minutes: this.store.weekMinutes(this.store.meId(), week),
+      status: this.store.report(this.store.meId(), week)?.status ?? 'none',
     })),
   );
 
@@ -215,7 +212,7 @@ export class ProgressPage {
   protected readonly dayBars = computed<BarItem[]>(() => {
     const week = this.selectedWeek();
     return week
-      ? this.store.weekDays(ME, week).map((d, i) => ({
+      ? this.store.weekDays(this.store.meId(), week).map((d, i) => ({
           label: UI_STRINGS.weekdayShort[i],
           value: d.minutes / 60,
           valueText: d.minutes ? String(Math.round(d.minutes / 6) / 10) : '',

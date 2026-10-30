@@ -113,6 +113,7 @@ export const OJT_STRINGS = {
     failure: {
       'reason-required': 'Type a reason.',
       'future-date': 'The date cannot be in the future.',
+      'punch-not-found': 'No punch of this type has this date and time. Examine the original time in the DTR.',
     },
   },
   export: {

@@ -19,7 +19,7 @@ import { addIcons } from 'ionicons';
 import { notificationsOutline, personCircleOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { LogoutService } from '../../core/auth/logout.service';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { UI_STRINGS } from '../strings-ui';
 import { SyncStatusBarComponent } from '../sync-status/sync-status-bar.component';
 import { STRINGS } from '../strings';
@@ -75,7 +75,7 @@ export class PageHeaderComponent {
   protected readonly strings = STRINGS;
   protected readonly ui = UI_STRINGS;
   protected readonly busy = signal(false);
-  protected readonly mock = inject(MockStore);
+  protected readonly mock = inject(WorkStore);
   private readonly role = inject(AuthService).role;
   protected readonly mobileRole = computed(() => this.role() === 'ojt' || this.role() === 'facilitator');
   private readonly logouts = inject(LogoutService);

@@ -2,9 +2,9 @@
 // Data comes from the prototype store (sample data).
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonButton, IonCard, IonCardContent, IonContent, IonItem, IonLabel, IonList, IonNote } from '@ionic/angular';
-import { ME, addDays } from '../../data/mock/mock-data';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { IonButton, IonCard, IonCardContent, IonContent, IonItem, IonLabel, IonList } from '@ionic/angular';
+import { addDays } from '../../data/store/store-models';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
@@ -27,7 +27,6 @@ import { weekStart } from '../../shared/utils/hours';
     IonList,
     IonItem,
     IonLabel,
-    IonNote,
     RouterLink,
     ProgressRingComponent,
     StatTileComponent,
@@ -84,7 +83,6 @@ import { weekStart } from '../../shared/utils/hours';
         }
       </ion-list>
 
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -143,7 +141,7 @@ export class OjtHomePage {
   protected readonly strings = STRINGS;
   protected readonly text = OJT_STRINGS.home;
   protected readonly ui = UI_STRINGS;
-  protected readonly store = inject(MockStore);
+  protected readonly store = inject(WorkStore);
 
   protected readonly actions = [
     { label: this.text.quickDtr, link: '/ojt/dtr' },
@@ -152,9 +150,9 @@ export class OjtHomePage {
     { label: this.text.quickProgress, link: '/ojt/progress' },
   ];
 
-  protected readonly progress = computed(() => this.store.progress(ME));
+  protected readonly progress = computed(() => this.store.progress(this.store.meId()));
   private readonly thisWeek = weekStart(new Date());
-  private readonly days = computed(() => this.store.weekDays(ME, this.thisWeek));
+  private readonly days = computed(() => this.store.weekDays(this.store.meId(), this.thisWeek));
   protected readonly weekTotal = computed(() => this.days().reduce((sum, d) => sum + d.minutes, 0));
   protected readonly bars = computed<BarItem[]>(() =>
     this.days().map((d, i) => ({
@@ -168,8 +166,8 @@ export class OjtHomePage {
   protected readonly reportRows = computed(() => {
     const lastWeek = addDays(this.thisWeek, -7);
     return [
-      { week: this.thisWeek, title: this.text.reportThisWeek, status: this.store.report(ME, this.thisWeek)?.status ?? 'none' },
-      { week: lastWeek, title: this.text.reportLastWeek, status: this.store.report(ME, lastWeek)?.status ?? 'none' },
+      { week: this.thisWeek, title: this.text.reportThisWeek, status: this.store.report(this.store.meId(), this.thisWeek)?.status ?? 'none' },
+      { week: lastWeek, title: this.text.reportLastWeek, status: this.store.report(this.store.meId(), lastWeek)?.status ?? 'none' },
     ];
   });
 }

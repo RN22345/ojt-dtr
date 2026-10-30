@@ -2,9 +2,9 @@
 // The reason is necessary and has at least 10 characters.
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, IonButton, IonContent, IonInput, IonLabel, IonNote, IonSegment, IonSegmentButton, IonTextarea, ToastController } from '@ionic/angular';
-import { CorrectionKind } from '../../data/mock/mock-data';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { AlertController, IonButton, IonContent, IonInput, IonLabel, IonSegment, IonSegmentButton, IonTextarea, ToastController } from '@ionic/angular';
+import { CorrectionKind } from '../../data/store/store-models';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -16,7 +16,7 @@ const MAX_REASON = 500;
 @Component({
   selector: 'app-correction-form-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonSegment, IonSegmentButton, IonLabel, IonInput, IonTextarea, IonButton, IonNote],
+  imports: [PageHeaderComponent, IonContent, IonSegment, IonSegmentButton, IonLabel, IonInput, IonTextarea, IonButton],
   template: `
     <app-page-header [title]="text.newTitle" backHref="/ojt/corrections" />
     <ion-content class="ion-padding">
@@ -99,7 +99,6 @@ const MAX_REASON = 500;
       />
 
       <ion-button expand="block" [disabled]="!formValid() || busy()" (click)="confirm()">{{ text.submit }}</ion-button>
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -137,7 +136,7 @@ export class CorrectionFormPage {
   protected readonly touched = signal(false);
   protected readonly busy = signal(false);
 
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
   private readonly router = inject(Router);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
@@ -189,7 +188,7 @@ export class CorrectionFormPage {
   private async send(): Promise<void> {
     this.busy.set(true);
     const change = this.kind() === 'change';
-    const result = this.store.addCorrection({
+    const result = await this.store.addCorrection({
       kind: this.kind(),
       punchType: this.punchType(),
       date: this.date(),

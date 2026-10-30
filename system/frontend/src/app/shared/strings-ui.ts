@@ -1,7 +1,6 @@
 // UI prototype: shared text of the new screens (D-31, frontend rule 13). The text of each role is in
 // `strings-ojt.ts` and `strings-fac.ts`. Text follows ASD-STE100 where practical.
 export const UI_STRINGS = {
-  prototypeNote: 'Prototype: this screen uses sample data. The data does not sync yet.',
   status: {
     draft: 'Draft',
     submitted: 'Submitted',

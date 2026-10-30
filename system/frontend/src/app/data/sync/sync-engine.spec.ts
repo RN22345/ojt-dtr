@@ -104,6 +104,56 @@ describe('sync engine (offline sync design, sections 4, 5, 8, 12)', () => {
     await db.close();
   });
 
+  describe('TC-CI-ACL-02 (client part): facilitator scope changes (API contract, section 5.2)', () => {
+    const FAC = 'fac-1';
+    const assignment = (id: string, ojt: string, active: boolean) => ({
+      id, ojt_id: ojt, facilitator_id: FAC, company_id: 'c1', batch_id: 'b1', active, version: active ? 1 : 2, deleted_at: null,
+    });
+
+    it('TC-CI-ACL-02: an ended assignment removes the synced records of that OJT; a local change stays', async () => {
+      user = FAC;
+      server.pages = [page([
+        { entity: 'ojt_assignments', seq: 1, data: assignment('a1', OTHER, true) },
+        { entity: 'punches', seq: 2, data: serverPunch('p1', { ojt_id: OTHER }) },
+        { entity: 'weekly_reports', seq: 3, data: { id: 'r1', ojt_id: OTHER, week_start: '2026-10-19', status: 'submitted', version: 2, deleted_at: null } },
+      ])];
+      await engine.requestSync();
+      await db.run("update weekly_reports set sync_status = 'pending' where id = 'r1'");
+      server.pages = [page([{ entity: 'ojt_assignments', seq: 9, data: assignment('a1', OTHER, false) }])];
+      await engine.requestSync();
+      expect(await db.query('select id from punches')).toEqual([]);
+      expect(await db.query('select id from weekly_reports')).toEqual([{ id: 'r1' }]);
+    });
+
+    it('TC-CI-ACL-02: a new OJT in the scope makes one pull again from cursor 0', async () => {
+      user = FAC;
+      await setState(db, userKey.cursor(FAC), '40');
+      await setState(db, userKey.epoch(FAC), EPOCH);
+      server.pages = [
+        page([{ entity: 'ojt_assignments', seq: 41, data: assignment('a2', OTHER, true) }]),
+        page([
+          { entity: 'punches', seq: 5, data: serverPunch('old', { ojt_id: OTHER }) },
+          { entity: 'ojt_assignments', seq: 41, data: assignment('a2', OTHER, true) },
+        ]),
+      ];
+      await engine.requestSync();
+      expect(server.pullCalls.map((c) => c.cursor)).toEqual([40, 0]);
+      expect(await db.query('select id from punches')).toEqual([{ id: 'old' }]);
+      expect(await getState(db, userKey.cursor(FAC))).toBe('41');
+    });
+
+    it('TC-CI-ACL-02: the own assignment of an OJT never removes its own records', async () => {
+      server.pages = [page([
+        { entity: 'ojt_assignments', seq: 1, data: { ...assignment('a3', OJT, true) } },
+        { entity: 'punches', seq: 2, data: serverPunch('mine') },
+      ])];
+      await engine.requestSync();
+      server.pages = [page([{ entity: 'ojt_assignments', seq: 3, data: assignment('a3', OJT, false) }])];
+      await engine.requestSync();
+      expect(await db.query('select id from punches')).toEqual([{ id: 'mine' }]);
+    });
+  });
+
   describe('TC-U-SYNC-02 results of a push', () => {
     it('TC-U-SYNC-02: applied removes the operation and sets the record to synced with the server data', async () => {
       await localPunch(db, 'p1');

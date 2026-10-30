@@ -1,8 +1,8 @@
 // Facilitator: review one weekly report; approve or return it with a remark (FR-RPT-02, FR-RPT-05, FR-RPT-07, FR-RPT-08).
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, IonButton, IonContent, IonModal, IonNote, IonTextarea, ToastController } from '@ionic/angular';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -31,11 +31,13 @@ type Decision = 'approved' | 'returned';
             <p class="body">{{ s.body || text.noText }}</p>
           }
           <h3>{{ text.photos }}</h3>
-          @if (r.photos.length === 0) {
+          @if (r.photoCount === 0) {
             <p>{{ text.noPhotos }}</p>
+          } @else if (photos().length === 0) {
+            <p>{{ text.photosNotHere(r.photoCount) }}</p>
           }
           <div class="photos">
-            @for (p of r.photos; track $index) {
+            @for (p of photos(); track $index) {
               <button type="button" class="photo" (click)="photo.set(p)">
                 <img [src]="p" [alt]="text.photoLabel($index + 1)" />
               </button>
@@ -78,7 +80,6 @@ type Decision = 'approved' | 'returned';
       } @else {
         <p class="ion-padding">{{ common.notFound }}</p>
       }
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
       <ion-modal [isOpen]="photo() !== null" (didDismiss)="photo.set(null)">
         <ng-template>
           <ion-content>
@@ -144,12 +145,21 @@ export class ReportReviewPage {
   protected readonly remark = signal('');
   protected readonly busy = signal(false);
   protected readonly photo = signal<string | null>(null);
-  private readonly store = inject(MockStore);
+  /** FR-RPT-03: the photos of the report that have a file on this device. */
+  protected readonly photos = signal<string[]>([]);
+  private readonly store = inject(WorkStore);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
   private readonly router = inject(Router);
 
   protected readonly report = computed(() => this.store.reportById(this.id()));
+
+  constructor() {
+    effect(() => {
+      const id = this.report()?.id;
+      void (id ? this.store.photosOf(id) : Promise.resolve([])).then((urls) => this.photos.set(urls));
+    });
+  }
   protected readonly ojtName = computed(() => this.store.ojt(this.report()?.ojtId ?? '')?.fullName ?? '');
   protected readonly hasRemark = computed(() => this.remark().trim().length > 0);
 
@@ -204,7 +214,7 @@ export class ReportReviewPage {
       return;
     }
     this.busy.set(true);
-    const result = this.store.reviewReport(this.id(), decision, this.remark());
+    const result = await this.store.reviewReport(this.id(), decision, this.remark());
     this.busy.set(false);
     const message = !result.ok ? this.text.failed : approve ? this.text.approved : this.text.returned;
     const toast = await this.toasts.create({ message, duration: 2500, color: result.ok ? 'success' : 'danger' });

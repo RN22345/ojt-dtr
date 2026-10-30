@@ -2,8 +2,8 @@
 // Prototype: the PDF file comes in a later stage. The page builds a text summary now.
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AlertController, IonButton, IonChip, IonContent, IonInput, IonLabel, IonNote, ToastController } from '@ionic/angular';
-import { addDays } from '../../data/mock/mock-data';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { addDays } from '../../data/store/store-models';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -87,7 +87,6 @@ type Chip = 'week' | 'lastWeek' | 'month' | 'all';
         <pre class="summary">{{ summary() }}</pre>
       }
 
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -164,7 +163,7 @@ export class ExportPage {
   protected readonly to = signal(this.today);
   protected readonly summary = signal('');
 
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
 

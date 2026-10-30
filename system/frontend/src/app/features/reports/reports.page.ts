@@ -1,9 +1,9 @@
 // OJT weekly reports: one row for each week, with a filter by status (FR-RPT-01 to FR-RPT-06).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonContent, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton } from '@ionic/angular';
-import { ME, addDays } from '../../data/mock/mock-data';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { IonContent, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton } from '@ionic/angular';
+import { addDays } from '../../data/store/store-models';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
@@ -39,7 +39,7 @@ function matches(filter: Filter, status: string): boolean {
 @Component({
   selector: 'app-reports-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonSegment, IonSegmentButton, IonList, IonItem, IonLabel, IonNote, RouterLink, StatusBadgeComponent, StatTileComponent],
+  imports: [PageHeaderComponent, IonContent, IonSegment, IonSegmentButton, IonList, IonItem, IonLabel, RouterLink, StatusBadgeComponent, StatTileComponent],
   template: `
     <app-page-header [title]="strings.pages.ojtReports" />
     <ion-content class="ion-padding">
@@ -83,7 +83,6 @@ function matches(filter: Filter, status: string): boolean {
         }
       </ion-list>
 
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -144,17 +143,17 @@ export class ReportsPage {
   protected readonly dateLabel = dateLabel;
   protected readonly filter = signal<Filter>('all');
 
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
 
   private readonly rows = computed<Row[]>(() =>
-    this.store.weeksOf(ME).map((week) => {
-      const report = this.store.report(ME, week);
+    this.store.weeksOf(this.store.meId()).map((week) => {
+      const report = this.store.report(this.store.meId(), week);
       const status = report?.status ?? 'none';
       const last = report?.history[report.history.length - 1];
       return {
         week,
         end: addDays(week, 6),
-        minutes: this.store.weekMinutes(ME, week),
+        minutes: this.store.weekMinutes(this.store.meId(), week),
         status,
         remark: status === 'returned' ? (last?.remark ?? null) : null,
       };

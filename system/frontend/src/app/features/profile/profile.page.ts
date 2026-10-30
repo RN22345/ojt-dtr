@@ -1,9 +1,9 @@
 // Profile for OJT and facilitator: assignment, contact number, password change (FR-PROF-01, FR-PROF-02, FR-AUTH-06).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { AlertController, IonButton, IonCheckbox, IonContent, IonInput, IonItem, IonLabel, IonList, IonNote, ToastController } from '@ionic/angular';
+import { IonButton, IonCheckbox, IonContent, IonInput, IonItem, IonLabel, IonList, IonNote, ToastController } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { homePath } from '../../core/auth/access';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { PlaceholderComponent } from '../../shared/placeholder/placeholder.component';
 import { STRINGS } from '../../shared/strings';
@@ -11,7 +11,6 @@ import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
 import { dateLabel } from '../../shared/utils/format';
 
-const PH_MOBILE = /^(09|\+639)\d{9}$/;
 const MIN_PASSWORD = 8;
 
 @Component({
@@ -37,22 +36,10 @@ const MIN_PASSWORD = 8;
             <ion-item><ion-label><p>{{ text.batch }}</p><h3>{{ me().batchName }}</h3></ion-label></ion-item>
             <ion-item><ion-label><p>{{ text.requiredHours }}</p><h3>{{ me().requiredHours }}</h3></ion-label></ion-item>
             <ion-item><ion-label><p>{{ text.startDate }}</p><h3>{{ date(me().startDate) }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.email }}</p><h3>{{ me().email }}</h3></ion-label></ion-item>
+            @if (me().contactNumber) {
+              <ion-item><ion-label><p>{{ text.contact }}</p><h3>{{ me().contactNumber }}</h3></ion-label></ion-item>
+            }
           </ion-list>
-          <h3>{{ text.contact }}</h3>
-          <ion-input
-            [label]="text.contact"
-            labelPlacement="floating"
-            fill="outline"
-            type="tel"
-            [value]="contact()"
-            [helperText]="text.contactHint"
-            [errorText]="text.contactInvalid"
-            [class.ion-invalid]="!contactValid()"
-            [class.ion-touched]="true"
-            (ionInput)="contact.set($any($event).detail.value ?? '')"
-          />
-          <ion-button [disabled]="!contactValid() || !contactChanged()" (click)="saveContact()">{{ text.save }}</ion-button>
         } @else {
           <p>{{ text.assignedOjts(store.assignedOjts().length) }}</p>
         }
@@ -73,11 +60,8 @@ const MIN_PASSWORD = 8;
         }
         <ion-button [disabled]="passwordProblem() !== null || busy()" (click)="changePassword()">{{ text.change }}</ion-button>
 
-        <h3>{{ text.data }}</h3>
-        <ion-button color="medium" fill="outline" (click)="reset()">{{ text.reset }}</ion-button>
         <p><ion-note>{{ text.version }}</ion-note></p>
       </div>
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -151,8 +135,7 @@ export class ProfilePage {
   protected readonly ui = UI_STRINGS;
   protected readonly date = dateLabel;
   protected readonly auth = inject(AuthService);
-  protected readonly store = inject(MockStore);
-  private readonly alerts = inject(AlertController);
+  protected readonly store = inject(WorkStore);
   private readonly toasts = inject(ToastController);
 
   protected readonly me = this.store.me;
@@ -162,11 +145,6 @@ export class ProfilePage {
     const role = this.auth.role();
     return role ? this.text.role[role] : '';
   });
-
-  protected readonly contact = signal(this.store.me().contactNumber);
-  private readonly cleanContact = computed(() => this.contact().replace(/\s/g, ''));
-  protected readonly contactValid = computed(() => PH_MOBILE.test(this.cleanContact()));
-  protected readonly contactChanged = computed(() => this.cleanContact() !== this.store.me().contactNumber);
 
   protected readonly current = signal('');
   protected readonly next = signal('');
@@ -191,11 +169,6 @@ export class ProfilePage {
     return this.next() === this.confirm() ? null : t.mismatch;
   });
 
-  protected async saveContact(): Promise<void> {
-    this.store.updateContact(this.cleanContact());
-    await this.toast(this.text.contactSaved, 'success');
-  }
-
   protected async changePassword(): Promise<void> {
     this.busy.set(true);
     this.passwordFailure.set(null);
@@ -214,24 +187,6 @@ export class ProfilePage {
     } finally {
       this.busy.set(false);
     }
-  }
-
-  protected async reset(): Promise<void> {
-    const alert = await this.alerts.create({
-      header: this.text.resetHeader,
-      message: this.text.resetMessage,
-      buttons: [
-        { text: FAC_STRINGS.common.cancel, role: 'cancel' },
-        { text: FAC_STRINGS.common.confirm, role: 'confirm' },
-      ],
-    });
-    await alert.present();
-    if ((await alert.onDidDismiss()).role !== 'confirm') {
-      return;
-    }
-    this.store.reset();
-    this.contact.set(this.store.me().contactNumber);
-    await this.toast(this.text.resetDone, 'success');
   }
 
   private async toast(message: string, color: string): Promise<void> {

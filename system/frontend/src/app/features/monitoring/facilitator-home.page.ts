@@ -1,8 +1,8 @@
 // Facilitator overview: summary tiles and the list of assigned OJTs with progress (FR-MON-02).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonBadge, IonButton, IonContent, IonItem, IonLabel, IonList, IonNote, IonSearchbar, IonSelect, IonSelectOption } from '@ionic/angular';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { IonBadge, IonButton, IonContent, IonItem, IonLabel, IonList, IonSearchbar, IonSelect, IonSelectOption } from '@ionic/angular';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { FAC_STRINGS } from '../../shared/strings-fac';
@@ -22,7 +22,7 @@ const DAY_MS = 86_400_000;
   selector: 'app-facilitator-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    PageHeaderComponent, IonContent, IonBadge, IonButton, IonList, IonItem, IonLabel, IonNote, IonSearchbar, IonSelect, IonSelectOption,
+    PageHeaderComponent, IonContent, IonBadge, IonButton, IonList, IonItem, IonLabel, IonSearchbar, IonSelect, IonSelectOption,
     RouterLink, ProgressRingComponent, StatTileComponent, StatusBadgeComponent,
   ],
   template: `
@@ -71,7 +71,6 @@ const DAY_MS = 86_400_000;
           </ion-item>
         }
       </ion-list>
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -99,7 +98,7 @@ export class FacilitatorHomePage {
   protected readonly strings = STRINGS;
   protected readonly text = FAC_STRINGS.home;
   protected readonly ui = UI_STRINGS;
-  protected readonly store = inject(MockStore);
+  protected readonly store = inject(WorkStore);
   protected readonly query = signal('');
   protected readonly sort = signal<SortKey>('name');
 

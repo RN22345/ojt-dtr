@@ -118,7 +118,7 @@ Response: `{epoch, epoch_changed, server_time, records: [{entity, change_seq, da
 
 Entities in the pull: `profiles`, `companies`, `batches`, `ojt_assignments`, `punches`, `weekly_reports`, `report_events`, `correction_requests`, `attachments`, `notifications`.
 
-NOTE: When an assignment ends, the records of that OJT leave the scope of the facilitator. The pull does not send tombstones for them. The client must remove them when the assignment record changes (S3).
+NOTE: When an assignment ends, the records of that OJT leave the scope of the facilitator. The pull does not send tombstones for them. The client removes them when the assignment record changes, and pulls again from cursor 0 for a new OJT (D-69).
 
 ## 6. Edge Functions
 

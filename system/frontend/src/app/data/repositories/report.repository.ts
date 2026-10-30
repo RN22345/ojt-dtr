@@ -8,6 +8,7 @@ import { countOpenChanges, enqueue, findQueued, replacePayload } from '../sync/o
 import { createPayload } from '../sync/payloads';
 import { ReportAction, ReportStatus, canEditReport, isCompleteForSubmit, needsRemark, nextStatus } from '../../shared/utils/report-rules';
 import { newId, nowIso } from '../../shared/utils/uuid';
+import { LocalPhoto, insertPhoto } from './attachment.repository';
 import { SyncStatus } from './punch.repository';
 
 export interface ReportContent {
@@ -157,14 +158,27 @@ export class ReportRepository {
   }
 
   /** FR-RPT-01, FR-RPT-06: saves the content as a draft. A new week makes a new report. */
-  async saveDraft(ojtId: string, week: string, content: ReportContent, userId: string): Promise<ReportResult> {
+  async saveDraft(ojtId: string, week: string, content: ReportContent, userId: string, photos: readonly LocalPhoto[] = []): Promise<ReportResult> {
     const db = await this.local.db();
-    const result = await db.transaction((tx) => this.writeContent(tx, ojtId, week, content, userId));
+    const result = await db.transaction(async (tx) => {
+      const saved = await this.writeContent(tx, ojtId, week, content, userId);
+      if (typeof saved === 'string') {
+        await this.addPhotos(tx, saved, photos, userId);
+      }
+      return saved;
+    });
     return this.done(result);
   }
 
   /** FR-RPT-04: saves the content and submits. Offline, the submit waits in the outbox. */
-  async submit(ojtId: string, week: string, content: ReportContent, userId: string, deviceId: string): Promise<ReportResult> {
+  async submit(
+    ojtId: string,
+    week: string,
+    content: ReportContent,
+    userId: string,
+    deviceId: string,
+    photos: readonly LocalPhoto[] = [],
+  ): Promise<ReportResult> {
     if (!isCompleteForSubmit(content)) {
       return { ok: false, reason: 'incomplete' };
     }
@@ -174,6 +188,7 @@ export class ReportRepository {
       if (typeof saved !== 'string') {
         return saved;
       }
+      await this.addPhotos(tx, saved, photos, userId);
       await this.addEvent(tx, saved, 'submit', null, userId, deviceId);
       return saved;
     });
@@ -245,6 +260,13 @@ export class ReportRepository {
       });
     }
     return current.id;
+  }
+
+  /** FR-RPT-03: the photo records go after the report operation, so that the server knows the report. */
+  private async addPhotos(tx: LocalDb, reportId: string, photos: readonly LocalPhoto[], userId: string): Promise<void> {
+    for (const photo of photos) {
+      await insertPhoto(tx, photo, userId, reportId);
+    }
   }
 
   private async addEvent(tx: LocalDb, reportId: string, action: ReportAction, remark: string | null, userId: string, deviceId: string): Promise<void> {

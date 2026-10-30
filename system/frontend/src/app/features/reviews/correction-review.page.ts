@@ -2,7 +2,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, IonButton, IonContent, IonNote, IonTextarea, ToastController } from '@ionic/angular';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -66,7 +66,6 @@ type Decision = 'approved' | 'rejected';
       } @else {
         <p class="ion-padding">{{ common.notFound }}</p>
       }
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -112,7 +111,7 @@ export class CorrectionReviewPage {
   protected readonly date = dateLabel;
   protected readonly remark = signal('');
   protected readonly busy = signal(false);
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
   private readonly router = inject(Router);
@@ -140,7 +139,7 @@ export class CorrectionReviewPage {
       return;
     }
     this.busy.set(true);
-    const result = this.store.decideCorrection(this.id(), decision, this.remark());
+    const result = await this.store.decideCorrection(this.id(), decision, this.remark());
     this.busy.set(false);
     const message = !result.ok ? this.text.failed : approve ? this.text.approved : this.text.rejected;
     const toast = await this.toasts.create({ message, duration: 2500, color: result.ok ? 'success' : 'danger' });

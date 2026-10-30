@@ -1,10 +1,10 @@
 // Notifications list for OJT and facilitator (FR-NOTI-05).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonButton, IonContent, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton } from '@ionic/angular';
+import { IonButton, IonContent, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { homePath } from '../../core/auth/access';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { FAC_STRINGS } from '../../shared/strings-fac';
@@ -17,7 +17,7 @@ type Filter = 'all' | 'unread';
 @Component({
   selector: 'app-notifications-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonButton, IonList, IonItem, IonLabel, IonNote, IonSegment, IonSegmentButton],
+  imports: [PageHeaderComponent, IonContent, IonButton, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton],
   template: `
     <app-page-header [title]="strings.pages.notifications" [backHref]="home()" />
     <ion-content>
@@ -45,7 +45,6 @@ type Filter = 'all' | 'unread';
           </ion-item>
         }
       </ion-list>
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -93,7 +92,7 @@ export class NotificationsPage {
   protected readonly strings = STRINGS;
   protected readonly text = FAC_STRINGS.notifications;
   protected readonly ui = UI_STRINGS;
-  protected readonly store = inject(MockStore);
+  protected readonly store = inject(WorkStore);
   protected readonly filter = signal<Filter>('all');
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);

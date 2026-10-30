@@ -2,7 +2,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonItem, IonLabel, IonList, IonNote } from '@ionic/angular';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -81,7 +81,6 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
       } @else {
         <p class="ion-padding">{{ common.notFound }}</p>
       }
-      <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
@@ -103,7 +102,7 @@ export class OjtOverviewPage {
   protected readonly common = FAC_STRINGS.common;
   protected readonly ui = UI_STRINGS;
   protected readonly date = dateLabel;
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
 
   protected readonly ojt = computed(() => this.store.ojt(this.ojtId()));
   protected readonly progress = computed(() => (this.ojt() ? this.store.progress(this.ojtId()) : null));

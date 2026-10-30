@@ -4,8 +4,7 @@ import { RouterLink } from '@angular/router';
 import { IonCard, IonCardContent, IonContent, IonFab, IonFabButton, IonIcon, IonNote } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { add } from 'ionicons/icons';
-import { ME } from '../../data/mock/mock-data';
-import { MockStore } from '../../data/mock/mock-store.service';
+import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -47,7 +46,6 @@ addIcons({ add });
         </ion-card>
       }
 
-      <ion-note class="proto">{{ ui.prototypeNote }}</ion-note>
 
       <ion-fab slot="fixed" vertical="bottom" horizontal="end">
         <ion-fab-button routerLink="/ojt/corrections/new" [attr.aria-label]="text.newRequest">
@@ -90,10 +88,10 @@ export class CorrectionsPage {
   protected readonly ui = UI_STRINGS;
   protected readonly dateLabel = dateLabel;
 
-  private readonly store = inject(MockStore);
+  private readonly store = inject(WorkStore);
 
   protected readonly rows = computed(() =>
-    this.store.correctionsOf(ME).map((c) => ({
+    this.store.correctionsOf(this.store.meId()).map((c) => ({
       id: c.id,
       date: c.date,
       status: c.status,

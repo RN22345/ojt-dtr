@@ -76,6 +76,7 @@ export const FAC_STRINGS = {
     noText: 'No text.',
     photos: 'Photos',
     noPhotos: 'No photo.',
+    photosNotHere: (n: number) => `This report has ${n} ${n === 1 ? 'photo' : 'photos'}. The photos show on the OJT device only in this version.`,
     photoLabel: (n: number) => `Photo ${n}`,
     closePhoto: 'Close',
     history: 'Status history',
