@@ -2,37 +2,24 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonButton, IonContent, IonHeader, IonInput, IonNote, IonSpinner, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonButton, IonContent, IonInput, IonNote, IonSpinner } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
-import { PlaceholderComponent } from '../../shared/placeholder/placeholder.component';
 import { STRINGS } from '../../shared/strings';
 
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonInput,
-    IonButton,
-    IonNote,
-    IonSpinner,
-    PlaceholderComponent,
-  ],
+  imports: [ReactiveFormsModule, IonContent, IonInput, IonButton, IonNote, IonSpinner],
   template: `
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{ s.appName }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content>
       <div class="login">
-        <app-placeholder [label]="s.logo" />
-        <h1>{{ s.login.title }}</h1>
+        <div class="hero">
+          <div class="logo">
+            <img src="assets/log-bound-logo.png" [alt]="s.appName" />
+          </div>
+        </div>
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <h1>{{ s.login.title }}</h1>
           <ion-input
             formControlName="email"
             type="email"
@@ -76,10 +63,42 @@ import { STRINGS } from '../../shared/strings';
       flex-direction: column;
       gap: 16px;
     }
+
+    /* Top part in the primary color with the logo */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 48px 16px 40px;
+      background: var(--ion-color-primary);
+      border-bottom: 8px solid var(--ion-color-secondary);
+      border-radius: 0 0 50% 50% / 0 0 32px 32px;
+    }
+    /* The logo image has a white background. A white panel keeps it clean on the primary color. */
+    .logo {
+      width: 85%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: var(--ion-color-primary-contrast);
+    }
+    .logo img {
+      display: block;
+      width: 100%;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
     form {
       display: flex;
       flex-direction: column;
       gap: 16px;
+      padding: 16px 24px 24px;
+    }
+    ion-note {
+      font-size: 0.85rem;
     }
     ion-button {
       min-height: 48px;

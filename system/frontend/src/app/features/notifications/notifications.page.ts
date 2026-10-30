@@ -49,17 +49,39 @@ type Filter = 'all' | 'unread';
     </ion-content>
   `,
   styles: `
+    ion-segment {
+      --background: var(--ion-color-light);
+      border-radius: 12px;
+    }
+    ion-segment-button {
+      --color: var(--ion-color-medium-shade);
+      --color-checked: var(--ion-color-primary);
+      --indicator-color: var(--ion-color-secondary);
+      text-transform: none;
+      font-weight: 600;
+    }
     .gap {
       margin-top: 8px;
+    }
+    ion-item {
+      --border-color: var(--ion-color-light-shade);
+    }
+    ion-item h2 {
+      font-weight: 500;
+    }
+    ion-item p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium-shade);
     }
     .dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: var(--ion-color-primary);
+      background: var(--ion-color-secondary);
     }
     .unread {
       font-weight: 700;
+      color: var(--ion-color-primary);
     }
     .note {
       display: block;

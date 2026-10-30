@@ -106,9 +106,17 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     }
     .end {
       text-align: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: var(--ion-color-light);
+    }
+    .end strong {
+      color: var(--ion-color-primary);
     }
     h3 {
       margin: 0 0 6px;
+      font-weight: 700;
+      color: var(--ion-color-primary);
     }
     .legend {
       display: flex;
@@ -118,6 +126,7 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
       padding: 0;
       margin: 10px 0 0;
       font-size: 0.75em;
+      color: var(--ion-color-medium-shade);
     }
     .dot {
       display: inline-block;
@@ -137,6 +146,22 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     }
     .dot.medium {
       background: var(--ion-color-medium);
+    }
+    ion-list {
+      background: transparent;
+      padding: 0;
+    }
+    ion-item {
+      --background: var(--ion-color-light);
+      --border-width: 0;
+      margin-bottom: 8px;
+      border-radius: 12px;
+    }
+    ion-item h2 {
+      font-weight: 600;
+    }
+    ion-item p {
+      color: var(--ion-color-medium-shade);
     }
     .proto {
       display: block;

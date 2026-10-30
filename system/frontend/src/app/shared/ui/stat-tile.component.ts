@@ -28,6 +28,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       color: var(--ion-color-medium-shade);
     }
     .value {
+      font-family: var(--font-heading);
       font-size: 1.3em;
       font-weight: 700;
       font-variant-numeric: tabular-nums;

@@ -93,8 +93,38 @@ function matches(filter: Filter, status: string): boolean {
       gap: 8px;
       margin-bottom: 16px;
     }
+    ion-segment {
+      --background: var(--ion-color-light);
+      margin-bottom: 8px;
+      border-radius: 12px;
+    }
+    ion-segment-button {
+      --color: var(--ion-color-medium-shade);
+      --color-checked: var(--ion-color-primary);
+      --indicator-color: var(--ion-color-secondary);
+      text-transform: none;
+      font-weight: 600;
+    }
     .empty {
       text-align: center;
+      color: var(--ion-color-medium-shade);
+    }
+    ion-list {
+      background: transparent;
+      padding: 0;
+    }
+    ion-item {
+      --background: var(--ion-color-light);
+      --border-width: 0;
+      --border-radius: 12px;
+      margin-top: 8px;
+      border-radius: 12px;
+    }
+    ion-item h2 {
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+    ion-item p {
       color: var(--ion-color-medium-shade);
     }
     .remark {

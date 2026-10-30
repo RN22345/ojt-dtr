@@ -1,2 +1,165 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+/* src/theme/variables.scss
+   All colors and fonts of the app are here. Page files use var(--ion-color-...) only.
+   Source: the UI/UX team (log-bound repository, 2026-10-28), with the colors and fonts
+   of the UI/UX head (2026-10-30): teal replaces blue, amber replaces orange (D-64). */
+
+/* FONTS (D-64): Plus Jakarta Sans for big text, headers, and sub headers. Inter for small text.
+   The font files come from npm (@fontsource-variable) and are in the app bundle,
+   so they operate offline. Do not load fonts from a CDN. */
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/plus-jakarta-sans/index.css';
+
+:root {
+  /* Palette
+     Teal        #0F766E -> primary   (header, tab bar, titles)
+     Amber       #F59E0B -> secondary (main buttons, active tab)
+     Light amber #FBBF24 -> warning   (submitted, notes)
+     Dark teal   #115E59 -> tertiary
+     Black       #111111 -> text / dark
+     White       #FFFFFF -> background */
+
+  /* Primary: Teal */
+  --ion-color-primary: #0f766e;
+  --ion-color-primary-rgb: 15, 118, 110;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0d6861;
+  --ion-color-primary-tint: #27847c;
+
+  /* Secondary: Amber - dark text, because white text on amber is hard to read */
+  --ion-color-secondary: #f59e0b;
+  --ion-color-secondary-rgb: 245, 158, 11;
+  --ion-color-secondary-contrast: #111111;
+  --ion-color-secondary-contrast-rgb: 17, 17, 17;
+  --ion-color-secondary-shade: #d88b0a;
+  --ion-color-secondary-tint: #f6a823;
+
+  /* Tertiary: dark teal */
+  --ion-color-tertiary: #115e59;
+  --ion-color-tertiary-rgb: 17, 94, 89;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #0f534e;
+  --ion-color-tertiary-tint: #296e6a;
+
+  /* Success: green (approved) */
+  --ion-color-success: #1e9e54;
+  --ion-color-success-rgb: 30, 158, 84;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #1a8b4a;
+  --ion-color-success-tint: #34a865;
+
+  /* Warning: light amber (submitted) - dark text so it can be read */
+  --ion-color-warning: #fbbf24;
+  --ion-color-warning-rgb: 251, 191, 36;
+  --ion-color-warning-contrast: #111111;
+  --ion-color-warning-contrast-rgb: 17, 17, 17;
+  --ion-color-warning-shade: #dda820;
+  --ion-color-warning-tint: #fbc53a;
+
+  /* Danger: red (errors, returned) */
+  --ion-color-danger: #d6232f;
+  --ion-color-danger-rgb: 214, 35, 47;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #bc1f29;
+  --ion-color-danger-tint: #da3944;
+
+  /* Medium: gray (draft, small text) */
+  --ion-color-medium: #6b7280;
+  --ion-color-medium-rgb: 107, 114, 128;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #5e6471;
+  --ion-color-medium-tint: #7a808d;
+
+  /* Light: card background (light teal gray) */
+  --ion-color-light: #f1f6f5;
+  --ion-color-light-rgb: 241, 246, 245;
+  --ion-color-light-contrast: #111111;
+  --ion-color-light-contrast-rgb: 17, 17, 17;
+  --ion-color-light-shade: #d4d8d8;
+  --ion-color-light-tint: #f2f7f6;
+
+  /* Dark: Black */
+  --ion-color-dark: #111111;
+  --ion-color-dark-rgb: 17, 17, 17;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #0f0f0f;
+  --ion-color-dark-tint: #292929;
+
+  /* Page */
+  --ion-background-color: #ffffff;
+  --ion-text-color: #111111;
+  --ion-item-background: #ffffff;
+
+  /* Header bar */
+  --ion-toolbar-background: var(--ion-color-primary);
+  --ion-toolbar-color: #ffffff;
+
+  /* Bottom tab bar */
+  --ion-tab-bar-background: var(--ion-color-primary);
+  --ion-tab-bar-color: #ffffff;
+  --ion-tab-bar-color-selected: var(--ion-color-secondary);
+
+  /* Fonts */
+  --font-heading: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif; /* big text, headers */
+  --ion-font-family: 'Inter Variable', 'Inter', sans-serif; /* small text, buttons, inputs */
+}
+
+/* ---------- Small global styles (shared by all pages) ---------- */
+
+/* Big text, headers, and sub headers use Plus Jakarta Sans. All other text uses Inter. */
+h1,
+h2,
+h3,
+h4,
+ion-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Floating rounded tab bar */
+ion-tab-bar {
+  margin: 0 12px 12px;
+  border-radius: 16px;
+  border: none;
+}
+
+/* Rounded buttons, no CAPITAL letters */
+ion-button {
+  --border-radius: 10px;
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* Main buttons are amber (buttons with a color="" keep their own color) */
+ion-button:not([color]):not(.button-outline):not(.button-clear) {
+  --background: var(--ion-color-secondary);
+  --background-activated: var(--ion-color-secondary-shade);
+  --background-hover: var(--ion-color-secondary-tint);
+  --color: var(--ion-color-secondary-contrast);
+}
+
+/* Outline buttons use the teal color */
+ion-button.button-outline:not([color]) {
+  --border-color: var(--ion-color-primary);
+  --color: var(--ion-color-primary);
+}
+
+/* Cards are light, flat, and rounded */
+ion-card {
+  background: var(--ion-color-light);
+  box-shadow: none;
+  border-radius: 16px;
+  margin: 12px 0;
+}
+
+/* Input fields */
+ion-input {
+  --border-radius: 10px;
+  --border-color: var(--ion-color-medium-tint);
+  --highlight-color-focused: var(--ion-color-primary);
+}

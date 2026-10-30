@@ -88,6 +88,11 @@ import { weekStart } from '../../shared/utils/hours';
     </ion-content>
   `,
   styles: `
+    h2 {
+      margin: 8px 0 0;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
     .company {
       margin-top: 0;
       color: var(--ion-color-medium-shade);
@@ -102,6 +107,7 @@ import { weekStart } from '../../shared/utils/hours';
       text-align: right;
       margin: 8px 0 0;
       font-weight: 600;
+      color: var(--ion-color-primary);
     }
     .status-row {
       display: flex;
@@ -111,6 +117,20 @@ import { weekStart } from '../../shared/utils/hours';
     }
     h3 {
       margin: 0 0 6px;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+    ion-list {
+      background: transparent;
+      padding: 0;
+    }
+    ion-item {
+      --background: var(--ion-color-light);
+      --border-radius: 12px;
+      --border-width: 0;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      font-weight: 600;
     }
     .proto {
       display: block;

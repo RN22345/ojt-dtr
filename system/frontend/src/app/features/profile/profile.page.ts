@@ -85,9 +85,56 @@ const MIN_PASSWORD = 8;
       display: flex;
       align-items: center;
       gap: 12px;
+      margin-bottom: 8px;
+    }
+    .who h2 {
+      margin: 0;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+    .who p {
+      margin: 4px 0 0;
+      color: var(--ion-color-medium-shade);
     }
     .avatar {
       width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--ion-color-primary);
+    }
+    h3 {
+      margin: 20px 0 8px;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+    ion-list {
+      background: transparent;
+      padding: 0;
+    }
+    ion-item {
+      --background: var(--ion-color-light);
+      --border-width: 0;
+      margin-bottom: 6px;
+      border-radius: 12px;
+    }
+    ion-item p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium-shade);
+    }
+    ion-item h3 {
+      margin: 2px 0 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+    ion-checkbox {
+      margin-top: 12px;
+      --checkbox-background-checked: var(--ion-color-primary);
+      --border-color-checked: var(--ion-color-primary);
+    }
+    ion-button {
+      margin-top: 12px;
     }
     .gap {
       margin-top: 8px;
