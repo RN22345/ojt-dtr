@@ -2,6 +2,8 @@
 
 This guide shows where to change the look of the app. All paths are in `system/frontend/`.
 
+Read the rules for designs and assets first: `docs/04-uiux/uiux-team-requirements.md`. The current design values are in `docs/04-uiux/design-system.md`.
+
 ## 1. See your changes at once (no rebuild)
 
 Do not run `ng build` or make an APK for each change. Use the dev server. It reloads the page when you save a file.
@@ -26,7 +28,9 @@ If the browser shows an old page, press Ctrl+Shift+R.
 | System name on screen | `src/app/shared/strings.ts` | Change `appName`. |
 | Name in the browser tab | `src/index.html` | Change `<title>`. |
 | Font | `src/theme/variables.scss` | `--font-heading` (Plus Jakarta Sans) and `--ion-font-family` (Inter) (section 4). |
-| Login page logo | `src/assets/log-bound-logo.png` | Replace the file. Keep the same name. Make it 900 px wide or less. |
+| Login page logo | `src/assets/brand/log-bound-logo.png` | Replace the file. Keep the same name. Make it 900 px wide or less. The path is in `src/app/shared/brand.ts`. |
+| Motion (animations) | `src/theme/motion.scss` | Durations, curves, and motion classes. See `docs/04-uiux/design-system.md`, section 4. |
+| Look of buttons, cards, tab bar, inputs | `src/theme/components.scss` | Use the tokens of `variables.scss` only. |
 | Browser tab icon | `src/assets/icon/favicon.png` | Replace the file. Keep the same name. |
 | One page | `src/app/features/<module>/` | Edit the `.ts` file of the page (the layout and styles are inside it). |
 | Shared parts (header, tiles, rings) | `src/app/shared/` | Edit the part. All pages that use it change. |

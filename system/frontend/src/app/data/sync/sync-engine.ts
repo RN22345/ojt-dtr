@@ -32,6 +32,7 @@ const RESEND_COLUMNS: Readonly<Record<string, { owner: string; time: string; dat
   attachments: { owner: 'owner_id', time: 'updated_at', dateOnly: false },
   punches: { owner: 'ojt_id', time: 'device_time', dateOnly: false },
   weekly_reports: { owner: 'ojt_id', time: 'week_start', dateOnly: true },
+  correction_requests: { owner: 'ojt_id', time: 'requested_time', dateOnly: false },
 };
 
 interface UploadRow {

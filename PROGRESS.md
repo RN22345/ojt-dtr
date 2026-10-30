@@ -6,9 +6,9 @@ This file is the only source for the current project state. Each agent session m
 
 | Item | Value |
 |---|---|
-| Stage | S2: Offline core (started early, D-46). The S1 gate is still open. |
+| Stage | S3: Reports, corrections, and admin web (started early, D-65). The S1 and S2 gates are still open. |
 | Stage dates | S1: 2026-10-28 to 2026-11-03. S2: 2026-11-04 to 2026-11-10 (work started 2026-10-26). |
-| Gate status | S1 open (operation items only). S2 open. |
+| Gate status | S1 open (operation items only). S2 open (waits for S1). S3 open (work in progress). |
 | Gate criteria | `docs/05-testing/test-plan.md`, section 8 |
 
 ## 2. Stage tracker
@@ -18,11 +18,23 @@ This file is the only source for the current project state. Each agent session m
 | S0 | Plan and design | 2026-10-21 to 2026-10-27 | Gate passed 2026-10-25 (`docs/05-testing/reports/S0-test-report.md`) |
 | S1 | Foundation | 2026-10-28 to 2026-11-03 | Code tests pass. Backend coverage 88.2% (D-52). Gate open: keep-alive B and C, TC-ST-Q-RE-05 again. `prod` comes before S5 (D-40). |
 | S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | All S2 tests pass (`S2-test-report.md`). Gate open: waits for the S1 gate. |
-| S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Not started |
+| S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Started 2026-10-30 (D-65). Server parts and mobile repositories done. Pages, admin web, and device tests not done. |
 | S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | Not started |
 | S5 | Release and documentation | 2026-11-19 to 2026-11-21 | Not started |
 
-## 3. Next tasks (stages S1 and S2)
+## 3. Next tasks (stages S1, S2, and S3)
+
+S3 (branch `s3/reports-corrections-admin`, D-65). Done 2026-10-30:
+- Server: migration `20261030120000_s3_reports_corrections` on `dev` (D-66, D-67). L2 tests TC-CI-RPT-01, TC-CI-RPT-02, TC-CI-AUD-01 pass. Backend coverage 91.0% (71 of 78).
+- Mobile: local migration 4, `ReportRepository`, `CorrectionRepository`, `NotificationRepository`, report rules. TC-U-RPT-01, TC-U-RPT-02, TC-CI-DB-02 (S3 part) pass.
+- Design: `docs/04-uiux/design-system.md`, `docs/04-uiux/uiux-team-requirements.md`, theme layers and motion (D-68).
+
+S3 next (in order):
+1. Replace `MockStore` in the 15 prototype pages with a store on the real repositories (OJT home, progress, reports, report editor with photos, corrections, export, facilitator overview, reviews, notifications, profile). Use the motion classes and the brand asset map. Delete `data/mock/` after the change.
+2. Remove the records of an OJT from the facilitator device when the assignment ends (API contract, section 5.2, NOTE). Then TC-CI-ACL-02 (move `ojt5` to `fac2`).
+3. Admin web: Edge Function `admin-users` (create, change, deactivate users, FR-ADM-01), companies, batches, assignments, company settings (FR-ADM-02 to 04, 06), dashboard and filters (FR-MON-03, 04), audit log (FR-AUD-02), offline message (TC-ST-ADM-02). Then TC-CI-ADM-01.
+4. Device tests on the emulator: TC-SI-RPT-01, TC-SI-COR-01, TC-ST-FAC-01, TC-ST-ADM-01 (part), TC-ST-ACC-01.
+5. Close the S1 gate items, then the S2 and S3 gate checks and the S3 test report.
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
@@ -40,7 +52,7 @@ Open S1 items:
 1. Keep-alive. Source A (`keepalive.yml`) runs: the first scheduled run passed on 2026-10-26 at 06:10 UTC (about 5 hours after the cron time; heartbeat `github` on `dev`). Source B is deferred (D-45) and must exist before the S1 gate. Source C: calendar reminders (Monday and Thursday).
 2. Agent: the S1 test report draft exists (`docs/05-testing/reports/S1-test-report.md`). Close its open items (section 5), then do the gate check. Backend coverage: done 2026-10-26. The user accepted D-52 (rule-item coverage). Value 88.2% (60 of 68), target 70%.
 3. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
-4. The UI/UX team makes the UI/UX design (D-26). When it is ready, put it in `docs/04-uiux/`.
+4. Done 2026-10-30: the UI/UX design values are in `docs/04-uiux/design-system.md` (D-68). The UI/UX team rules are in `docs/04-uiux/uiux-team-requirements.md`.
 5. UI prototype (D-63, outside the stage gates): all missing OJT and facilitator mobile screens exist on the branch `ui/prototype-pages` with fake data (`system/frontend/src/app/data/mock/`). The UI/UX team designs on these screens. In S3, replace `MockStore` with the real repositories and write the S3 test cases for these screens.
 6. UI/UX theme (D-64), done 2026-10-30 on `ui/prototype-pages`: the UI/UX team changes from `Yandev13/log-bound` (login page with the LogBound logo, styles of seven pages, theme), with teal and amber colors and the Inter and Plus Jakarta Sans fonts. See open issue UI-02.
 
@@ -99,7 +111,7 @@ Open S1 items:
 | ENV-02 | The GitHub repository exists. The weekly backup waited for the `dev` database password (readiness plan, item 4b). `backup.yml` exists and the first backup passed on 2026-10-26. | User | Closed |
 | ENV-04 | The `dev` Auth settings were the Supabase defaults. Pushed on 2026-10-25. | Agent | Closed |
 | O-5 | supabase-js had no request timeout. The fetch wrapper stops each request after 15 s. TC-SI-SYNC-06 passed on the emulator on 2026-10-26 (17-minute outage, session kept). | Agent | Closed |
-| DM-01 | The data model has no punch type for a correction request of kind `add`. The server cannot make the new punch without it. Decide in S3 before COR work (add `requested_type`, then update the data model). | Agent | Open |
+| DM-01 | The data model has no punch type for a correction request of kind `add`. The server cannot make the new punch without it. Decide in S3 before COR work (add `requested_type`, then update the data model). | Agent | Closed 2026-10-30 (D-66) |
 | KA-01 | QR-RE-06 (Must) needs two automatic keep-alive sources. Source A runs (first scheduled run 2026-10-26, 06:10 UTC). Source B is deferred (D-45). The S1 gate cannot pass without source B. | User and agent | Open |
 | UI-02 | The teal and amber hex values (D-64) are agent selections. The Figma file still shows the old orange and blue mood board. The LogBound logo is still blue and orange. The UI/UX team must confirm the hex values and send a teal and amber logo (900 px wide or less). | User (UI/UX team) | Open |
 | BK-01 | The weekly backup (`backup.yml`) does not contain the Storage files (photos). After a rebuild, devices upload the photos of the last 30 days again (offline sync design, section 12). Older photos are lost. Decide before TC-ST-Q-RE-04: add a Storage copy to the backup, or accept the gap with a decision. | Agent | Open |
@@ -141,3 +153,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-10-26 | Claude Code (desktop) | Made a Figma starter file of the app UI for the UI/UX team (D-26): [OJT-DTR App - UI Starter (from code)](https://www.figma.com/design/0STcZXRJO5eLpSn2d9ff2p). Built screens are copied from the code (Ionic default theme). Screens not built yet are mockups. 104 prototype links, local components, and color variables. No repository file changed except this row. | Figma file `0STcZXRJO5eLpSn2d9ff2p` (team "W's team"), `PROGRESS.md` |
 | 2026-10-28 | Claude Code (desktop) | Saved the S2 working changes (IT-EL-5 plan, decision log D-53 to D-62, deliverables) on the branch `archive/s2-offline-core-2026-10-28` and pushed it. Made the UI prototype (D-63) on the branch `ui/prototype-pages`: OJT home, progress, reports, report editor, corrections, correction form, DTR export; facilitator overview, OJT overview, reviews, report review, correction review; profile and notifications. Shared progress ring, bar chart, status badge, and stat tile. Fake data store with the requirement rules. Lint: zero errors. Frontend tests: 189 of 189 pass (5 new for the store). Checked in the browser preview (mobile size): report submit, report approval, and the pages render. Made the replacement zip for the UI/UX team. | `system/frontend/src/app/**`, `system/frontend/AGENTS.md`, `docs/01-project/decision-log.md`, `PROGRESS.md` |
 | 2026-10-30 | Claude Code (desktop) | Merged the UI/UX team changes from `Yandev13/log-bound` (commit `7545390`) into `ui/prototype-pages`: theme, login page with the logo, styles of seven pages. Changed blue to teal and orange to amber. Fonts: Plus Jakarta Sans (headers, big text) and Inter (small text) from `@fontsource-variable` (offline, D-64). Made the logo smaller (5.5 MB to 140 KB). Lint passes, build passes, 189 unit tests pass. The login page was checked in the browser preview (light and dark). The inner pages were not checked in the browser (they need a login to `dev`). The Figma MCP stopped at the Starter plan limit. | `system/frontend/src/theme/variables.scss`, `system/frontend/src/app/features/**` (7 pages), `system/frontend/src/app/shared/ui/` (2 files), `system/frontend/src/assets/log-bound-logo.png`, `system/frontend/package.json`, `docs/01-project/decision-log.md`, `system/frontend/AGENTS.md`, `system/frontend/UI-GUIDE.md`, `PROGRESS.md` |
+| 2026-10-30 | Claude Code (desktop) | Started S3 early (D-65) on the branch `s3/reports-corrections-admin`. Wrote `docs/04-uiux/design-system.md` (current mood board, modular layers, motion) and `docs/04-uiux/uiux-team-requirements.md` (UI/UX team rules for states, tokens, assets, animations, delivery). Split the theme into tokens, motion, and component styles; moved the logo to `assets/brand/`; removed the dark palette; fixed the tab bar contrast (D-68). Server: report events, correction requests and decisions, notifications, report photo link (D-66, D-67), applied to `dev` with `supabase db push`. Closed DM-01. Mobile: local migration 4 and three repositories. Backend: 97 L2 tests pass, coverage 91.0%. Frontend: 211 unit tests pass, lint and build pass. Login page checked in the browser preview. The pages still use `MockStore`. Nothing is committed. | `docs/04-uiux/*`, `docs/01-project/decision-log.md`, `docs/01-project/uiux-moodboard-summary.md`, `docs/03-architecture/data-model.md`, `docs/AGENTS.md`, `system/backend/supabase/migrations/20261030120000_s3_reports_corrections.sql`, `system/backend/supabase/api-contract.md`, `system/backend/tests/*`, `system/backend/AGENTS.md`, `system/frontend/src/theme/*`, `system/frontend/src/app/data/**`, `system/frontend/src/app/shared/{brand.ts,utils/report-rules*}`, `system/frontend/angular.json`, `system/frontend/UI-GUIDE.md`, `PROGRESS.md` |

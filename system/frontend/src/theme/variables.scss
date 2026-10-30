@@ -1,5 +1,6 @@
-/* src/theme/variables.scss
-   All colors and fonts of the app are here. Page files use var(--ion-color-...) only.
+/* src/theme/variables.scss - layer 1 of the design system (docs/04-uiux/design-system.md, section 3).
+   All design tokens of the app are here: colors, fonts, shapes, space. Page files use var(--...) only.
+   Global component styles are in components.scss. Motion is in motion.scss.
    Source: the UI/UX team (log-bound repository, 2026-10-28), with the colors and fonts
    of the UI/UX head (2026-10-30): teal replaces blue, amber replaces orange (D-64). */
 
@@ -99,67 +100,25 @@
   --ion-toolbar-background: var(--ion-color-primary);
   --ion-toolbar-color: #ffffff;
 
-  /* Bottom tab bar */
+  /* Bottom tab bar. Amber text on teal is too dark to read (QR-IC-06), so the selected tab
+     uses light amber text and an amber mark (components.scss). */
   --ion-tab-bar-background: var(--ion-color-primary);
   --ion-tab-bar-color: #ffffff;
-  --ion-tab-bar-color-selected: var(--ion-color-secondary);
+  --ion-tab-bar-color-selected: #fef3c7;
+
+  /* Shapes, space, and elevation (design-system.md, section 2.3) */
+  --radius-s: 10px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --elevation-1: 0 4px 16px rgba(15, 118, 110, 0.18);
 
   /* Fonts */
   --font-heading: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif; /* big text, headers */
   --ion-font-family: 'Inter Variable', 'Inter', sans-serif; /* small text, buttons, inputs */
-}
-
-/* ---------- Small global styles (shared by all pages) ---------- */
-
-/* Big text, headers, and sub headers use Plus Jakarta Sans. All other text uses Inter. */
-h1,
-h2,
-h3,
-h4,
-ion-title {
-  font-family: var(--font-heading);
-  font-weight: 700;
-}
-
-/* Floating rounded tab bar */
-ion-tab-bar {
-  margin: 0 12px 12px;
-  border-radius: 16px;
-  border: none;
-}
-
-/* Rounded buttons, no CAPITAL letters */
-ion-button {
-  --border-radius: 10px;
-  text-transform: none;
-  font-weight: 600;
-}
-
-/* Main buttons are amber (buttons with a color="" keep their own color) */
-ion-button:not([color]):not(.button-outline):not(.button-clear) {
-  --background: var(--ion-color-secondary);
-  --background-activated: var(--ion-color-secondary-shade);
-  --background-hover: var(--ion-color-secondary-tint);
-  --color: var(--ion-color-secondary-contrast);
-}
-
-/* Outline buttons use the teal color */
-ion-button.button-outline:not([color]) {
-  --border-color: var(--ion-color-primary);
-  --color: var(--ion-color-primary);
-}
-
-/* Cards are light, flat, and rounded */
-ion-card {
-  background: var(--ion-color-light);
-  box-shadow: none;
-  border-radius: 16px;
-  margin: 12px 0;
-}
-
-/* Input fields */
-ion-input {
-  --border-radius: 10px;
-  --border-color: var(--ion-color-medium-tint);
-  --highlight-color-focused: var(--ion-color-primary);
 }

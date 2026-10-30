@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { IonButton, IonContent, IonInput, IonNote, IonSpinner } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
+import { BRAND } from '../../shared/brand';
 import { STRINGS } from '../../shared/strings';
 
 @Component({
@@ -14,11 +15,11 @@ import { STRINGS } from '../../shared/strings';
     <ion-content>
       <div class="login">
         <div class="hero">
-          <div class="logo">
-            <img src="assets/log-bound-logo.png" [alt]="s.appName" />
+          <div class="logo anim-pop">
+            <img [src]="brand.logo" [alt]="s.appName" />
           </div>
         </div>
-        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <form class="anim-rise-in" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <h1>{{ s.login.title }}</h1>
           <ion-input
             formControlName="email"
@@ -107,6 +108,7 @@ import { STRINGS } from '../../shared/strings';
 })
 export class LoginPage {
   protected readonly s = STRINGS;
+  protected readonly brand = BRAND;
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 

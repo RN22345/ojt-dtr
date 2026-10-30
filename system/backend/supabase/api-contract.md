@@ -2,7 +2,7 @@
 
 This document is the API contract of the OJT-DTR backend (D-23, QR-CO-02). It lists each table, RLS policy, RPC function, and Edge Function. Update it in the same commit as each change to the schema.
 
-Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, and `20261026080316_attachments_storage`.
+Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, `20261026080316_attachments_storage`, and `20261030120000_s3_reports_corrections`.
 
 ## 1. Interfaces
 
@@ -71,9 +71,9 @@ There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (
 |---|---|---|
 | `touch` | All synced tables | Sets `version`, `created_at`, `updated_at`, `change_seq` (the pull cursor, D-11) |
 | `check_roles` | `ojt_assignments` | `ojt_id` must be an OJT. `facilitator_id` must be a facilitator. One active assignment for each OJT (unique index). |
-| `append_only` | `punches` | No DELETE. An UPDATE can change only `approved`, `doubtful_time`, and the common columns (D-05). |
+| `append_only` | `punches` | No DELETE. An UPDATE can change only `approved`, `doubtful_time`, and the common columns (D-05). `correction_id` cannot change. |
 | `read_only` | `audit_logs` | No UPDATE or DELETE (QR-SE-07) |
-| `audit` | `profiles`, `ojt_assignments`, `companies`, `batches` (all changes); `weekly_reports` (status change); `correction_requests` (decision); `punches` (insert of a correction punch) | Writes one `audit_logs` row: actor, action, entity, before and after data (FR-AUD-01) |
+| `audit` | `profiles`, `ojt_assignments`, `companies`, `batches` (all changes); `weekly_reports` (status change); `correction_requests` (decision); `punches` (insert of a correction punch: `corrects_punch_id` or `correction_id` is set, D-66) | Writes one `audit_logs` row: actor, action, entity, before and after data (FR-AUD-01) |
 | `on_auth_user_created` | `auth.users` | Makes the `profiles` row. The role comes from `app_metadata.role`. No role gives status `inactive`. |
 
 ## 5. RPC functions
@@ -96,18 +96,21 @@ Response: `{server_time, results: [{op_id, result, cause, record}]}`, one result
 |---|---|---|
 | `applied` | The server applied the change. | The server record (with `version`, `server_received_at`, `doubtful_time`) |
 | `duplicate` | The `op_id` or the record ID is already applied (FR-SYNC-05, section 12). | The current server record |
-| `conflict` | `base_version` is old (cause `version`), or a report exists for that week (cause `week_exists`). | The current server record |
+| `conflict` | `base_version` is old (cause `version`), a report exists for that week (cause `week_exists`), or the report or correction is already decided (cause `decided`, first decision wins, D-67). | The current server record |
 | `rejected` | The operation is not valid. | None |
 
-Cause codes of `rejected`: `file_missing` (attachment: no file in Storage at `storage_key`; the client must upload the file first), `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch or attachment update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type).
+Cause codes of `rejected`: `file_missing` (attachment: no file in Storage at `storage_key`; the client must upload the file first), `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch or attachment update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type), `incomplete` (submit with no text in `tasks_done` or `skills_learned`), `remark_required` (a return or a rejection with no remark), `too_many_photos` (a sixth photo for one report).
 
-Entities in S2:
+Entities (S2 and S3):
 
 | Entity | Operations | Rules |
 |---|---|---|
 | `punches` | `create` | OJT only. `ojt_id` must be the caller. Times: ISO 8601 with a time zone. The server sets `server_received_at`, `doubtful_time` (offline sync design, section 8), `approved`, `version`. |
-| `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. Status changes come in S3. |
-| `attachments` | `create` | OJT only. `owner_id` must be the caller. `storage_key` must be `<owner_id>/<id>.jpg`. The file must be in Storage. The server sets `size_bytes` from the Storage file. `report_id` is ignored in S2 (the report link comes in S3). An update gives `append_only`. Send the attachment operation before the punch or report that refers to it. |
+| `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. A status change is a `report_events` operation. |
+| `report_events` | `create` | Payload: `id`, `report_id`, `action`, `remark`, `device_id`. `submit`: the OJT of the report, status `draft` or `returned`, text in `tasks_done` and `skills_learned`. `approve` and `return`: the active facilitator of the OJT, status `submitted` (else `conflict`, cause `decided`); `return` needs a remark. `approve` sets `approved = true` on the punches of the week (Asia/Manila, FR-RPT-07). Each action writes a notification (D-67). |
+| `correction_requests` | `create`, `update` (decision) | `create`: OJT only. Payload: `id`, `ojt_id`, `kind`, `punch_id` (kind `change`, an own punch), `punch_type` (kind `add`), `requested_time` (not more than 2 minutes after the server time), `reason` (1 to 1000 characters). `update`: the active facilitator of the OJT. Payload: `status` (`approved` or `rejected`), `remark` (needed for `rejected`), `decided_device_id`. Not `pending`: `conflict`, cause `decided`. `approved` makes a new punch with `correction_id` and, for kind `change`, `corrects_punch_id` (D-66). |
+| `notifications` | `update` | The owner only. Payload: `{read: true}`. Last write wins. |
+| `attachments` | `create` | OJT only. `owner_id` must be the caller. `storage_key` must be `<owner_id>/<id>.jpg`. The file must be in Storage. The server sets `size_bytes` from the Storage file. `report_id` (optional): an own report in `draft` or `returned`, five photos or less for each report (FR-RPT-03). An update gives `append_only`. Send the attachment operation before the punch or report that refers to it. |
 
 ### 5.2 `sync_pull`
 

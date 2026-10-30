@@ -78,6 +78,9 @@ Use these names. Do not use synonyms.
 | time-in | The punch that starts a work session |
 | time-out | The punch that stops a work session |
 | punch | One time-in or one time-out record |
+| report event | One status change of a weekly report (submit, approve, return), with the actor and the remark |
+| design token | One named design value (color, font, radius, space, motion) in the theme files |
+| Lottie | A file format for vector animations (JSON or dotLottie) |
 | work session | One time-in and its time-out |
 | logged hours | Hours from all closed work sessions |
 | approved hours | Hours from the work sessions of approved weeks |
