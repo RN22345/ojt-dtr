@@ -2,7 +2,7 @@
 
 This document is the API contract of the OJT-DTR backend (D-23, QR-CO-02). It lists each table, RLS policy, RPC function, and Edge Function. Update it in the same commit as each change to the schema.
 
-Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, `20261026080316_attachments_storage`, and `20261030120000_s3_reports_corrections`.
+Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, `20261026080316_attachments_storage`, `20261030120000_s3_reports_corrections`, and `20261108120000_s3_admin`.
 
 ## 1. Interfaces
 
@@ -12,7 +12,7 @@ Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_an
 | RPC | `/rest/v1/rpc/<function>` | POST with a JSON body |
 | Auth | `/auth/v1/*` | Supabase Auth |
 | Storage | `/storage/v1/object/attachments/<owner_id>/<id>.jpg` | Upload (POST) and download (GET). See section 3.1. |
-| Edge Functions | `/functions/v1/<name>` | Not deployed yet (S3, S4) |
+| Edge Functions | `/functions/v1/<name>` | POST with a JSON body. Supabase JWT in `Authorization`. See section 6. |
 
 The Data API exposes only the `public` schema. The `private` and `ops` schemas are not exposed.
 
@@ -85,6 +85,7 @@ There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (
 | `server_epoch` | None | `uuid` | `authenticated` | Current server epoch (D-19) |
 | `sync_push` | `p_ops jsonb`, `p_device_now timestamptz` (optional) | `jsonb` (see 5.1) | `authenticated`: active OJT and facilitator only | Offline sync design, section 4 |
 | `sync_pull` | `p_cursor bigint` (default 0), `p_epoch uuid` (default null), `p_limit int` (1 to 500, default 500) | `jsonb` (see 5.2) | `authenticated`: active OJT and facilitator only | Offline sync design, section 5 |
+| `admin_dashboard` | None | Table (see 5.3) | `authenticated`: active admin only (others: error `42501`) | Admin dashboard (D-70) |
 
 ### 5.1 `sync_push`
 
@@ -120,9 +121,39 @@ Entities in the pull: `profiles`, `companies`, `batches`, `ojt_assignments`, `pu
 
 NOTE: When an assignment ends, the records of that OJT leave the scope of the facilitator. The pull does not send tombstones for them. The client removes them when the assignment record changes, and pulls again from cursor 0 for a new OJT (D-69).
 
+### 5.3 `admin_dashboard`
+
+One row for each active assignment that is not deleted. Order: OJT name.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `ojt_id`, `ojt_name`, `ojt_status` | uuid, text, text | OJT account (`ojt_status`: `active` or `inactive`) |
+| `company_id`, `company_name` | uuid, text | Company of the assignment |
+| `batch_id`, `batch_name` | uuid, text | Batch of the assignment |
+| `facilitator_id`, `facilitator_name` | uuid, text | Facilitator of the assignment |
+| `required_hours` | int | Required hours of the batch |
+| `logged_minutes` | bigint | Minutes of the closed work sessions. Same pairing rule as `hours.ts`: deleted punches and corrected punches do not count. An open session counts zero. |
+| `late_reports` | int | Full past weeks (Monday to Sunday, Asia/Manila) that are in the batch dates and have no report with the status `submitted` or `approved` |
+| `behind` | boolean | `late_reports > 0` or `logged_minutes < 0.9 x expected`. Expected = full past weeks x 2400 minutes, not more than `required_hours` x 60. |
+
 ## 6. Edge Functions
 
-Planned: `admin-users` (S3), `export-csv` (S4), `push-notify` (S4). See `system/backend/AGENTS.md`.
+Planned: `export-csv` (S4), `push-notify` (S4).
+
+### 6.1 `admin-users` (S3, D-70)
+
+`POST /functions/v1/admin-users`. Body: JSON `{ "action": ..., ... }`. CORS: any origin. The caller must be an active admin. Other callers get HTTP 403 `{"error":"forbidden"}`. The function uses the service role key of its own environment. It changes `profiles` with the JWT of the calling admin, so the audit entry has the admin as the actor. The audit entry of a new user has no actor (the trigger on `auth.users` makes the profile).
+
+| Action | Fields | Success | Notes |
+|---|---|---|---|
+| `create` | `email`, `password` (8 to 72 characters), `full_name` (1 to 200), `role` (`ojt`, `facilitator`, `admin`), `contact_no` (optional) | 200 `{"user_id": "<uuid>"}` | The email is confirmed. The status is `active`. |
+| `update` | `user_id`, and one or more of `full_name`, `contact_no`, `role` | 200 `{"ok":true}` | A role change also changes `app_metadata.role`. An admin cannot change the own role. |
+| `deactivate` | `user_id` | 200 `{"ok":true}` | Status `inactive`, and the Auth user is banned. An admin cannot deactivate the own account. |
+| `activate` | `user_id` | 200 `{"ok":true}` | Status `active`, and the ban is removed. |
+| `reset_password` | `user_id`, `password` | 200 `{"ok":true}` | FR-AUTH-07 |
+
+Errors: HTTP 400 `{"error":"<code>"}` with these codes: `invalid_json`, `unknown_action`, `invalid_email`, `weak_password`, `invalid_full_name`, `invalid_role`, `invalid_contact_no`, `invalid_user_id`, `email_taken`, `no_changes`, `self_deactivate`, `self_role_change`. HTTP 404 `not_found` (the user does not exist). HTTP 405 `method_not_allowed`. HTTP 500 for a failure of the server (`create_failed`, `profile_update_failed`, `auth_update_failed`, `internal_error`).
+
 
 ## 7. Known advisor notes
 
