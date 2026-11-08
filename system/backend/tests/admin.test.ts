@@ -52,7 +52,7 @@ afterAll(async () => {
   for (const id of createdUsers) {
     await callAdmin(admin, { action: 'deactivate', user_id: id });
   }
-  await admin.auth.signOut();
+  await admin.auth.signOut({ scope: 'local' });
 });
 
 describe('TC-CI-ADM-01 account actions of admin-users', () => {
@@ -312,7 +312,7 @@ describe('TC-CI-ADM-01 admin_dashboard', () => {
     const { data, error } = await client.rpc('admin_dashboard');
     expect(error?.code).toBe('42501');
     expect(data).toBeNull();
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: 'local' });
   });
 
   it('TC-CI-ADM-01 fails for the anon key', async () => {

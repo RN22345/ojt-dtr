@@ -16,7 +16,7 @@ describe.each(roles)('TC-CI-ACL-03 admin endpoints with a %s token', (_role, ema
     client = await signedIn(email);
   });
   afterAll(async () => {
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: 'local' });
   });
 
   it('TC-CI-ACL-03 cannot insert a company', async () => {
@@ -98,7 +98,7 @@ describe.each(roles)('TC-CI-ACL-03 Edge Function admin-users with a %s token', (
       expect(res.status).toBe(403);
       expect(await res.json()).toEqual({ error: 'forbidden' });
     }
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: 'local' });
   });
 });
 
@@ -129,7 +129,7 @@ describe('TC-CI-ACL-03 control: the admin token can use the admin endpoints', ()
       .select();
     expect(upd.error).toBeNull();
     expect(upd.data).toHaveLength(1);
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 
   it('TC-CI-ACL-03 admin reads all profiles, batches, and assignments', async () => {
@@ -145,7 +145,7 @@ describe('TC-CI-ACL-03 control: the admin token can use the admin endpoints', ()
 
     const assignments = await admin.from('ojt_assignments').select('ojt_id').in('ojt_id', [SEED.ojt1.id, SEED.ojt6.id]);
     expect((assignments.data ?? []).map((r) => r.ojt_id).sort()).toEqual([SEED.ojt1.id, SEED.ojt6.id].sort());
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 });
 
@@ -159,7 +159,7 @@ describe('TC-CI-ADM-01 assignment rules (database part, QR-SE-05)', () => {
 
     const notFacilitator = await admin.from('ojt_assignments').insert({ ...base, ojt_id: SEED.ojt6.id, facilitator_id: SEED.ojt4.id });
     expect(notFacilitator.error?.message).toContain('facilitator_id must be a facilitator account');
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 });
 
@@ -182,7 +182,7 @@ describe('TC-CI-AUD-01 audit entries (admin data part, FR-AUD-01)', () => {
     expect(data).toMatchObject({ actor_id: SEED.admin.id, action: 'update', entity: 'companies' });
     expect(data!.before_data['version']).toBe(company.data!.version);
     expect(data!.after_data['version']).toBe(upd.data![0].version);
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 });
 
