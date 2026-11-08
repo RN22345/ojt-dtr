@@ -114,7 +114,7 @@ describe('list helpers and messages', () => {
   });
 
   it('gives a clear message for each error code of the Edge Function', () => {
-    const codes = ['invalid_email', 'weak_password', 'invalid_role', 'email_taken', 'not_found', 'self_deactivate', 'forbidden'];
+    const codes = ['invalid_email', 'weak_password', 'invalid_role', 'email_taken', 'not_found', 'self_deactivate', 'forbidden', 'session_ended'];
     const texts = codes.map((c) => errorMessage(new AdminError(c)));
     expect(new Set(texts).size).toBe(codes.length);
     for (const text of texts) {

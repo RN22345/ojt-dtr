@@ -24,6 +24,7 @@ export const ADM_STRINGS = {
     not_found: 'The server does not have this record.',
     self_deactivate: 'You cannot make your own account not active.',
     forbidden: 'Only an active admin can do this.',
+    session_ended: 'Your session ended. Log out, then log in again.',
     duplicate: 'This record exists already. An OJT can have one active assignment only.',
     invalid_data: 'The server did not accept the values. Examine the fields.',
     network: 'The server did not answer. Examine the network connection and try again.',

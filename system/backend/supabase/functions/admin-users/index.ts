@@ -83,7 +83,8 @@ Deno.serve(async (req) => {
     // 1. The caller must be an active admin.
     const jwt = authHeader.replace(/^Bearer\s+/i, '');
     const { data: who, error: whoError } = await caller.auth.getUser(jwt);
-    if (whoError || !who.user) throw new Fail('forbidden', 403);
+    // An ended session (for example after a global sign-out) is not the same as a user that is not an admin (DEF-018).
+    if (whoError || !who.user) throw new Fail('session_ended', 401);
     const me = who.user.id;
     const { data: mine } = await caller
       .from('profiles')

@@ -142,7 +142,7 @@ Planned: `export-csv` (S4), `push-notify` (S4).
 
 ### 6.1 `admin-users` (S3, D-70)
 
-`POST /functions/v1/admin-users`. Body: JSON `{ "action": ..., ... }`. CORS: any origin. The caller must be an active admin. Other callers get HTTP 403 `{"error":"forbidden"}`. The function uses the service role key of its own environment. It changes `profiles` with the JWT of the calling admin, so the audit entry has the admin as the actor. The audit entry of a new user has no actor (the trigger on `auth.users` makes the profile).
+`POST /functions/v1/admin-users`. Body: JSON `{ "action": ..., ... }`. CORS: any origin. The caller must be an active admin. Other callers get HTTP 403 `{"error":"forbidden"}`. A token of a session that ended on the server (for example after a global sign-out) gives HTTP 401 `{"error":"session_ended"}` (DEF-018). The function uses the service role key of its own environment. It changes `profiles` with the JWT of the calling admin, so the audit entry has the admin as the actor. The audit entry of a new user has no actor (the trigger on `auth.users` makes the profile).
 
 | Action | Fields | Success | Notes |
 |---|---|---|---|

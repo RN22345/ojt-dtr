@@ -148,6 +148,23 @@ describe('TC-CI-ADM-01 account actions of admin-users', () => {
     expect(data!.status).toBe('active');
   });
 
+  it('TC-CI-ADM-01 a token of an ended session gives 401 session_ended (DEF-018)', async () => {
+    const admin2 = await createUser('admin', 'ended');
+    const client = newClient();
+    const { error } = await client.auth.signInWithPassword({ email: admin2.email, password: PASSWORD });
+    expect(error).toBeNull();
+    const token = (await client.auth.getSession()).data.session!.access_token;
+    // A global sign-out ends the session on the server. The token itself stays valid until it expires.
+    await client.auth.signOut({ scope: 'global' });
+    const res = await fetch(`${env('SUPABASE_URL')}/functions/v1/admin-users`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, apikey: env('SUPABASE_ANON_KEY'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', user_id: admin2.id, full_name: 'Ended' }),
+    });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: 'session_ended' });
+  });
+
   it('TC-CI-ADM-01 an OPTIONS request gets the CORS headers', async () => {
     const res = await fetch(`${env('SUPABASE_URL')}/functions/v1/admin-users`, {
       method: 'OPTIONS',
