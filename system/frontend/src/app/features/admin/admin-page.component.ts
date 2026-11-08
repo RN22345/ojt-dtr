@@ -29,6 +29,16 @@ import { AdminOnline } from './admin-online.service';
     </ion-content>
   `,
   styles: `
+    /* The frame is between the Ionic page and ion-content. It must fill the page, or ion-content has no height. */
+    app-admin-page {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    app-admin-page > ion-content {
+      flex: 1 1 auto;
+    }
     .adm-page {
       max-width: 1200px;
       margin: 0 auto;
