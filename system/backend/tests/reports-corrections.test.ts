@@ -203,7 +203,7 @@ describe('TC-CI-RPT-02 first decision wins (FR-RPT-05, FR-COR-02)', () => {
 });
 
 describe('TC-CI-AUD-01 audit entries (FR-AUD-01, QR-SE-07) and correction rules (FR-COR-01 to FR-COR-03)', () => {
-  it('TC-CI-AUD-01: an approved correction makes a new punch; the original stays; each step is audited', async () => {
+  it('TC-CI-AUD-01, TC-U-COR-01 (D-71): an approved correction makes a new punch; the original stays; each step is audited', async () => {
     const week = await freeWeek(ojt4);
     const original = punch(week, 1, 9, 'in');
     expect((await push(ojt4, [op('punches', 'create', original['id'] as string, original)]))[0].result).toBe('applied');
