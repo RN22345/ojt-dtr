@@ -76,7 +76,7 @@
     "id_conflict": ["TC-CI-ACL-01"],
     "incomplete": ["TC-CI-RPT-01"],
     "invalid_data": ["TC-CI-RPT-01", "TC-CI-SYNC-04"],
-    "invalid_reference": ["TC-CI-SYNC-04"],
+    "invalid_reference": ["TC-CI-SYNC-04", "TC-CI-FILE-01"],
     "not_editable": ["TC-CI-RPT-01"],
     "not_found": ["TC-CI-SYNC-04"],
     "remark_required": ["TC-CI-RPT-01", "TC-CI-AUD-01"],
