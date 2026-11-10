@@ -22,7 +22,12 @@ export class LogoutService {
       return 0;
     }
     await this.sync.trigger().catch(() => undefined);
-    return unsyncedCount(await this.local.db(), userId);
+    try {
+      return unsyncedCount(await this.local.db(), userId);
+    } catch {
+      // The local database did not open. There is no local data to lose, so the logout can continue.
+      return 0;
+    }
   }
 
   /**

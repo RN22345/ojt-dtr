@@ -82,6 +82,8 @@ stateDiagram-v2
 5. The app stores the new cursor.
 6. If `has_more` is true, go to step 1.
 
+7. Scope changes (D-69): an assignment of a different OJT that ends removes the synced records of that OJT from the device. A new assignment of a different OJT starts one more pull from cursor 0, so that the older records of that OJT come to the device.
+
 ### Scope of the pull
 
 | Role | Data in the pull |

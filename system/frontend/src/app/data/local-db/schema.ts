@@ -190,6 +190,20 @@ export const LOCAL_MIGRATIONS: readonly LocalMigration[] = [
     description: 'Server copy of a record with a sync issue, for the "Sync issues" screen (FR-SYNC-06)',
     sql: `alter table outbox add column server_record text;`,
   },
+  {
+    version: 4,
+    description: 'S3: correction punch type and link, notification text and page (D-66, D-67)',
+    sql: `
+      alter table correction_requests add column punch_type text;
+      alter table correction_requests add column created_at text;
+      alter table punches add column correction_id text;
+      alter table notifications add column body text not null default '';
+      alter table notifications add column link text;
+      alter table weekly_reports add column created_at text;
+      create index correction_requests_ojt on correction_requests (ojt_id);
+      create index notifications_user on notifications (user_id, created_at);
+    `,
+  },
 ];
 
 /** The newest local schema version. */

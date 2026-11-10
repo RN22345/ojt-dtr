@@ -96,3 +96,59 @@ export async function markIssue(db: LocalDb, entity: string, id: string): Promis
     await db.run(`update ${entity} set sync_status = 'issue' where id = ?`, [id]);
   }
 }
+
+type ScopeChange = 'started' | 'ended' | 'none';
+
+/** On a facilitator device: an assignment of an OJT starts or ends (API contract, section 5.2, NOTE). */
+async function scopeChange(db: LocalDb, data: Record<string, unknown>, userId: string): Promise<ScopeChange> {
+  if (data['ojt_id'] === userId || typeof data['id'] !== 'string') {
+    return 'none';
+  }
+  const active = data['active'] === true && !data['deleted_at'];
+  const local = await db.query<{ active: number }>('select active from ojt_assignments where id = ?', [data['id']]);
+  const wasActive = local[0]?.active === 1;
+  if (active && !wasActive) {
+    return 'started';
+  }
+  return !active && wasActive ? 'ended' : 'none';
+}
+
+/**
+ * The OJT left the scope of this device (its assignment ended). The pull sends no tombstones for it, so the
+ * device removes the synced records of the OJT. Records with a local change stay (QR-SF-03).
+ */
+export async function removeOjtRecords(db: LocalDb, ojtId: string): Promise<void> {
+  const others = await db.query<{ n: number }>(
+    'select count(*) as n from ojt_assignments where ojt_id = ? and active = 1 and deleted_at is null',
+    [ojtId],
+  );
+  if (Number(others[0]?.n ?? 0) > 0) {
+    return;
+  }
+  await db.run(
+    `delete from report_events where sync_status = 'synced'
+       and report_id in (select id from weekly_reports where ojt_id = ?)`,
+    [ojtId],
+  );
+  for (const [table, owner] of [['weekly_reports', 'ojt_id'], ['correction_requests', 'ojt_id'], ['punches', 'ojt_id'], ['attachments', 'owner_id']]) {
+    await db.run(`delete from ${table} where ${owner} = ? and sync_status = 'synced'`, [ojtId]);
+  }
+}
+
+/**
+ * Merges one pull page (section 5, step 4) and applies the scope changes of the assignments.
+ * Returns true if an OJT came into the scope of this device. Then the caller pulls again from cursor 0,
+ * because the older records of that OJT have a change number below the cursor.
+ */
+export async function mergePage(db: LocalDb, records: readonly { entity: string; data: Record<string, unknown> }[], userId: string): Promise<boolean> {
+  let started = false;
+  for (const r of records) {
+    const change = r.entity === 'ojt_assignments' ? await scopeChange(db, r.data, userId) : 'none';
+    await mergePulled(db, r.entity, r.data);
+    if (change === 'ended') {
+      await removeOjtRecords(db, String(r.data['ojt_id']));
+    }
+    started ||= change === 'started';
+  }
+  return started;
+}

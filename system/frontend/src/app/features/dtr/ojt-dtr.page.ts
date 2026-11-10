@@ -31,10 +31,19 @@ import { DtrService } from './dtr.service';
     </ion-content>
   `,
   styles: `
+    p {
+      margin: 0 0 8px;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
     .note {
       display: block;
       margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
       font-size: 0.85rem;
+      color: var(--ion-color-dark);
+      background: rgba(var(--ion-color-warning-rgb), 0.2);
     }
   `,
 })

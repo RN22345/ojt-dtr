@@ -138,3 +138,40 @@ export async function countOutbox(db: LocalDb, userId: string): Promise<number> 
   const rows = await db.query<{ n: number }>('select count(*) as n from outbox where user_id = ?', [userId]);
   return Number(rows[0]?.n ?? 0);
 }
+
+/** The newest queued operation of a record, or null. A queued operation is not sent yet, so its payload can change. */
+export async function findQueued(db: LocalDb, entity: string, entityId: string): Promise<OutboxOp | null> {
+  const rows = await db.query<OutboxRow>(
+    "select * from outbox where entity = ? and entity_id = ? and status = 'queued' order by created_at desc, rowid desc limit 1",
+    [entity, entityId],
+  );
+  return rows[0] ? fromRow(rows[0]) : null;
+}
+
+/** Changes the payload of a queued operation (one operation for many saves of the same record). */
+export async function replacePayload(db: LocalDb, opId: string, payload: unknown): Promise<void> {
+  await db.run("update outbox set payload = ? where op_id = ? and status = 'queued'", [JSON.stringify(payload), opId]);
+}
+
+/**
+ * The number of unsent operations that change the server version of a record: the operations of the record, and
+ * the operations of `ref.entity` that refer to it with `ref.column` in their payload (for example, a report event).
+ * The base version of a new update is the local version plus this number (offline sync design, section 7).
+ */
+export async function countOpenChanges(
+  db: LocalDb,
+  entity: string,
+  entityId: string,
+  ref?: { entity: string; column: string },
+): Promise<number> {
+  const own = await db.query<{ n: number }>('select count(*) as n from outbox where entity = ? and entity_id = ?', [entity, entityId]);
+  let refs = 0;
+  if (ref) {
+    const rows = await db.query<{ n: number }>('select count(*) as n from outbox where entity = ? and payload like ?', [
+      ref.entity,
+      `%"${ref.column}":"${entityId}"%`,
+    ]);
+    refs = Number(rows[0]?.n ?? 0);
+  }
+  return Number(own[0]?.n ?? 0) + refs;
+}

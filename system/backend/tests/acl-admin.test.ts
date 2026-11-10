@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { newClient, SEED, signedIn } from './helpers';
+import { env, newClient, SEED, signedIn } from './helpers';
 
 // TC-CI-ACL-03 (QR-SE-01): OJT and facilitator tokens cannot use the admin endpoints.
-// The Edge Function part (admin-users, export-csv) runs when those functions exist (S3).
+// The Edge Function part covers admin-users (S3). export-csv comes in S4.
 const roles = [
   ['OJT', SEED.ojt1.email],
   ['facilitator', SEED.fac1.email],
@@ -16,7 +16,7 @@ describe.each(roles)('TC-CI-ACL-03 admin endpoints with a %s token', (_role, ema
     client = await signedIn(email);
   });
   afterAll(async () => {
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: 'local' });
   });
 
   it('TC-CI-ACL-03 cannot insert a company', async () => {
@@ -77,6 +77,42 @@ describe.each(roles)('TC-CI-ACL-03 admin endpoints with a %s token', (_role, ema
   });
 });
 
+describe.each(roles)('TC-CI-ACL-03 Edge Function admin-users with a %s token', (_role, email) => {
+  it('TC-CI-ACL-03 gets 403 for each action, and no account is made', async () => {
+    const client = await signedIn(email);
+    const token = (await client.auth.getSession()).data.session!.access_token;
+    const call = (body: unknown) =>
+      fetch(`${env('SUPABASE_URL')}/functions/v1/admin-users`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, apikey: env('SUPABASE_ANON_KEY'), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    const bodies = [
+      { action: 'create', email: 'acl-forged@example.test', password: 'Forged-pass-1', full_name: 'Forged', role: 'admin' },
+      { action: 'update', user_id: SEED.ojt1.id, role: 'admin' },
+      { action: 'deactivate', user_id: SEED.ojt6.id },
+      { action: 'reset_password', user_id: SEED.ojt6.id, password: 'Forged-pass-1' },
+    ];
+    for (const body of bodies) {
+      const res = await call(body);
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({ error: 'forbidden' });
+    }
+    await client.auth.signOut({ scope: 'local' });
+  });
+});
+
+describe('TC-CI-ACL-03 Edge Function admin-users without a user token', () => {
+  it('TC-CI-ACL-03 gets 401 or 403 with the anon key', async () => {
+    const res = await fetch(`${env('SUPABASE_URL')}/functions/v1/admin-users`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env('SUPABASE_ANON_KEY')}`, apikey: env('SUPABASE_ANON_KEY'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deactivate', user_id: SEED.ojt6.id }),
+    });
+    expect([401, 403]).toContain(res.status);
+  });
+});
+
 describe('TC-CI-ACL-03 control: the admin token can use the admin endpoints', () => {
   it('TC-CI-ACL-03 admin reads audit_logs and changes a company', async () => {
     const admin = await signedIn(SEED.admin.email);
@@ -93,7 +129,7 @@ describe('TC-CI-ACL-03 control: the admin token can use the admin endpoints', ()
       .select();
     expect(upd.error).toBeNull();
     expect(upd.data).toHaveLength(1);
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 
   it('TC-CI-ACL-03 admin reads all profiles, batches, and assignments', async () => {
@@ -109,7 +145,7 @@ describe('TC-CI-ACL-03 control: the admin token can use the admin endpoints', ()
 
     const assignments = await admin.from('ojt_assignments').select('ojt_id').in('ojt_id', [SEED.ojt1.id, SEED.ojt6.id]);
     expect((assignments.data ?? []).map((r) => r.ojt_id).sort()).toEqual([SEED.ojt1.id, SEED.ojt6.id].sort());
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 });
 
@@ -123,7 +159,7 @@ describe('TC-CI-ADM-01 assignment rules (database part, QR-SE-05)', () => {
 
     const notFacilitator = await admin.from('ojt_assignments').insert({ ...base, ojt_id: SEED.ojt6.id, facilitator_id: SEED.ojt4.id });
     expect(notFacilitator.error?.message).toContain('facilitator_id must be a facilitator account');
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 });
 
@@ -146,7 +182,7 @@ describe('TC-CI-AUD-01 audit entries (admin data part, FR-AUD-01)', () => {
     expect(data).toMatchObject({ actor_id: SEED.admin.id, action: 'update', entity: 'companies' });
     expect(data!.before_data['version']).toBe(company.data!.version);
     expect(data!.after_data['version']).toBe(upd.data![0].version);
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: 'local' });
   });
 });
 

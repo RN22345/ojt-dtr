@@ -14,6 +14,7 @@ export const PAYLOAD_COLUMNS: Readonly<Record<string, readonly string[]>> = {
     'lat', 'lng', 'accuracy_m', 'photo_id', 'device_id', 'corrects_punch_id',
   ],
   weekly_reports: ['id', 'ojt_id', 'week_start', 'tasks_done', 'skills_learned', 'problems', 'next_plans'],
+  correction_requests: ['id', 'ojt_id', 'punch_id', 'kind', 'punch_type', 'requested_time', 'reason'],
 };
 
 /** The entities that the client can create. Their records are sent again after an epoch change. */

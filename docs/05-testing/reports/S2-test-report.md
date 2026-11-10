@@ -1,6 +1,6 @@
 # Stage test report: S2 Offline core
 
-This report gives the results of the S2 tests and the status of the S2 gate. The S2 work started before the S1 gate (D-46). Thus the S2 gate cannot pass before the S1 gate passes. Update this report at the gate check (S2 end date 2026-11-10).
+This report gives the results of the S2 tests and the S2 gate decision. The S2 work started before the S1 gate (D-46). Gate check: 2026-11-10, after the S1 gate passed.
 
 ## 1. Summary
 
@@ -8,8 +8,8 @@ This report gives the results of the S2 tests and the status of the S2 gate. The
 |---|---|
 | Stage | S2 |
 | Dates | 2026-11-04 to 2026-11-10 (work started 2026-10-26, D-46) |
-| Build or commit | `3bbe97a` and later on `main` |
-| Gate result | Fail for now (not passed yet). All 31 S2 test cases pass or part pass. The open item is the S1 gate (section 8). |
+| Build or commit | `3bbe97a` (S2 tests). Gate check on `d6e87ce` (branch `s3/reports-corrections-admin`, CI pass). |
+| Gate result | Passed 2026-11-10 (section 8) |
 | Prepared by | Claude Code (desktop), for the developer |
 
 Test devices: Android 15 emulator (AVD `ojt_dtr_api35`, 1080 x 2400), development build. PC with Node.js for the L2 tests. Supabase project `dev`.
@@ -19,12 +19,12 @@ Test devices: Android 15 emulator (AVD `ojt_dtr_api35`, 1080 x 2400), developmen
 | Level | Planned | Run | Pass | Fail | Blocked | Not run |
 |---|---|---|---|---|---|---|
 | L1 Unit | 12 | 12 | 12 | 0 | 0 | 0 |
-| L2 Component integration | 6 | 6 | 6 (1 part pass) | 0 | 0 | 0 |
-| L3 Subsystem integration | 9 | 9 | 9 (1 part pass) | 0 | 0 | 0 |
+| L2 Component integration | 6 | 6 | 6 | 0 | 0 | 0 |
+| L3 Subsystem integration | 9 | 9 | 9 | 0 | 0 | 0 |
 | L4 System | 4 | 4 | 4 | 0 | 0 | 0 |
 | L5 Acceptance | 0 | 0 | 0 | 0 | 0 | 0 |
 
-The two part passes are TC-CI-FILE-01 and TC-SI-FILE-01. Their DTR photo part passes. Their weekly report photo part (FR-RPT-03, "Should") is S3 work.
+TC-CI-FILE-01 and TC-SI-FILE-01 were part passes on 2026-10-26 (the weekly report photo part, FR-RPT-03, needed S3). Both pass now: two L2 tests of report photos (`d6e87ce`) and the report part of TC-SI-FILE-01 on 2026-11-10 (S3 report, section 2.5).
 
 Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 75 pass. CI passes on `3bbe97a`. After the coverage tests (D-52): backend L2 92 of 92 pass.
 
@@ -43,7 +43,7 @@ Automated test totals on 2026-10-26: frontend 184 of 184 pass, backend L2 75 of 
 | TC-CI-ACL-01 | OJT data scope | Pass: sync, Data API, and Storage parts. Assignments, device records, and attachment records added for the backend coverage (D-52). |
 | TC-CI-SYNC-01 to TC-CI-SYNC-03 | Idempotent push, version conflict, pull scope and pages | Pass |
 | TC-CI-SYNC-04 | Invalid payload | Pass, after DEF-008 |
-| TC-CI-FILE-01 | Photo upload | Part pass. A photo of 500 KB or less is accepted; a larger file and a file that is not JPEG are rejected; a file cannot be replaced or deleted; the client compression makes a large photo 500 KB or less. The report photo part comes in S3. |
+| TC-CI-FILE-01 | Photo upload | Pass. A photo of 500 KB or less is accepted; a larger file and a file that is not JPEG are rejected; a file cannot be replaced or deleted; the client compression makes a large photo 500 KB or less. Report part: pass on 2026-11-10 (a photo of the own report is applied with the link; a link to the report of a different OJT gives `invalid_reference`). |
 
 NOTE: For the backend coverage (D-52), the database parts of three S3 test cases ran early: TC-CI-ACL-02 (a facilitator reads only its assignments), TC-CI-ADM-01 (an assignment must link an OJT account to a facilitator account), and TC-CI-AUD-01 (a company change makes an audit entry). All pass. These test cases are run in full in S3. `keepalive.test.ts` examines the heartbeat functions that TC-ST-Q-RE-05 uses.
 
@@ -59,7 +59,7 @@ NOTE: For the backend coverage (D-52), the database parts of three S3 test cases
 | TC-SI-SYNC-05 | Device clock change | Pass, after DEF-012 and DEF-013. Device clock 2 hours ahead, offline punch, sync with the clock still wrong. The server set the doubtful-time flag. `fac1` sees "Doubtful time" on the punch. |
 | TC-SI-SYNC-06 | Backend not reachable | Pass. Fault injector at 100% for 17 minutes with 5 punches. The app showed "Server not reachable", kept the session, and kept all changes. The retries followed 5 s, 15 s, 60 s, and the 5-minute timer. After the injector was off, all changes synced. Zero forced sign-outs. See section 7, item 1. |
 | TC-SI-SYNC-07 | Server epoch change | Pass. A new epoch on `dev`. The app reset the cursor, pulled again, and sent its records of the last 30 days again. The server count did not change. |
-| TC-SI-FILE-01 | Offline photo | Part pass. A time-out with a selfie in airplane mode (`ojt6`, Company B requires a photo). When the network returned, the file uploaded 0.34 s before its record. The punch refers to the photo. The report photo part comes in S3. |
+| TC-SI-FILE-01 | Offline photo | Pass. A time-out with a selfie in airplane mode (`ojt6`, Company B requires a photo). When the network returned, the file uploaded 0.34 s before its record. The punch refers to the photo. Report part: pass on 2026-11-10 (S3 report, section 2.5). |
 
 ### 2.4 Level 4: system tests (emulator)
 
@@ -75,21 +75,21 @@ NOTE: For the backend coverage (D-52), the database parts of three S3 test cases
 | Rule | Result | Evidence |
 |---|---|---|
 | G1 All planned test cases run | Yes | 31 of 31 (section 2) |
-| G2 "Must" test cases pass | Yes | The two part passes are for FR-RPT-03 ("Should", S3). |
+| G2 "Must" test cases pass | Yes | All 31 pass. The two part passes of 2026-10-26 pass now (section 2). |
 | G3 Zero open S1 and S2 defects | Yes | Section 6, `defect-log.md` |
 | G4 Lint, type check, and builds pass | Yes | Lint 0 errors. Web build and Android debug build pass. |
-| G5 Regression suites pass | Yes | CI on each push (lint, L1, L2). Frontend 184 of 184, backend 92 of 92. |
+| G5 Regression suites pass | Yes | CI passes on `d6e87ce`: frontend lint, L1 (256 tests), and build; backend L2 122 of 122. The L3 and L4 test case of S1 that S2 and S3 changed (TC-SI-AUTH-01) passes again; TC-SI-PLUG-01 is not touched; TC-ST-Q-RE-05 passes (2026-11-10). The S2 L3 and L4 test cases also pass again after the S3 changes (S3 report, section 2.5). |
 | G6 Coverage meets QR-MA-05 | Yes | Frontend yes (section 5). Backend 88.2% of the rule items (D-52, accepted), target 70%. |
 | G7 This report exists | Yes | This file |
-| G8 `PROGRESS.md` updated | Yes | Test results recorded. The gate result is recorded at the gate check. |
-| G9 Keep-alive check passes | No | Same open S1 items: keep-alive sources B and C, a scheduled run of source A. |
+| G8 `PROGRESS.md` updated | Yes | Gate result recorded on 2026-11-10 |
+| G9 Keep-alive check passes | Yes | TC-ST-Q-RE-05 passes (2026-11-10, S1 report). Source C is deleted (D-73). |
 
 ## 4. Stage exit criteria (test plan, section 8)
 
 | Criterion | Result | Evidence |
 |---|---|---|
-| S1 gate passed (entry criterion) | No | S2 work started early (D-46). |
-| Common gate rules | No | G9 (section 3) |
+| S1 gate passed (entry criterion) | Yes | Passed 2026-11-10 (S1 report). S2 work started early (D-46). |
+| Common gate rules | Yes | Section 3 |
 | TC-SI-SYNC-02 passes (zero data loss) | Yes | Section 2.3 |
 | TC-SI-SYNC-03 passes (app stop) | Yes | Section 2.3 |
 | TC-SI-SYNC-06 passes (backend not reachable) | Yes | Section 2.3 |
@@ -143,7 +143,7 @@ No S2 test case was skipped. Limits:
 1. TC-SI-SYNC-06 asks for a simulated 24 hours with a short test clock. The app has no test clock. The outage ran 17 minutes, which is more than the access token life (15 minutes). Thus the token expired during the outage, and the refresh also failed.
 2. TC-SI-SYNC-03: the first run of 10 rounds was not valid, because the stop command of the test script did not stop the app. That run was not counted. The second run used a real force-stop and a check of the process ID.
 3. All device tests ran on the emulator. The emulator has no front camera, so the selfie used the back camera. Run TC-SI-FILE-01 and TC-ST-Q-PE-01 again on a real phone in S4.
-4. The report photo part of TC-CI-FILE-01 and TC-SI-FILE-01 waits for the weekly report functions (S3).
+4. Done 2026-11-10: the report photo part of TC-CI-FILE-01 and TC-SI-FILE-01 passes.
 
 Observations (OBS-S2-01 in `PROGRESS.md`; not defects now):
 
@@ -156,10 +156,10 @@ Observations (OBS-S2-01 in `PROGRESS.md`; not defects now):
 
 ## 8. Decision
 
-The S2 gate does not pass yet. The S2 test results meet the S2 exit criteria. The gate waits for these actions:
+The S2 gate passes on 2026-11-10. All 31 S2 test cases pass. Zero open S1 and S2 defects. The record of the actions before the gate:
 
-1. The S1 gate passes (S1 report, section 5): keep-alive sources B and C, a scheduled run of source A, TC-ST-Q-RE-05.
+1. Done 2026-11-10: the S1 gate passes (keep-alive source B exists, source C deleted by D-73, TC-ST-Q-RE-05 passes).
 2. Done 2026-10-26: backend coverage (QR-MA-05). The user accepted D-52. 13 L2 tests were added; 88.2% of the items are covered (60 of 68).
-3. At the gate check, run the regression suites again.
+3. Done 2026-11-10: the regression suites pass (section 3, G5).
 
-New gate date: the S2 end date, 2026-11-10, or earlier when items 1 and 3 are done.
+Open items for S4: run TC-SI-FILE-01 and TC-ST-Q-PE-01 again on a real phone (section 7, item 3). The observations of section 7 stay open (OBS-S2-01).

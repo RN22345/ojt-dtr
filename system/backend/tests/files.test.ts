@@ -115,6 +115,41 @@ describe('TC-CI-FILE-01 photo upload (QR-PE-05)', () => {
     expect(results.map((r) => r.result)).toEqual(['applied', 'applied']);
     expect(results[1].record?.['photo_id']).toBe(id);
   });
+
+  describe('report photos (FR-RPT-03)', () => {
+    let reportId: string;
+
+    beforeAll(async () => {
+      // A random past week (2001 to 2020) that ojt4 has no report for. Reports cannot be deleted, so each run adds one.
+      let week = '';
+      for (let tries = 0; tries < 20 && !week; tries++) {
+        const monday = new Date(Date.UTC(2001, 0, 1) + Math.floor(Math.random() * 1040) * 7 * 86400000).toISOString().slice(0, 10);
+        const { data } = await ojt4.from('weekly_reports').select('id').eq('ojt_id', SEED.ojt4.id).eq('week_start', monday);
+        week = data?.length ? '' : monday;
+      }
+      reportId = randomUUID();
+      const [res] = await push(ojt4, [{
+        op_id: randomUUID(), entity: 'weekly_reports', entity_id: reportId, op_type: 'create', base_version: null,
+        payload: { id: reportId, ojt_id: SEED.ojt4.id, week_start: week, tasks_done: 'Photo test.', skills_learned: 'Photo test.', problems: '', next_plans: '' },
+      }]);
+      expect(res.result).toBe('applied');
+    });
+
+    it('TC-CI-FILE-01: a photo of the own report is applied with the report link', async () => {
+      const id = randomUUID();
+      expect((await upload(ojt4, keyOf(SEED.ojt4.id, id), 5_000)).error).toBeNull();
+      const [result] = await push(ojt4, [attachmentOp(SEED.ojt4.id, id, { report_id: reportId })]);
+      expect(result.result).toBe('applied');
+      expect(result.record).toMatchObject({ id, report_id: reportId });
+    });
+
+    it('TC-CI-FILE-01: a photo linked to the report of a different OJT is rejected (invalid_reference)', async () => {
+      const id = randomUUID();
+      expect((await upload(ojt6, keyOf(SEED.ojt6.id, id), 5_000)).error).toBeNull();
+      const [result] = await push(ojt6, [attachmentOp(SEED.ojt6.id, id, { report_id: reportId })]);
+      expect(result).toMatchObject({ result: 'rejected', cause: 'invalid_reference' });
+    });
+  });
 });
 
 describe('TC-CI-ACL-01 OJT data scope (Storage part)', () => {

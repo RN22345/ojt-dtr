@@ -305,7 +305,8 @@ describe('TC-CI-SYNC-03 pull scope and pages', () => {
 
   it('TC-CI-SYNC-03: small pages return all records in scope with no gaps and no repeats', async () => {
     const full = await pullAll(ojt4, 0, 500);
-    const paged = await pullAll(ojt4, 0, 7);
+    // Pages of 40 records: many pages. Each CI run adds records of ojt4 on dev, so pages of 7 took more than 30 s.
+    const paged = await pullAll(ojt4, 0, 40);
     const seqs = paged.records.map((r) => r.change_seq);
     expect(new Set(seqs).size).toBe(seqs.length);
     expect([...seqs].sort((a, b) => a - b)).toEqual(seqs);
@@ -324,7 +325,7 @@ describe('TC-CI-SYNC-03 pull scope and pages', () => {
     expect(ids('companies')).toContain(SEED.companyA);
     expect(ids('batches')).toContain(SEED.batch1);
     expect(paged.records.every((r) => r.entity !== 'punches' || r.data['ojt_id'] === SEED.ojt4.id)).toBe(true);
-  });
+  }, 120_000);
 
   it('TC-CI-SYNC-03: the facilitator of ojt4 gets its punch, a different facilitator does not', async () => {
     const f1 = await pullAll(fac1, 0, 500);

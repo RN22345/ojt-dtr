@@ -60,7 +60,7 @@ Use this template when you write the full steps of a test case. Put full test ca
 | TC-U-SRV-01 | S2 | FR-DTR-11 | Server doubtful-time rules | Each of the three conditions in the offline sync design, section 8, sets `doubtful_time`. Normal punches do not get the flag. |
 | TC-U-RPT-01 | S3 | FR-RPT-04, FR-RPT-05, FR-RPT-06 | Report status machine | Permitted: draft to submitted, submitted to approved, submitted to returned, returned to submitted. Content changes only in `draft` or `returned`. All other changes are rejected. |
 | TC-U-RPT-02 | S3 | FR-RPT-02 | Report hours | The report shows the logged hours of its week from the DTR. |
-| TC-U-COR-01 | S3 | FR-COR-03 | Approved correction | Approval makes a new punch with `corrects_punch_id`. The original punch does not change. |
+| TC-U-COR-01 | S3 | FR-COR-03 | Approved correction | Approval makes a new punch with `corrects_punch_id`. The original punch does not change. The rule is in the server function `push_correction`, so this case runs in the L2 file `reports-corrections.test.ts`, together with TC-CI-AUD-01 (D-71). |
 | TC-U-MON-01 | S4 | FR-MON-01 | Progress calculation | Logged, approved, and remaining hours and the percent are correct for the test data. Approved hours include only approved weeks (A-06). |
 
 ## 3. Level 2: Component integration tests (CI)

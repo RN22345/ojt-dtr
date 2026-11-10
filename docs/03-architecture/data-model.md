@@ -64,6 +64,7 @@ erDiagram
         uuid photo_id FK
         string device_id
         uuid corrects_punch_id FK
+        uuid correction_id FK
         bool doubtful_time
         bool approved
     }
@@ -72,6 +73,7 @@ erDiagram
         uuid ojt_id FK
         uuid punch_id FK
         string kind "add | change"
+        string punch_type "in | out (kind add only, D-66)"
         timestamp requested_time
         string reason
         string status "pending | approved | rejected"
@@ -116,6 +118,8 @@ erDiagram
         uuid user_id FK
         string type
         string title
+        string body
+        string link
         bool read
     }
     AUDIT_LOGS {

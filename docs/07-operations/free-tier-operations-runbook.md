@@ -60,10 +60,10 @@ This makes a real database write. The admin dashboard shows the newest heartbeat
 |---|---|---|---|---|
 | A | GitHub Actions workflow `keepalive.yml` | Each day, 09:17 Manila time | GitHub can delay scheduled runs. GitHub disables scheduled workflows in a public repository after 60 days without repository activity. | GitHub sends an email when a run fails |
 | B | External free cron service (for example, cron-job.org) | Each day, 21:17 Manila time | The service can stop or change its terms | The service sends an email when a call fails |
-| C | Human routine: the developer opens the admin web app and the mobile app, and does one sync | Two times each week (Monday and Thursday) | The developer forgets | Calendar reminder |
+| C | Deleted (D-73). Was: human routine with calendar reminders. The routine check (section 7) occurs at the start of each agent session and at each stage gate. | - | - | - |
 | D | Supabase warning email before a pause | When activity is low | Email goes to an inbox that nobody reads | Use an inbox that you read each day |
 
-NOTE: Source C is "two times each week", not "one time in two weeks". The pause occurs after 7 days. A check every two weeks is too late.
+NOTE: The pause occurs after 7 days. If no work session occurs for 5 days, do the routine check (section 7) by hand.
 
 NOTE: Source B must support custom HTTP headers. The call needs the `apikey` header.
 
@@ -75,7 +75,7 @@ NOTE: Source B must support custom HTTP headers. The call needs the `apikey` hea
 4. Add the workflow `.github/workflows/keepalive.yml`. It calls the function for `dev` and for `prod`.
 5. Run the workflow manually one time. Make sure that two new heartbeat rows exist.
 6. Set up source B with a different time of day.
-7. Add the calendar reminders for source C.
+7. Deleted (D-73): calendar reminders for source C.
 8. Set the Supabase account email to an inbox that you read each day.
 
 ### 3.4 Source B settings (cron-job.org)
@@ -180,7 +180,7 @@ CAUTION: Keep `BACKUP_PASSPHRASE` in a password manager also. GitHub does not sh
 
 Do the restore test one time before the S4 gate (TC-ST-Q-RE-04). Use the local stack or the `dev` project.
 
-## 7. Routine checklist (source C, two times each week)
+## 7. Routine checklist (at the start of each agent session and at each stage gate, D-73)
 
 1. Open the admin web app. Examine the newest heartbeat of sources A and B. Each must be less than 48 hours old.
 2. Open the mobile app on one device. Do one sync.

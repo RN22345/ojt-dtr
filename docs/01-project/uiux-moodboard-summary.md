@@ -1,6 +1,8 @@
 # UI/UX mood board summary
 
-This document records the current UI/UX mood board of the UI/UX team (D-26). The team owns the design. This file is a summary for the document set only. Do not change the design here.
+NOTE: This is the first mood board (2026-10-21). The current mood board (teal and amber, Plus Jakarta Sans and Inter, D-64) is in `docs/04-uiux/design-system.md`, section 2. Keep this file for the history of UI-01.
+
+This document records the first UI/UX mood board of the UI/UX team (D-26). The team owns the design. This file is a summary for the document set only. Do not change the design here.
 
 - Source: [Figma file "OJT Weekly Report and DTR Monitoring"](https://www.figma.com/design/bMKurAvFxJW1rP2lVEMBx4/OJT-Weekly-Report-and-DTR-Monitoring)
 - Image: `docs/deliverables/source/uiux-moodboard.jpg` (captured 2026-10-21)

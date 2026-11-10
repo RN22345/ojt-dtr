@@ -106,6 +106,7 @@ export const STRINGS = {
     ojtDtr: 'DTR',
     ojtReports: 'Reports',
     ojtProgress: 'Progress',
+    facOverview: 'Overview',
     facOjts: 'My OJTs',
     facReviews: 'Reviews',
     adminDashboard: 'Dashboard',

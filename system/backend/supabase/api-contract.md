@@ -2,7 +2,7 @@
 
 This document is the API contract of the OJT-DTR backend (D-23, QR-CO-02). It lists each table, RLS policy, RPC function, and Edge Function. Update it in the same commit as each change to the schema.
 
-Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, and `20261026080316_attachments_storage`.
+Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, `20261026080316_attachments_storage`, `20261030120000_s3_reports_corrections`, and `20261108120000_s3_admin`.
 
 ## 1. Interfaces
 
@@ -12,7 +12,7 @@ Status: S2, migrations `20261025134548_core_schema`, `20261025134615_restrict_an
 | RPC | `/rest/v1/rpc/<function>` | POST with a JSON body |
 | Auth | `/auth/v1/*` | Supabase Auth |
 | Storage | `/storage/v1/object/attachments/<owner_id>/<id>.jpg` | Upload (POST) and download (GET). See section 3.1. |
-| Edge Functions | `/functions/v1/<name>` | Not deployed yet (S3, S4) |
+| Edge Functions | `/functions/v1/<name>` | POST with a JSON body. Supabase JWT in `Authorization`. See section 6. |
 
 The Data API exposes only the `public` schema. The `private` and `ops` schemas are not exposed.
 
@@ -71,9 +71,9 @@ There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (
 |---|---|---|
 | `touch` | All synced tables | Sets `version`, `created_at`, `updated_at`, `change_seq` (the pull cursor, D-11) |
 | `check_roles` | `ojt_assignments` | `ojt_id` must be an OJT. `facilitator_id` must be a facilitator. One active assignment for each OJT (unique index). |
-| `append_only` | `punches` | No DELETE. An UPDATE can change only `approved`, `doubtful_time`, and the common columns (D-05). |
+| `append_only` | `punches` | No DELETE. An UPDATE can change only `approved`, `doubtful_time`, and the common columns (D-05). `correction_id` cannot change. |
 | `read_only` | `audit_logs` | No UPDATE or DELETE (QR-SE-07) |
-| `audit` | `profiles`, `ojt_assignments`, `companies`, `batches` (all changes); `weekly_reports` (status change); `correction_requests` (decision); `punches` (insert of a correction punch) | Writes one `audit_logs` row: actor, action, entity, before and after data (FR-AUD-01) |
+| `audit` | `profiles`, `ojt_assignments`, `companies`, `batches` (all changes); `weekly_reports` (status change); `correction_requests` (decision); `punches` (insert of a correction punch: `corrects_punch_id` or `correction_id` is set, D-66) | Writes one `audit_logs` row: actor, action, entity, before and after data (FR-AUD-01) |
 | `on_auth_user_created` | `auth.users` | Makes the `profiles` row. The role comes from `app_metadata.role`. No role gives status `inactive`. |
 
 ## 5. RPC functions
@@ -85,6 +85,7 @@ There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (
 | `server_epoch` | None | `uuid` | `authenticated` | Current server epoch (D-19) |
 | `sync_push` | `p_ops jsonb`, `p_device_now timestamptz` (optional) | `jsonb` (see 5.1) | `authenticated`: active OJT and facilitator only | Offline sync design, section 4 |
 | `sync_pull` | `p_cursor bigint` (default 0), `p_epoch uuid` (default null), `p_limit int` (1 to 500, default 500) | `jsonb` (see 5.2) | `authenticated`: active OJT and facilitator only | Offline sync design, section 5 |
+| `admin_dashboard` | None | Table (see 5.3) | `authenticated`: active admin only (others: error `42501`) | Admin dashboard (D-70) |
 
 ### 5.1 `sync_push`
 
@@ -96,18 +97,21 @@ Response: `{server_time, results: [{op_id, result, cause, record}]}`, one result
 |---|---|---|
 | `applied` | The server applied the change. | The server record (with `version`, `server_received_at`, `doubtful_time`) |
 | `duplicate` | The `op_id` or the record ID is already applied (FR-SYNC-05, section 12). | The current server record |
-| `conflict` | `base_version` is old (cause `version`), or a report exists for that week (cause `week_exists`). | The current server record |
+| `conflict` | `base_version` is old (cause `version`), a report exists for that week (cause `week_exists`), or the report or correction is already decided (cause `decided`, first decision wins, D-67). | The current server record |
 | `rejected` | The operation is not valid. | None |
 
-Cause codes of `rejected`: `file_missing` (attachment: no file in Storage at `storage_key`; the client must upload the file first), `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch or attachment update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type).
+Cause codes of `rejected`: `file_missing` (attachment: no file in Storage at `storage_key`; the client must upload the file first), `invalid_data` (missing, wrong type, out of range, or not ISO 8601), `invalid_reference` (photo or other reference not found or not own), `forbidden` (wrong role or wrong owner, or a client correction punch), `id_conflict` (the ID belongs to a different user), `append_only` (punch or attachment update or delete), `not_found`, `not_editable` (report not in `draft` or `returned`), `unsupported` (entity or operation type), `incomplete` (submit with no text in `tasks_done` or `skills_learned`), `remark_required` (a return or a rejection with no remark), `too_many_photos` (a sixth photo for one report).
 
-Entities in S2:
+Entities (S2 and S3):
 
 | Entity | Operations | Rules |
 |---|---|---|
 | `punches` | `create` | OJT only. `ojt_id` must be the caller. Times: ISO 8601 with a time zone. The server sets `server_received_at`, `doubtful_time` (offline sync design, section 8), `approved`, `version`. |
-| `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. Status changes come in S3. |
-| `attachments` | `create` | OJT only. `owner_id` must be the caller. `storage_key` must be `<owner_id>/<id>.jpg`. The file must be in Storage. The server sets `size_bytes` from the Storage file. `report_id` is ignored in S2 (the report link comes in S3). An update gives `append_only`. Send the attachment operation before the punch or report that refers to it. |
+| `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. A status change is a `report_events` operation. |
+| `report_events` | `create` | Payload: `id`, `report_id`, `action`, `remark`, `device_id`. `submit`: the OJT of the report, status `draft` or `returned`, text in `tasks_done` and `skills_learned`. `approve` and `return`: the active facilitator of the OJT, status `submitted` (else `conflict`, cause `decided`); `return` needs a remark. `approve` sets `approved = true` on the punches of the week (Asia/Manila, FR-RPT-07). Each action writes a notification (D-67). |
+| `correction_requests` | `create`, `update` (decision) | `create`: OJT only. Payload: `id`, `ojt_id`, `kind`, `punch_id` (kind `change`, an own punch), `punch_type` (kind `add`), `requested_time` (not more than 2 minutes after the server time), `reason` (1 to 1000 characters). `update`: the active facilitator of the OJT. Payload: `status` (`approved` or `rejected`), `remark` (needed for `rejected`), `decided_device_id`. Not `pending`: `conflict`, cause `decided`. `approved` makes a new punch with `correction_id` and, for kind `change`, `corrects_punch_id` (D-66). |
+| `notifications` | `update` | The owner only. Payload: `{read: true}`. Last write wins. |
+| `attachments` | `create` | OJT only. `owner_id` must be the caller. `storage_key` must be `<owner_id>/<id>.jpg`. The file must be in Storage. The server sets `size_bytes` from the Storage file. `report_id` (optional): an own report in `draft` or `returned`, five photos or less for each report (FR-RPT-03). An update gives `append_only`. Send the attachment operation before the punch or report that refers to it. |
 
 ### 5.2 `sync_pull`
 
@@ -115,11 +119,41 @@ Response: `{epoch, epoch_changed, server_time, records: [{entity, change_seq, da
 
 Entities in the pull: `profiles`, `companies`, `batches`, `ojt_assignments`, `punches`, `weekly_reports`, `report_events`, `correction_requests`, `attachments`, `notifications`.
 
-NOTE: When an assignment ends, the records of that OJT leave the scope of the facilitator. The pull does not send tombstones for them. The client must remove them when the assignment record changes (S3).
+NOTE: When an assignment ends, the records of that OJT leave the scope of the facilitator. The pull does not send tombstones for them. The client removes them when the assignment record changes, and pulls again from cursor 0 for a new OJT (D-69).
+
+### 5.3 `admin_dashboard`
+
+One row for each active assignment that is not deleted. Order: OJT name.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `ojt_id`, `ojt_name`, `ojt_status` | uuid, text, text | OJT account (`ojt_status`: `active` or `inactive`) |
+| `company_id`, `company_name` | uuid, text | Company of the assignment |
+| `batch_id`, `batch_name` | uuid, text | Batch of the assignment |
+| `facilitator_id`, `facilitator_name` | uuid, text | Facilitator of the assignment |
+| `required_hours` | int | Required hours of the batch |
+| `logged_minutes` | bigint | Minutes of the closed work sessions. Same pairing rule as `hours.ts`: deleted punches and corrected punches do not count. An open session counts zero. |
+| `late_reports` | int | Full past weeks (Monday to Sunday, Asia/Manila) that are in the batch dates and have no report with the status `submitted` or `approved` |
+| `behind` | boolean | `late_reports > 0` or `logged_minutes < 0.9 x expected`. Expected = full past weeks x 2400 minutes, not more than `required_hours` x 60. |
 
 ## 6. Edge Functions
 
-Planned: `admin-users` (S3), `export-csv` (S4), `push-notify` (S4). See `system/backend/AGENTS.md`.
+Planned: `export-csv` (S4), `push-notify` (S4).
+
+### 6.1 `admin-users` (S3, D-70)
+
+`POST /functions/v1/admin-users`. Body: JSON `{ "action": ..., ... }`. CORS: any origin. The caller must be an active admin. Other callers get HTTP 403 `{"error":"forbidden"}`. A token of a session that ended on the server (for example after a global sign-out) gives HTTP 401 `{"error":"session_ended"}` (DEF-018). The function uses the service role key of its own environment. It changes `profiles` with the JWT of the calling admin, so the audit entry has the admin as the actor. The audit entry of a new user has no actor (the trigger on `auth.users` makes the profile).
+
+| Action | Fields | Success | Notes |
+|---|---|---|---|
+| `create` | `email`, `password` (8 to 72 characters), `full_name` (1 to 200), `role` (`ojt`, `facilitator`, `admin`), `contact_no` (optional) | 200 `{"user_id": "<uuid>"}` | The email is confirmed. The status is `active`. |
+| `update` | `user_id`, and one or more of `full_name`, `contact_no`, `role` | 200 `{"ok":true}` | A role change also changes `app_metadata.role`. An admin cannot change the own role. |
+| `deactivate` | `user_id` | 200 `{"ok":true}` | Status `inactive`, and the Auth user is banned. An admin cannot deactivate the own account. |
+| `activate` | `user_id` | 200 `{"ok":true}` | Status `active`, and the ban is removed. |
+| `reset_password` | `user_id`, `password` | 200 `{"ok":true}` | FR-AUTH-07 |
+
+Errors: HTTP 400 `{"error":"<code>"}` with these codes: `invalid_json`, `unknown_action`, `invalid_email`, `weak_password`, `invalid_full_name`, `invalid_role`, `invalid_contact_no`, `invalid_user_id`, `email_taken`, `no_changes`, `self_deactivate`, `self_role_change`. HTTP 404 `not_found` (the user does not exist). HTTP 405 `method_not_allowed`. HTTP 500 for a failure of the server (`create_failed`, `profile_update_failed`, `auth_update_failed`, `internal_error`).
+
 
 ## 7. Known advisor notes
 

@@ -1,0 +1,92 @@
+/* src/theme/components.scss - layer 3 of the design system (docs/04-uiux/design-system.md, section 3).
+   The global look of the Ionic parts. Use the tokens of variables.scss only. */
+
+/* Big text, headers, and sub headers use Plus Jakarta Sans. All other text uses Inter. */
+h1,
+h2,
+h3,
+h4,
+ion-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Floating rounded tab bar */
+ion-tab-bar {
+  margin: 0 var(--space-3) var(--space-3);
+  border-radius: var(--radius-l);
+  border: none;
+  box-shadow: var(--elevation-1);
+}
+
+/* The selected tab has an amber mark under its label */
+ion-tab-button {
+  position: relative;
+}
+ion-tab-button.tab-selected::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 20px;
+  height: 3px;
+  margin-left: -10px;
+  border-radius: 2px;
+  background: var(--ion-color-secondary);
+}
+
+/* Rounded buttons, no CAPITAL letters */
+ion-button {
+  --border-radius: var(--radius-s);
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* Main buttons are amber (buttons with a color="" keep their own color) */
+ion-button:not([color]):not(.button-outline):not(.button-clear) {
+  --background: var(--ion-color-secondary);
+  --background-activated: var(--ion-color-secondary-shade);
+  --background-hover: var(--ion-color-secondary-tint);
+  --color: var(--ion-color-secondary-contrast);
+}
+
+/* Outline buttons use the teal color */
+ion-button.button-outline:not([color]) {
+  --border-color: var(--ion-color-primary);
+  --color: var(--ion-color-primary);
+}
+
+/* Cards are light, flat, and rounded */
+ion-card {
+  background: var(--ion-color-light);
+  box-shadow: none;
+  border-radius: var(--radius-l);
+  margin: var(--space-3) 0;
+}
+
+/* Input fields */
+ion-input {
+  --border-radius: var(--radius-s);
+  --border-color: var(--ion-color-medium-tint);
+  --highlight-color-focused: var(--ion-color-primary);
+}
+
+/* Segments (filters) */
+ion-segment {
+  --background: var(--ion-color-light);
+  border-radius: var(--radius-m);
+}
+ion-segment-button {
+  --color: var(--ion-color-medium-shade);
+  --color-checked: var(--ion-color-primary);
+  --indicator-color: var(--ion-color-secondary);
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* Big numbers use the heading font */
+.big-number {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
