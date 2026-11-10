@@ -138,6 +138,38 @@ NOTE: The browser tests of the admin web found DEF-017 and DEF-018. Section 6 gi
 
 Sync bar check: after the device tests, a query of the sync bar first hit a stale hidden page. The visible bar updated in less than 0.3 s with the report sync status. This is not a defect. A last draft edit of the report of 2026-10-19 (the "problems" field) synced to the server.
 
+### 2.5 Regression: L3 and L4 test cases of S1 and S2 (2026-11-10)
+
+Test plan, section 9, rule 2. The S3 work changed the sync engine, the local merge, the local schema (version 4), the attachment code, the logout, the login page, the routes, and the server function `sync_push`. Thus 15 of the 16 L3 and L4 test cases of S1 and S2 ran again. TC-SI-PLUG-01 did not run again, because the plugin code did not change since its pass. TC-ST-Q-RE-05 passed on 2026-11-10 (S1 report). The web part of TC-SI-AUTH-01 passed in TC-ST-ACC-01 (section 2.4).
+
+Environment (D-72): the local Supabase stack in Docker, the `local` build of the app (commit of this section), and two Android 15 emulators (`emulator-5554`, `emulator-5556`). "Offline" is airplane mode and the removed `adb reverse` tunnel. Three test agents (Claude Haiku) ran the steps through the DevTools protocol and adb. They logged in with the local seed password. Claude Code (Opus) examined each result in the database and ran TC-SI-SYNC-03 and TC-SI-SYNC-07 again itself.
+
+| Test case | Result | Evidence |
+|---|---|---|
+| TC-SI-AUTH-01 (mobile part) | Pass | `ojt1` sees Home, DTR, Reports, Progress. `fac1` sees Overview, My OJTs, Reviews, and 5 OJTs. The admin login on the mobile app is refused. |
+| TC-SI-AUTH-02 | Pass | The app opened offline with the profile of `ojt4`. The sessions of `ojt4` were deleted on the server. After 16 minutes offline (token expired) and the network back, the app showed the login screen and kept the punch. After the next login, the punch synced (1 row). |
+| TC-SI-SYNC-01 | Pass | A punch reached the server 1.8 s after the tap. A punch made on the server, and later a change of the company name and the full name, showed on the device after pull-to-refresh on the DTR page. |
+| TC-SI-SYNC-02 | Pass | 200 punches of `ojt3` with 30% dropped requests, 10% error 500, and 132 network changes. Server: 200 punches (100 time-ins, 100 time-outs), 200 different IDs, zero duplicate `op_id`. No sync issue. |
+| TC-SI-SYNC-03 | Pass | 10 of 10 stops while the `sync_push` request was in progress: a table lock held the request on the server, the app was force-stopped (no process), then the server applied the batch. After each restart the app sent the batch again, the server gave `duplicate`, and the bar showed "All changes synced". 98 punches, server total 303 with 303 different IDs. |
+| TC-SI-SYNC-04 | Pass | `ojt5` logged in on the device while the outbox had a punch of `ojt4`. Server: zero punches of `ojt4` and `ojt5`, zero operations of `ojt5`. After the next login of `ojt4`, the punch synced. |
+| TC-SI-SYNC-05 | Pass | Device clock 2 hours ahead, offline punch, sync with the wrong clock. The server set `doubtful_time`. `fac1` sees "Doubtful time" on the punch. |
+| TC-SI-SYNC-06 | Pass | Fault injector at 100% for 17 minutes with 5 punches. The app showed "Server not reachable" at each check and stayed logged in after the 15-minute token life. After the injector was off, the 5 punches synced in 40 s (205 different IDs). |
+| TC-SI-SYNC-07 | Pass | New epoch on the local stack. The app pulled from cursor 0, then sent its records again. The server counts did not change (429 punches, 434 operations). |
+| TC-SI-FILE-01 | Pass | DTR part: an offline time-out with a photo (`ojt6`, Company B). The file reached the storage 0.14 s before its record. Report part (FR-RPT-03): two photos on an offline draft. The files reached the storage 0.14 s and 0.29 s before the records. |
+| TC-ST-OJT-01 | Pass | Two work sessions in airplane mode. The count went from 1 to 4 unsynced changes. The server count did not change offline. After the network returned and pull-to-refresh, all showed "Synced" and 4 new punches were on the server. |
+| TC-ST-OJT-03 | Pass | An offline submit of a report that the server had approved. The "Sync issues" screen showed two items with their causes ("A different user changed this record before your change arrived." and "The record cannot be changed now. Its status changed."). "Try again" was rejected again. "Discard my change" removed the items. |
+| TC-ST-OJT-04 | Pass | The CAUTION showed the count. Cancel kept the session and the change. Confirm logged out offline in 1.38 s. The removed change did not reach the server. |
+| TC-ST-Q-PE-01 | Pass | 2 taps from Home. 10 offline punches: 886 to 936 ms, median 898 ms (target 1 s or less). |
+
+Notes:
+
+1. The emulator gave no location fix with the low-accuracy setting. Thus the punches of the re-runs have no location and show "No location". FR-DTR-04 permits this. The location check on a real phone stays in S4 (TC-SI-PLUG-01).
+2. The Home page has no pull-to-refresh. The DTR pages have it. The first check of the profile change pulled on Home, and no sync ran. This was a test fault, not a defect.
+3. In TC-ST-OJT-03, the test set the report to `approved` with SQL. In real use, a facilitator cannot approve a draft. Thus two items showed, not one.
+4. The first run of TC-SI-SYNC-03 by a test agent stopped the app before the request left the device (zero of 10 on the server at each stop). That run was not counted. The run in the table used the table lock.
+5. The accounts differ from the test cases (`ojt4` and `ojt5` for `ojt1` and `ojt2` in TC-SI-SYNC-04), because two agents worked at the same time on two emulators.
+6. Zero new defects.
+
 ## 3. Common gate rules (test plan, section 7)
 
 | Rule | Result | Evidence |
@@ -146,18 +178,18 @@ Sync bar check: after the device tests, a query of the sync bar first hit a stal
 | G2 "Must" test cases pass | Yes | All "Must" cases pass. The CSV part of TC-ST-ADM-01 (FR-EXP-03, "Should") is S4 work. |
 | G3 Zero open S1 and S2 defects | Yes | Section 6, `defect-log.md` |
 | G4 Lint, type check, and builds pass | Yes | Lint 0 errors. The frontend build passes. |
-| G5 Regression suites pass | Part | The automated suites pass: frontend 256 of 256, backend 119 of 119 (and 43 of 43 after DEF-018). The L3 and L4 test cases of S1 and S2 are not run again yet (test plan, section 9). Do this at the gate check. |
+| G5 Regression suites pass | Yes | The automated suites pass: frontend 256 of 256, backend 119 of 119 (and 43 of 43 after DEF-018). The L3 and L4 test cases of S1 and S2 that the S3 changes touch pass again on 2026-11-10 (section 2.5). |
 | G6 Coverage meets QR-MA-05 | Yes | Backend 92.4% of the rule items (73 of 79, D-52), target 70%. Frontend line coverage 80.3% (2026-11-09), target 60%. `data/sync` 92.3%, `core/auth` 93.8%, `shared/utils` (DTR calculation) 87.4%, target 80%. |
 | G7 This report exists | Draft | This file |
 | G8 `PROGRESS.md` updated | No | The test results are recorded. The gate result is recorded at the gate check. |
-| G9 Keep-alive check passes | No | KA-01: keep-alive source B does not exist (D-45). See section 8. |
+| G9 Keep-alive check passes | Yes | TC-ST-Q-RE-05 passes on 2026-11-10: sources A and B both wrote a heartbeat in less than 48 hours, and the backup is 3 days old. KA-01 is closed (S1 report). |
 
 ## 4. Stage exit criteria (test plan, section 8)
 
 | Criterion | Result | Evidence |
 |---|---|---|
 | S2 gate passed (entry criterion) | No | S3 work started early (D-65). The S2 gate waits for the S1 gate. |
-| Common gate rules | No | G8 and G9 (section 3) |
+| Common gate rules | No | G7 and G8 (section 3): the gate results are not recorded yet |
 | The report cycle passes in N1, N2, and N3 | Yes | TC-SI-RPT-01 (section 2.3). TC-ST-FAC-01 also passes in N1, N2, and N3. |
 | The access matrix tests pass 100% | Yes | TC-ST-ACC-01, TC-CI-ACL-02, and the Edge Function part of TC-CI-ACL-03 pass. |
 
@@ -216,8 +248,8 @@ Observations (not defects now):
 
 The S3 gate does not pass yet. This is a draft. The S3 gate waits for these actions:
 
-1. The S1 gate passes (S1 report, section 5). KA-01 is open: keep-alive source B does not exist (D-45), so TC-ST-Q-RE-05 does not pass. On 2026-11-09 the user put the decision about source B (cron-job.org) on hold.
+1. The S1 gate passes (S1 report, section 5). Done 2026-11-10: keep-alive source B (cron-job.org) operates, TC-ST-Q-RE-05 passes, and KA-01 is closed. The gate decision is not recorded yet.
 2. The S2 gate passes (S2 report, section 8). It waits for the S1 gate.
-3. At the gate check, run the regression suites again, including the L3 and L4 test cases of S1 and S2. Then update this report and `PROGRESS.md`.
+3. Done 2026-11-10: the L3 and L4 test cases of S1 and S2 pass again (section 2.5). Record the gate results in this report and `PROGRESS.md` at the gate check.
 
 New gate date: the S3 end date, 2026-11-14, or earlier when items 1 and 2 are done.
