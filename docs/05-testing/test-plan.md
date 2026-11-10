@@ -158,7 +158,7 @@ If a gate fails, do not start the next stage. Fix the defects. Then run the fail
 | Entry criteria | S0 gate passed. Node.js, Ionic CLI, the Android SDK (Android Studio or the command-line tools), and the Supabase CLI are installed. The two Supabase projects exist. |
 | Test items | Layers 0 and 1. Auth module. Role shells. Local database adapter. Plugin installation. Keep-alive and backup jobs. |
 | Tests | L1: TC-U-UTIL-01 to TC-U-UTIL-05, TC-U-AUTH-01 to TC-U-AUTH-04. L2: TC-CI-DB-01, TC-CI-DB-02, TC-CI-AUTH-01 to TC-CI-AUTH-03, TC-CI-ACL-03. L3: TC-SI-AUTH-01, TC-SI-PLUG-01. L4: TC-ST-Q-RE-05. |
-| Exit criteria | Common gate rules. The CI workflow runs lint, L1, and L2 tests on each push. Login works for each role on Android and on the web. Keep-alive sources A, B, and C are set up. The first own backup exists. |
+| Exit criteria | Common gate rules. The CI workflow runs lint, L1, and L2 tests on each push. Login works for each role on Android and on the web. Keep-alive sources A and B are set up (source C deleted, D-73). The first own backup exists. |
 
 ### S2: Offline core (2026-11-04 to 2026-11-10)
 

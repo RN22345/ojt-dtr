@@ -1,15 +1,15 @@
 # Stage test report: S3 Reports, corrections, and admin web
 
-This report gives the results of the S3 tests and the status of the S3 gate. It is a draft. The S3 work started before the S1 and S2 gates (D-65). Thus the S3 gate cannot pass before the S1 and S2 gates pass. Update this report at the gate check (S3 end date 2026-11-14).
+This report gives the results of the S3 tests and the S3 gate decision. The S3 work started before the S1 and S2 gates (D-65). Gate check: 2026-11-10, after the S1 and S2 gates passed.
 
 ## 1. Summary
 
 | Item | Value |
 |---|---|
 | Stage | S3 |
-| Dates | 2026-11-11 to 2026-11-14 (work started 2026-10-30, D-65). Tests ran on 2026-10-30 and 2026-11-08. |
-| Build or commit | `bfbf648` and earlier on the branch `s3/reports-corrections-admin` (not merged into `main`) |
-| Gate result | Fail for now (not passed yet). Draft. Open items: the S1 and S2 gates (section 8). All S3 test cases are run. |
+| Dates | 2026-11-11 to 2026-11-14 (work started 2026-10-30, D-65). Tests ran on 2026-10-30, 2026-11-08, and 2026-11-10 (regression). |
+| Build or commit | `bfbf648` (S3 tests). Regression on `4945796`. Gate check on `d6e87ce` (CI pass). Branch `s3/reports-corrections-admin`, not merged into `main`. |
+| Gate result | Passed 2026-11-10 (section 8) |
 | Prepared by | Claude Code (desktop), for the developer |
 
 Test devices:
@@ -178,18 +178,18 @@ Notes:
 | G2 "Must" test cases pass | Yes | All "Must" cases pass. The CSV part of TC-ST-ADM-01 (FR-EXP-03, "Should") is S4 work. |
 | G3 Zero open S1 and S2 defects | Yes | Section 6, `defect-log.md` |
 | G4 Lint, type check, and builds pass | Yes | Lint 0 errors. The frontend build passes. |
-| G5 Regression suites pass | Yes | The automated suites pass: frontend 256 of 256, backend 119 of 119 (and 43 of 43 after DEF-018). The L3 and L4 test cases of S1 and S2 that the S3 changes touch pass again on 2026-11-10 (section 2.5). |
+| G5 Regression suites pass | Yes | CI passes on `d6e87ce`: frontend lint, L1 (256 tests), and build; backend L2 122 of 122. CI failed from `5b1152a` to `d567400` because of a slow L2 paging test (test fault, fixed in `362adf2`, S1 report section 2). The L3 and L4 test cases of S1 and S2 that the S3 changes touch pass again on 2026-11-10 (section 2.5). |
 | G6 Coverage meets QR-MA-05 | Yes | Backend 92.4% of the rule items (73 of 79, D-52), target 70%. Frontend line coverage 80.3% (2026-11-09), target 60%. `data/sync` 92.3%, `core/auth` 93.8%, `shared/utils` (DTR calculation) 87.4%, target 80%. |
-| G7 This report exists | Draft | This file |
-| G8 `PROGRESS.md` updated | No | The test results are recorded. The gate result is recorded at the gate check. |
+| G7 This report exists | Yes | This file |
+| G8 `PROGRESS.md` updated | Yes | Gate result recorded on 2026-11-10 |
 | G9 Keep-alive check passes | Yes | TC-ST-Q-RE-05 passes on 2026-11-10: sources A and B both wrote a heartbeat in less than 48 hours, and the backup is 3 days old. KA-01 is closed (S1 report). |
 
 ## 4. Stage exit criteria (test plan, section 8)
 
 | Criterion | Result | Evidence |
 |---|---|---|
-| S2 gate passed (entry criterion) | No | S3 work started early (D-65). The S2 gate waits for the S1 gate. |
-| Common gate rules | No | G7 and G8 (section 3): the gate results are not recorded yet |
+| S2 gate passed (entry criterion) | Yes | Passed 2026-11-10 (S2 report). S3 work started early (D-65). |
+| Common gate rules | Yes | Section 3 |
 | The report cycle passes in N1, N2, and N3 | Yes | TC-SI-RPT-01 (section 2.3). TC-ST-FAC-01 also passes in N1, N2, and N3. |
 | The access matrix tests pass 100% | Yes | TC-ST-ACC-01, TC-CI-ACL-02, and the Edge Function part of TC-CI-ACL-03 pass. |
 
@@ -197,7 +197,7 @@ Notes:
 
 | QR ID | Target | Measured value | Pass or fail |
 |---|---|---|---|
-| QR-MA-05 | Coverage: backend 70% | Backend 92.4% of the rule items (73 of 79, D-52). Frontend value for S3: not measured in this draft. | Pass (backend) |
+| QR-MA-05 | Coverage: backend 70% | Backend 92.4% of the rule items (73 of 79, D-52). Frontend 80.3% lines (2026-11-09), target 60%. | Pass |
 | QR-SE-01 | Each user reads and sends only own scope | TC-CI-ACL-02 (pass). TC-ST-ACC-01 (pass). | Pass |
 | QR-SF-03 | No silent delete of local changes | D-69: the device keeps the records that have a local change when the scope changes. Examined in TC-CI-ACL-02 (client part). | Pass |
 
@@ -246,10 +246,12 @@ Observations (not defects now):
 
 ## 8. Decision
 
-The S3 gate does not pass yet. This is a draft. The S3 gate waits for these actions:
+The S3 gate passes on 2026-11-10. All 14 S3 test cases pass (TC-ST-ADM-01: the S3 part; the CSV export part is S4 work). Zero open S1 and S2 defects. The report cycle passes in N1, N2, and N3. The access matrix tests pass 100%. The L3 and L4 test cases of S1 and S2 pass again (section 2.5).
 
-1. The S1 gate passes (S1 report, section 5). Done 2026-11-10: keep-alive source B (cron-job.org) operates, TC-ST-Q-RE-05 passes, and KA-01 is closed. The gate decision is not recorded yet.
-2. The S2 gate passes (S2 report, section 8). It waits for the S1 gate.
-3. Done 2026-11-10: the L3 and L4 test cases of S1 and S2 pass again (section 2.5). Record the gate results in this report and `PROGRESS.md` at the gate check.
+The record of the actions before the gate:
 
-New gate date: the S3 end date, 2026-11-14, or earlier when items 1 and 2 are done.
+1. Done 2026-11-10: the S1 gate passes (keep-alive source B exists, source C deleted by D-73, TC-ST-Q-RE-05 passes).
+2. Done 2026-11-10: the S2 gate passes.
+3. Done 2026-11-10: the regression suites pass (section 3, G5, and section 2.5).
+
+Open items for S4: the CSV export part of TC-ST-ADM-01 (FR-EXP-03), the device tests on a real phone (section 7, item 6), and the observations of section 7. The branch is not merged into `main`. Merge only when the user asks (`AGENTS.md`, rule 13).

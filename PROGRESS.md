@@ -6,9 +6,9 @@ This file is the only source for the current project state. Each agent session m
 
 | Item | Value |
 |---|---|
-| Stage | S3: Reports, corrections, and admin web (started early, D-65). The S1 and S2 gates are still open. |
+| Stage | S3 gate passed 2026-11-10. Next stage: S4 (Completion and quality tests), not started. |
 | Stage dates | S1: 2026-10-28 to 2026-11-03. S2: 2026-11-04 to 2026-11-10 (work started 2026-10-26). |
-| Gate status | S1 open (operation items only). S2 open (waits for S1). S3 open: all S3 test cases are run and pass (TC-ST-ADM-01 S3 part). The draft S3 report exists. 2026-11-10: KA-01 closed, and the L3 and L4 test cases of S1 and S2 pass again (regression, S3 report section 2.5). Next: the S1, S2, and S3 gate checks. |
+| Gate status | S1, S2, and S3 gates passed 2026-11-10 (reports in `docs/05-testing/reports/`). CI passes on `d6e87ce`. The branch `s3/reports-corrections-admin` is not merged into `main` (merge only when the user asks). |
 | Gate criteria | `docs/05-testing/test-plan.md`, section 8 |
 
 ## 2. Stage tracker
@@ -16,9 +16,9 @@ This file is the only source for the current project state. Each agent session m
 | Stage | Name | Dates | Status |
 |---|---|---|---|
 | S0 | Plan and design | 2026-10-21 to 2026-10-27 | Gate passed 2026-10-25 (`docs/05-testing/reports/S0-test-report.md`) |
-| S1 | Foundation | 2026-10-28 to 2026-11-03 | Code tests pass. Backend coverage 88.2% (D-52). Gate open: keep-alive B and C, TC-ST-Q-RE-05 again. `prod` comes before S5 (D-40). |
-| S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | All S2 tests pass (`S2-test-report.md`). Gate open: waits for the S1 gate. |
-| S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Started 2026-10-30 (D-65). Server parts, mobile pages on real data, and admin web (code and L2) done 2026-11-08. Browser and device tests not done. |
+| S1 | Foundation | 2026-10-28 to 2026-11-03 | Gate passed 2026-11-10 (`S1-test-report.md`). Keep-alive sources A and B; source C deleted (D-73). `prod` comes before S5 (D-40). |
+| S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | Gate passed 2026-11-10 (`S2-test-report.md`). |
+| S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Started 2026-10-30 (D-65). Gate passed 2026-11-10 (`S3-test-report.md`). |
 | S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | Not started |
 | S5 | Release and documentation | 2026-11-19 to 2026-11-21 | Not started |
 
@@ -36,7 +36,7 @@ S3 next (in order):
 4. Done 2026-11-08: browser tests of the admin web in the preview, as the seed admin. TC-ST-ADM-01 (S3 part, without CSV export) passes: company, batch, user (made by the user), and assignment; dashboard counts checked against the database; filters and reset; audit log with filters. TC-ST-ADM-02 passes (offline simulated with the browser `offline` and `online` events: message, saves disabled, form values kept). DEF-017 (page height) fixed. DEF-018 (wrong message for an ended session, S4) fixed: `admin-users` gives 401 `session_ended`, deployed to `dev`. Test data left on `dev`: `ST-ADM Test Company`, `ST-ADM Test Batch`, `ST-ADM Test OJT` and its assignment.
 5. Done 2026-11-08: device tests on two emulators (two read-only instances of `ojt_dtr_api35`; `ojt1` on `emulator-5554`, `fac1` on `emulator-5556`; the user logged in by hand). TC-SI-RPT-01 (N1, N2, N3), TC-SI-COR-01 (N1, N2), and TC-ST-FAC-01 (N1, N2, N3) pass, with zero defects. Server rows checked by the orchestrator. TC-ST-ACC-01 passes: the admin login on the mobile app and the `ojt1` login on the web app (2026-11-10) are refused with the role message. Limits: text fields and the pull were set or started through the DevTools protocol, because the emulator keyboard does not open (`hw.keyboard=no`); pull-to-refresh was not tested. Observations: the facilitator review list shows the time of the first submit after a resubmit; the app accepts a report for a week with 0 hours (no rule blocks it). Test data on `dev`: `ojt1` reports 10-12 and 10-26 approved, 10-19 returned; 3 corrections.
 6. Done 2026-11-10: regression of the L3 and L4 test cases of S1 and S2 on the local stack (D-72). 14 of 14 pass (TC-SI-PLUG-01 not touched; TC-ST-Q-RE-05 passed separately). Zero new defects. S3 report, section 2.5.
-7. Do the S1 gate check, then the S2 and S3 gate checks, and finish the S1, S2, and S3 test reports.
+7. Done 2026-11-10: the S1, S2, and S3 gates pass. CI was red from `5b1152a` to `d567400` (slow L2 paging test, fixed in `362adf2`). The report photo part of TC-CI-FILE-01 has two new L2 tests (`d6e87ce`). TC-CI-AUTH-03 passes with the admin reset test of TC-CI-ADM-01. Source C deleted (D-73).
 
 The prerequisite status is in `docs/01-project/readiness-and-stage-plan.md`, section 1.
 
@@ -51,7 +51,7 @@ S2 next (in order):
 
 Open S1 items:
 
-1. Keep-alive. Source A (`keepalive.yml`) runs: the first scheduled run passed on 2026-10-26 at 06:10 UTC (about 5 hours after the cron time; heartbeat `github` on `dev`). Source B is deferred (D-45) and must exist before the S1 gate. Source C: calendar reminders (Monday and Thursday).
+1. Done 2026-11-10: keep-alive. Source A (`keepalive.yml`) runs each day. Source B (cron-job.org) runs each day at 21:17 Asia/Manila. Source C is deleted (D-73).
 2. Agent: the S1 test report draft exists (`docs/05-testing/reports/S1-test-report.md`). Close its open items (section 5), then do the gate check. Backend coverage: done 2026-10-26. The user accepted D-52 (rule-item coverage). Value 88.2% (60 of 68), target 70%.
 3. User (later): run TC-SI-PLUG-01 again on a real Android phone (readiness plan, item 8).
 4. Done 2026-10-30: the UI/UX design values are in `docs/04-uiux/design-system.md` (D-68). The UI/UX team rules are in `docs/04-uiux/uiux-team-requirements.md`.
@@ -163,3 +163,4 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-11-09 | Claude Code (desktop), orchestrator with a Sonnet agent | Draft S3 test report (`docs/05-testing/reports/S3-test-report.md`, agent draft, orchestrator review). TC-U-COR-01 runs in the L2 test of TC-CI-AUD-01 (D-71); 9 of 9 tests of that file and the coverage map pass. Frontend coverage 80.3% lines (G6 passes). Keep-alive source B on hold (user). The web part of TC-ST-ACC-01 waits for the user. | `docs/05-testing/reports/S3-test-report.md`, `docs/05-testing/test-cases.md`, `docs/01-project/decision-log.md`, `system/backend/tests/reports-corrections.test.ts`, `docs/AGENTS.md` (local), `PROGRESS.md` |
 | 2026-11-10 | Claude Code (desktop) | The web part of TC-ST-ACC-01 passes (the user logged in as `ojt1` in the browser preview; the web app refused it). Updated the draft S3 test report: G1, G2, and the access-matrix rule pass. The S3 gate waits only for the S1 and S2 gates. | `docs/05-testing/reports/S3-test-report.md`, `PROGRESS.md` |
 | 2026-11-10 | Claude Code (desktop), orchestrator with three Haiku test agents | The user installed WSL 2 and Docker Desktop on the D drive. Local Supabase stack runs (migrations applied, seed with its own local password). New app build configuration `local` and a debug-only HTTP permission for 127.0.0.1 (D-72). Regression of 14 L3 and L4 test cases of S1 and S2 on two emulators: all pass (S3 report, section 2.5). The orchestrator checked each result in the database and ran TC-SI-SYNC-03 (with a table lock, for a real stop during the request) and TC-SI-SYNC-07 itself. Zero new defects. | `system/frontend/angular.json`, `system/frontend/src/environments/environment.local.ts`, `system/frontend/android/app/src/debug/`, `system/frontend/AGENTS.md`, `system/backend/AGENTS.md`, `docs/01-project/decision-log.md`, `docs/05-testing/reports/S3-test-report.md`, `PROGRESS.md` |
+| 2026-11-10 | Claude Code (desktop) | Gate checks. CI had failed since `5b1152a`: the L2 test TC-CI-SYNC-03 (small pages) took more than 30 s on `dev` (test fault); fixed with pages of 40 and a 120 s limit (`362adf2`). Added two L2 tests of report photos (TC-CI-FILE-01 report part, `d6e87ce`). CI passes on `d6e87ce` (frontend 256 tests, backend 122 of 122). The user deleted keep-alive source C (D-73). The S1, S2, and S3 gates pass. Reports updated. | `system/backend/tests/{sync,files}.test.ts`, `system/backend/tests/coverage-map.json`, `docs/01-project/decision-log.md`, `docs/05-testing/test-plan.md`, `docs/07-operations/free-tier-operations-runbook.md`, `docs/05-testing/reports/S{1,2,3}-test-report.md`, `PROGRESS.md` |
