@@ -17,7 +17,7 @@ import { issueCause, issueTime, issueTitle } from './sync-issue-text';
     <app-page-header [title]="strings.pages.syncIssues" [backHref]="home()" />
     <ion-content class="ion-padding">
       @if (issues().length === 0) {
-        <p>{{ text.none }}</p>
+        <p class="empty">{{ text.none }}</p>
       } @else {
         <p>{{ text.intro }}</p>
       }
@@ -41,10 +41,90 @@ import { issueCause, issueTime, issueTitle } from './sync-issue-text';
     </ion-content>
   `,
   styles: `
+    p {
+      margin: var(--space-2) 0 var(--space-5);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--ion-color-dark);
+    }
+    /* No issue: a check mark on a document, drawn with CSS */
+    p.empty {
+      position: relative;
+      max-width: 340px;
+      margin: 100px auto var(--space-5);
+      padding-top: 148px;
+      text-align: center;
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+    p.empty::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: calc(50% - 46px);
+      width: 92px;
+      height: 120px;
+      border: 4px solid var(--ion-color-primary);
+      border-radius: 10px;
+      background: radial-gradient(circle at 50% 56%, var(--ion-color-success) 0 27px, transparent 28px), var(--lb-mist);
+      box-shadow: inset 0 0 0 8px var(--ion-background-color);
+    }
+    p.empty::after {
+      content: '';
+      position: absolute;
+      top: 49px;
+      left: calc(50% - 8px);
+      width: 15px;
+      height: 27px;
+      border: solid var(--ion-color-success-contrast);
+      border-width: 0 4px 4px 0;
+      transform: rotate(45deg);
+    }
+    ion-card {
+      margin: 0 0 var(--space-4);
+      border-color: rgba(var(--ion-color-primary-rgb), 0.16);
+      border-radius: 10px;
+    }
+    ion-card-header {
+      gap: 6px;
+      padding: var(--space-4) 14px 10px;
+    }
+    ion-card-subtitle {
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.5;
+      letter-spacing: 0;
+      color: var(--ion-color-medium-shade);
+    }
+    ion-card-content {
+      padding: 0 14px var(--space-4);
+      line-height: 1.6;
+    }
+    ion-card-content p {
+      margin: 0;
+    }
     .actions {
       display: flex;
-      gap: 8px;
-      margin-top: 8px;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: 20px;
+    }
+    .actions ion-button {
+      flex: 1 1 auto;
+      margin: 0;
+      --border-radius: 7px;
+      --padding-start: var(--space-3);
+      --padding-end: var(--space-3);
+      font-size: 0.75rem;
+    }
+    /* "Try again" is the main action: primary fill */
+    .actions ion-button:not([color]) {
+      --background: var(--ion-color-primary);
+      --background-hover: var(--ion-color-primary-tint);
+      --background-activated: var(--ion-color-primary-shade);
+      --color: var(--ion-color-primary-contrast);
     }
   `,
 })

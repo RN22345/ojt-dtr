@@ -43,8 +43,6 @@ import { weekStart } from '../../shared/utils/hours';
         [value]="progress().percent"
         [secondary]="progress().loggedPercent"
         [size]="190"
-        color="success"
-        secondaryColor="primary"
         [caption]="ui.hoursOf(progress().approvedMinutes, progress().requiredMinutes)"
       />
 
@@ -87,53 +85,74 @@ import { weekStart } from '../../shared/utils/hours';
   `,
   styles: `
     h2 {
-      margin: 8px 0 0;
+      margin: var(--space-3) 0 var(--space-1);
+      font-size: 1.3rem;
       font-weight: 700;
-      color: var(--ion-color-primary);
+      color: var(--ion-color-dark);
     }
     .company {
-      margin-top: 0;
+      margin: 0 0 20px;
+      font-size: 0.875rem;
       color: var(--ion-color-medium-shade);
+    }
+    app-progress-ring {
+      margin: 6px 0 22px;
     }
     .tiles {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 16px 0;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2);
+      margin: 18px 0 22px;
+    }
+    ion-card {
+      margin: var(--space-3) 0;
     }
     .total {
+      margin: var(--space-2) 0 0;
       text-align: right;
-      margin: 8px 0 0;
+      font-size: 0.875rem;
       font-weight: 600;
       color: var(--ion-color-primary);
+      font-variant-numeric: tabular-nums;
     }
     .status-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: var(--space-3);
+    }
+    .status-row h3 {
+      color: var(--ion-color-dark);
+    }
+    .status-row ion-button {
+      flex-shrink: 0;
+      font-size: 0.75rem;
     }
     h3 {
-      margin: 0 0 6px;
+      margin: 20px 0 10px;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--ion-color-primary);
     }
-    ion-list {
-      background: transparent;
-      padding: 0;
+    ion-card h3 {
+      margin: 0 0 var(--space-2);
     }
     ion-item {
+      --min-height: 48px;
       --background: var(--ion-color-light);
-      --border-radius: 12px;
       --border-width: 0;
-      margin-bottom: 8px;
-      border-radius: 12px;
+      --padding-start: 14px;
+      --inner-padding-end: 14px;
+      margin-bottom: var(--space-2);
+      border-radius: 10px;
       font-weight: 600;
     }
-    .proto {
-      display: block;
-      margin-top: 16px;
-      font-size: 0.75em;
+    /* The first quick action is the main action */
+    ion-item:first-child {
+      --background: var(--ion-color-secondary);
+      --color: var(--ion-color-secondary-contrast);
+      --detail-icon-color: var(--ion-color-secondary-contrast);
+      --detail-icon-opacity: 1;
     }
   `,
 })

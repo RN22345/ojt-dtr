@@ -1,11 +1,13 @@
 // Profile for OJT and facilitator: assignment, contact number, password change (FR-PROF-01, FR-PROF-02, FR-AUTH-06).
+// The mobile Log out button is here. It uses the logout flow of the page header (FR-AUTH-05).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { IonButton, IonCheckbox, IonContent, IonInput, IonItem, IonLabel, IonList, IonNote, ToastController } from '@ionic/angular';
+import { IonButton, IonCheckbox, IonContent, IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, ToastController } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { logOutOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { homePath } from '../../core/auth/access';
 import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
-import { PlaceholderComponent } from '../../shared/placeholder/placeholder.component';
 import { STRINGS } from '../../shared/strings';
 import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -13,16 +15,18 @@ import { dateLabel } from '../../shared/utils/format';
 
 const MIN_PASSWORD = 8;
 
+addIcons({ logOutOutline });
+
 @Component({
   selector: 'app-profile-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, PlaceholderComponent, IonContent, IonButton, IonCheckbox, IonInput, IonItem, IonLabel, IonList, IonNote],
+  imports: [PageHeaderComponent, IonContent, IonButton, IonCheckbox, IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote],
   template: `
-    <app-page-header [title]="strings.pages.profile" [backHref]="home()" />
+    <app-page-header #header [title]="strings.pages.profile" [backHref]="home()" />
     <ion-content>
       <div class="ion-padding">
         <div class="who">
-          <div class="avatar"><app-placeholder [label]="text.photo" /></div>
+          <div class="avatar" role="img" [attr.aria-label]="text.photo">{{ text.photo }}</div>
           <div>
             <h2>{{ auth.profile()?.fullName }}</h2>
             <p>{{ roleText() }}</p>
@@ -61,71 +65,100 @@ const MIN_PASSWORD = 8;
         <ion-button [disabled]="passwordProblem() !== null || busy()" (click)="changePassword()">{{ text.change }}</ion-button>
 
         <p><ion-note>{{ text.version }}</ion-note></p>
+
+        <ion-button class="logout" expand="block" fill="outline" color="danger" [disabled]="header.busy()" (click)="header.logout()">
+          <ion-icon slot="start" name="log-out-outline" aria-hidden="true" />
+          {{ strings.logout }}
+        </ion-button>
       </div>
     </ion-content>
   `,
   styles: `
     .who {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
+      gap: var(--space-4);
+      margin: var(--space-3) 0 28px;
+      text-align: center;
     }
     .who h2 {
       margin: 0;
-      font-weight: 700;
-      color: var(--ion-color-primary);
+      font-size: 1.25rem;
+      line-height: 1.5;
+      color: var(--ion-color-dark);
     }
     .who p {
-      margin: 4px 0 0;
-      color: var(--ion-color-medium-shade);
+      display: inline-block;
+      margin: 7px 0 0;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--space-1);
+      background: var(--ion-color-secondary);
+      color: var(--ion-color-secondary-contrast);
+      font-size: 0.75rem;
+      font-weight: 600;
     }
     .avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ion-color-medium);
+      width: 84px;
+      height: 84px;
       overflow: hidden;
-      border: 3px solid var(--ion-color-primary);
+      border: 1px solid var(--ion-color-primary);
+      border-radius: 50%;
+      background: rgba(var(--ion-color-tertiary-rgb), 0.08);
     }
     h3 {
-      margin: 20px 0 8px;
-      font-weight: 700;
+      margin: var(--space-5) 0 var(--space-3);
+      font-size: 0.9375rem;
       color: var(--ion-color-primary);
     }
-    ion-list {
-      background: transparent;
-      padding: 0;
-    }
     ion-item {
-      --background: var(--ion-color-light);
-      --border-width: 0;
-      margin-bottom: 6px;
-      border-radius: 12px;
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      --min-height: 48px;
+      margin: 0;
+      border-bottom: 1px solid var(--ion-color-light-shade);
+    }
+    ion-item ion-label {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr);
+      align-items: start;
+      gap: var(--space-3);
+      margin: var(--space-3) 0;
     }
     ion-item p {
-      font-size: 0.8rem;
+      margin: 0;
+      font-size: 0.75rem;
+      line-height: 1.6;
       color: var(--ion-color-medium-shade);
     }
     ion-item h3 {
-      margin: 2px 0 0;
-      font-size: 1rem;
-      font-weight: 600;
+      margin: 0;
+      font-family: var(--ion-font-family);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      white-space: normal;
+      overflow-wrap: anywhere;
       color: var(--ion-color-dark);
     }
     ion-checkbox {
-      margin-top: 12px;
-      --checkbox-background-checked: var(--ion-color-primary);
-      --border-color-checked: var(--ion-color-primary);
+      margin-top: var(--space-3);
     }
     ion-button {
-      margin-top: 12px;
+      margin-top: var(--space-3);
     }
     .gap {
-      margin-top: 8px;
+      margin-top: var(--space-2);
     }
-    .note {
-      display: block;
-      font-size: 0.75em;
+    .logout {
+      margin: var(--space-5) 0 var(--space-2);
     }
   `,
 })

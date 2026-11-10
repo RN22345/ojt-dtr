@@ -56,15 +56,67 @@ const STATUS_COLOR = { pending: 'warning', synced: 'success', issue: 'danger' } 
     }
   `,
   styles: `
-    .day {
+    ion-list {
+      margin-bottom: 18px;
+    }
+    ion-list-header {
+      --padding-start: 0;
+      gap: var(--space-2);
+      min-height: 36px;
+      padding-inline-start: 0;
+      font-size: 0.875rem;
       font-weight: 600;
+    }
+    ion-list-header ion-label {
+      margin-block: var(--space-2);
+    }
+    ion-note {
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+    }
+    ion-item {
+      --min-height: 58px;
+      --padding-start: 10px;
+      --inner-padding-end: var(--space-2);
+      --border-color: var(--ion-color-light);
+    }
+    .day {
+      --min-height: 36px;
       --background: var(--ion-color-light);
+      --border-width: 0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ion-color-primary);
+    }
+    .day ion-label {
+      margin-block: 6px;
+    }
+    h3 {
+      font-family: var(--ion-font-family);
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
     }
     .flags {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
+      gap: var(--space-1);
+      margin: 5px 0 0;
+    }
+    ion-badge {
+      padding: 3px 7px;
+    }
+    ion-badge[color='success'] {
+      --ion-color-base: rgba(var(--ion-color-success-rgb), 0.15);
+      --ion-color-contrast: var(--ion-color-success-shade);
+    }
+    :host > p {
+      margin: var(--space-3) 0;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--ion-color-medium-shade);
     }
   `,
 })

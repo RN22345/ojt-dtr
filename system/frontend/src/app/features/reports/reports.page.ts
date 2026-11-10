@@ -88,51 +88,53 @@ function matches(filter: Filter, status: string): boolean {
   styles: `
     .tiles {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2);
+      margin: var(--space-1) 0 var(--space-4);
     }
     ion-segment {
-      --background: var(--ion-color-light);
-      margin-bottom: 8px;
-      border-radius: 12px;
-    }
-    ion-segment-button {
-      --color: var(--ion-color-medium-shade);
-      --color-checked: var(--ion-color-primary);
-      --indicator-color: var(--ion-color-secondary);
-      text-transform: none;
-      font-weight: 600;
+      margin-bottom: 14px;
     }
     .empty {
+      padding: var(--space-5) var(--space-3);
       text-align: center;
+      font-size: 0.875rem;
       color: var(--ion-color-medium-shade);
-    }
-    ion-list {
-      background: transparent;
-      padding: 0;
     }
     ion-item {
-      --background: var(--ion-color-light);
+      --background: var(--lb-cream);
       --border-width: 0;
-      --border-radius: 12px;
-      margin-top: 8px;
-      border-radius: 12px;
+      --border-radius: 10px;
+      --padding-start: 14px;
+      --inner-padding-end: var(--space-3);
+      --min-height: 90px;
+      --detail-icon-color: var(--ion-color-primary);
+      --detail-icon-opacity: 0.7;
+      margin: 0 0 10px;
+      border: 1px solid var(--lb-cream-border);
+      border-radius: 10px;
+    }
+    ion-label {
+      margin: 14px 0;
     }
     ion-item h2 {
+      margin-bottom: 7px;
+      font-family: var(--ion-font-family);
+      font-size: 0.875rem;
       font-weight: 700;
-      color: var(--ion-color-primary);
+      color: var(--ion-color-dark);
     }
     ion-item p {
+      font-size: 0.75rem;
+      line-height: 1.6;
       color: var(--ion-color-medium-shade);
     }
-    .remark {
+    ion-item p.remark {
+      margin-top: 6px;
       color: var(--ion-color-danger);
     }
-    .proto {
-      display: block;
-      margin-top: 16px;
-      font-size: 0.75em;
+    app-status-badge {
+      margin-left: 10px;
     }
   `,
 })

@@ -25,7 +25,7 @@ import { DtrService } from './dtr.service';
 
       <section class="punch" aria-live="polite">
         <p class="state">{{ openSince() ? text.openSince(openSince()!) : text.noOpenSession }}</p>
-        <ion-button expand="block" size="large" [color]="openSince() ? 'medium' : 'primary'" [disabled]="busy()" (click)="punch()">
+        <ion-button expand="block" size="large" [color]="openSince() ? 'primary' : 'secondary'" [disabled]="busy()" (click)="punch()">
           @if (busy()) {
             <ion-spinner name="dots" />
           } @else {
@@ -40,11 +40,55 @@ import { DtrService } from './dtr.service';
   `,
   styles: `
     .punch {
-      margin-bottom: 24px;
+      position: relative;
+      margin-bottom: 22px;
+      padding: var(--space-5) 14px var(--space-3);
+      border-radius: 14px;
+      background: var(--lb-cream);
+    }
+    /* A clock mark above the status text */
+    .punch::before {
+      content: '';
+      display: block;
+      box-sizing: border-box;
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 18px;
+      border: 3px solid var(--lb-sky);
+      border-radius: 50%;
+      outline: 2px solid var(--ion-color-primary);
+      outline-offset: 4px;
+      pointer-events: none;
+    }
+    .punch::after {
+      content: '';
+      position: absolute;
+      top: 39px;
+      left: 50%;
+      width: 15px;
+      height: 18px;
+      border-bottom: 2px solid var(--ion-color-primary);
+      border-left: 2px solid var(--ion-color-primary);
+      transform: skewY(25deg);
+      pointer-events: none;
     }
     .state {
+      margin: 0 0 var(--space-4);
       text-align: center;
-      color: var(--ion-color-medium-shade);
+      font-size: 0.875rem;
+      font-weight: 600;
+      line-height: 1.6;
+      color: var(--ion-color-primary);
+      font-variant-numeric: tabular-nums;
+    }
+    ion-button {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+      color: var(--ion-color-primary);
     }
   `,
 })

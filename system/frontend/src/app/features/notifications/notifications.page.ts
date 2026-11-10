@@ -48,43 +48,58 @@ type Filter = 'all' | 'unread';
     </ion-content>
   `,
   styles: `
-    ion-segment {
-      --background: var(--ion-color-light);
-      border-radius: 12px;
-    }
-    ion-segment-button {
-      --color: var(--ion-color-medium-shade);
-      --color-checked: var(--ion-color-primary);
-      --indicator-color: var(--ion-color-secondary);
-      text-transform: none;
-      font-weight: 600;
-    }
     .gap {
-      margin-top: 8px;
+      margin: var(--space-3) 0 0;
+      --border-radius: 6px;
+      font-size: 0.75rem;
+    }
+    ion-list {
+      margin: 0 var(--space-4);
     }
     ion-item {
-      --border-color: var(--ion-color-light-shade);
+      --background: var(--lb-mist);
+      --border-width: 0;
+      --padding-start: var(--space-3);
+      --inner-padding-end: 10px;
+      --detail-icon-color: var(--ion-color-primary);
+      --detail-icon-opacity: 0.5;
+      margin: 0 0 var(--space-2);
+      border: 1px solid rgba(var(--ion-color-primary-rgb), 0.06);
+      border-radius: var(--space-2);
+    }
+    ion-item:nth-child(even) {
+      --background: var(--lb-cream);
+    }
+    ion-label {
+      margin: var(--space-3) 0;
     }
     ion-item h2 {
+      margin-bottom: 3px;
+      font-family: var(--ion-font-family);
+      font-size: 0.875rem;
       font-weight: 500;
+      line-height: 1.5;
+      color: var(--ion-color-dark);
     }
     ion-item p {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      line-height: 1.6;
       color: var(--ion-color-medium-shade);
     }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--ion-color-secondary);
+    ion-item p:last-child {
+      margin-top: 3px;
     }
-    .unread {
+    .dot {
+      flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      margin-right: var(--space-3);
+      border-radius: 50%;
+      background: var(--ion-color-primary);
+    }
+    ion-item h2.unread {
       font-weight: 700;
       color: var(--ion-color-primary);
-    }
-    .note {
-      display: block;
-      font-size: 0.75em;
     }
   `,
 })

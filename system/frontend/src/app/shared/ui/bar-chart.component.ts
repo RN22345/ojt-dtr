@@ -33,63 +33,90 @@ export interface BarItem {
     </div>
   `,
   styles: `
+    :host {
+      display: block;
+    }
     .chart {
       position: relative;
       display: flex;
       align-items: stretch;
-      gap: 6px;
-      padding-top: 18px;
+      gap: 10px;
+      box-sizing: border-box;
+      padding: 0 var(--space-2);
+      border-top: 24px solid transparent;
+      border-bottom: 24px solid transparent;
     }
     .col {
-      flex: 1;
+      position: relative;
       display: flex;
+      flex: 1;
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
-      background: none;
-      border: 0;
-      padding: 0;
       min-width: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 3px;
+      background: none;
       color: inherit;
       font: inherit;
+      cursor: pointer;
+    }
+    .col:focus-visible {
+      outline: 2px solid var(--ion-color-primary);
+      outline-offset: 4px;
     }
     .bar {
-      width: 70%;
+      flex-shrink: 0;
+      width: 74%;
+      max-width: 44px;
       min-height: 2px;
       border-radius: 4px 4px 0 0;
       transition: height 0.4s ease;
     }
     .selected .bar {
-      outline: 2px solid var(--ion-color-dark);
-      outline-offset: 1px;
+      outline: 2px solid var(--ion-color-secondary);
+      outline-offset: 2px;
     }
     .value {
-      font-size: 0.65em;
-      color: var(--ion-color-medium-shade);
+      flex-shrink: 0;
+      margin-bottom: 3px;
+      color: var(--ion-color-primary);
+      font-size: 0.75rem;
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
     .label {
-      font-size: 0.7em;
-      margin-top: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      position: absolute;
+      top: 100%;
       max-width: 100%;
+      margin-top: 6px;
+      overflow: hidden;
+      color: var(--ion-color-medium-shade);
+      font-size: 0.75rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .target {
       position: absolute;
-      left: 0;
-      right: 0;
-      border-top: 1px dashed var(--ion-color-medium);
-      margin-bottom: 1.4em;
+      right: var(--space-2);
+      left: var(--space-2);
+      border-top: 1px dashed var(--ion-color-secondary);
       pointer-events: none;
     }
     .target span {
       position: absolute;
+      top: -1.4em;
       right: 0;
-      top: -1.3em;
-      font-size: 0.6em;
-      color: var(--ion-color-medium-shade);
+      color: var(--ion-color-primary);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bar {
+        transition: none;
+      }
     }
   `,
 })

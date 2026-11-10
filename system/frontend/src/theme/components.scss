@@ -1,5 +1,5 @@
 /* src/theme/components.scss - layer 3 of the design system (docs/04-uiux/design-system.md, section 3).
-   The global look of the Ionic parts. Use the tokens of variables.scss only. */
+   The global look of the Ionic parts (LogBound restyle). Use the tokens of variables.scss only. */
 
 /* Big text, headers, and sub headers use Plus Jakarta Sans. All other text uses Inter. */
 h1,
@@ -11,77 +11,376 @@ ion-title {
   font-weight: 700;
 }
 
-/* Floating rounded tab bar */
-ion-tab-bar {
-  margin: 0 var(--space-3) var(--space-3);
-  border-radius: var(--radius-l);
-  border: none;
-  box-shadow: var(--elevation-1);
+body {
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* The selected tab has an amber mark under its label */
-ion-tab-button {
-  position: relative;
+h2 {
+  font-size: 1.2rem;
+  line-height: 1.35;
 }
-ion-tab-button.tab-selected::after {
+h3 {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+p {
+  line-height: 1.55;
+}
+
+ion-content {
+  --background: var(--ion-background-color);
+}
+ion-content.ion-padding {
+  --padding-top: 14px;
+  --padding-bottom: 28px;
+}
+.ion-padding,
+.ion-padding-horizontal {
+  --ion-padding: 20px;
+}
+
+/* Header: deep teal, title on the left, flat */
+ion-header {
+  background: var(--ion-background-color);
+  box-shadow: none;
+}
+ion-header::after {
+  display: none;
+}
+ion-header ion-toolbar {
+  --border-width: 0;
+  --padding-start: var(--space-2);
+  --padding-end: var(--space-2);
+  --min-height: 60px;
+}
+ion-title {
+  padding-inline: var(--space-3);
+  font-size: 1rem;
+  text-align: left;
+}
+ion-header ion-buttons ion-button {
+  --color: var(--ion-color-primary-contrast);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+/* Bottom navigation: a raised amber icon in a smooth white notch */
+ion-tab-bar[slot='bottom'] {
+  --lb-nav-height: clamp(66px, 16vw, 118px);
+  --lb-nav-active-size: clamp(44px, 10.7vw, 78px);
+  --lb-nav-icon-size: clamp(27px, 6.3vw, 46px);
+  --lb-nav-active-icon-size: clamp(27px, 6.8vw, 50px);
+  --lb-nav-label-size: clamp(12px, 2.85vw, 21px);
+  --background: var(--ion-color-primary);
+  --color: var(--lb-mist);
+  --color-selected: var(--ion-color-secondary);
+  box-sizing: content-box;
+  height: var(--lb-nav-height);
+  min-height: var(--lb-nav-height);
+  margin: 0;
+  padding: 0 0 var(--ion-safe-area-bottom, 0px);
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  contain: none;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button {
+  position: relative;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --background: transparent;
+  --color: var(--lb-mist);
+  --color-selected: var(--ion-color-secondary);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+  height: var(--lb-nav-height);
+  min-height: var(--lb-nav-height);
+  overflow: visible;
+  letter-spacing: 0;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button::part(native) {
+  height: 100%;
+  overflow: visible;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button ion-icon {
+  position: absolute;
+  top: calc(var(--lb-nav-height) * 0.16);
+  left: 50%;
+  z-index: 1;
+  box-sizing: content-box;
+  width: var(--lb-nav-icon-size);
+  height: var(--lb-nav-icon-size);
+  margin: 0;
+  font-size: var(--lb-nav-icon-size);
+  transform: translateX(-50%);
+  transition: background-color var(--motion-medium) var(--ease-standard);
+}
+ion-tab-bar[slot='bottom'] ion-tab-button ion-label {
+  position: absolute;
+  top: calc(var(--lb-nav-height) * 0.6);
+  right: 0;
+  left: 0;
+  margin: 0;
+  font-size: var(--lb-nav-label-size);
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected::before {
   content: '';
   position: absolute;
-  bottom: 6px;
+  top: 0;
   left: 50%;
-  width: 20px;
-  height: 3px;
-  margin-left: -10px;
-  border-radius: 2px;
+  z-index: 0;
+  width: min(calc(var(--lb-nav-active-size) * 2.25), 100%);
+  height: calc(var(--lb-nav-active-size) * 0.78);
+  background: var(--ion-background-color);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 112 44' preserveAspectRatio='none'%3E%3Cpath d='M0 0 C24 0 23 40 56 40 S88 0 112 0 Z' fill='white'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected ion-icon {
+  top: calc(var(--lb-nav-active-size) * -0.46);
+  width: var(--lb-nav-active-icon-size);
+  height: var(--lb-nav-active-icon-size);
+  padding: calc((var(--lb-nav-active-size) - var(--lb-nav-active-icon-size)) / 2);
+  border-radius: 50%;
   background: var(--ion-color-secondary);
+  color: var(--ion-color-secondary-contrast);
+  font-size: var(--lb-nav-active-icon-size);
+}
+/* White label: amber text on teal fails the contrast rule. The amber icon shows the selected tab. */
+ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected ion-label {
+  color: var(--ion-color-primary-contrast);
+  font-weight: 700;
+}
+/* The raised icon goes above the tab bar. More space at the bottom keeps the last item visible. */
+ion-tabs ion-content.ion-padding {
+  --padding-bottom: 72px;
 }
 
-/* Rounded buttons, no CAPITAL letters */
+/* Top navigation (admin web app) */
+ion-tab-bar[slot='top'] {
+  --background: var(--ion-color-primary);
+  --color: var(--lb-mist);
+  --color-selected: var(--ion-color-secondary);
+  min-height: 68px;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+}
+ion-tab-bar[slot='top'] ion-tab-button {
+  --background: transparent;
+  font-size: 0.75rem;
+  letter-spacing: 0;
+}
+ion-tab-bar[slot='top'] ion-tab-button ion-icon {
+  font-size: 22px;
+}
+ion-tab-bar[slot='top'] ion-tab-button.tab-selected {
+  box-shadow: inset 0 -3px var(--ion-color-secondary);
+}
+
+/* Buttons: rounded, no capital letters */
 ion-button {
   --border-radius: var(--radius-s);
+  --box-shadow: none;
+  --padding-start: 18px;
+  --padding-end: 18px;
+  min-height: 48px;
   text-transform: none;
+  font-size: 0.875rem;
   font-weight: 600;
+  letter-spacing: 0;
 }
 
 /* Main buttons are amber (buttons with a color="" keep their own color) */
-ion-button:not([color]):not(.button-outline):not(.button-clear) {
+ion-button:not([color]):not(.button-outline):not(.button-clear):not(.in-toolbar) {
   --background: var(--ion-color-secondary);
   --background-activated: var(--ion-color-secondary-shade);
   --background-hover: var(--ion-color-secondary-tint);
   --color: var(--ion-color-secondary-contrast);
 }
 
-/* Outline buttons use the teal color */
+/* Outline buttons use the deep teal */
 ion-button.button-outline:not([color]) {
   --border-color: var(--ion-color-primary);
   --color: var(--ion-color-primary);
 }
 
-/* Cards are light, flat, and rounded */
-ion-card {
-  background: var(--ion-color-light);
-  box-shadow: none;
-  border-radius: var(--radius-l);
-  margin: var(--space-3) 0;
+/* Danger outline buttons: soft red fill, red border */
+ion-button.button-outline[color='danger'] {
+  --background: var(--lb-danger-soft);
+  --border-color: var(--ion-color-danger);
+  --color: var(--ion-color-danger);
 }
 
-/* Input fields */
-ion-input {
-  --border-radius: var(--radius-s);
-  --border-color: var(--ion-color-medium-tint);
-  --highlight-color-focused: var(--ion-color-primary);
+/* Cards: cream, flat, rounded */
+ion-card {
+  margin: var(--space-3) 0;
+  border: 1px solid var(--lb-cream-border);
+  border-radius: var(--radius-m);
+  background: var(--lb-cream);
+  box-shadow: none;
+  color: var(--ion-text-color);
+}
+ion-card[color='danger'] {
+  border-color: var(--ion-color-danger);
+  background: var(--ion-color-danger);
+  color: var(--ion-color-danger-contrast);
+}
+ion-card-header {
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+ion-card-content {
+  padding: var(--space-4);
+  font-size: 0.875rem;
+}
+ion-card-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+}
+ion-card-subtitle {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+/* Lists */
+ion-list {
+  padding-block: 0;
+  background: transparent;
+}
+ion-item {
+  --border-color: var(--lb-border);
+  --background: transparent;
+  --min-height: 52px;
+  --inner-padding-end: var(--space-3);
+  font-size: 0.875rem;
+}
+ion-item::part(detail-icon) {
+  color: var(--ion-color-primary);
+  font-size: 16px;
+  opacity: 0.7;
+}
+ion-note {
+  color: var(--ion-color-medium);
+  line-height: 1.5;
+}
+ion-list-header {
+  color: var(--ion-color-primary);
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Compact status labels */
+ion-badge {
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: normal;
+}
+ion-chip {
+  --background: var(--lb-mist);
+  --color: var(--ion-color-primary);
+  font-weight: 600;
 }
 
 /* Segments (filters) */
 ion-segment {
   --background: var(--ion-color-light);
-  border-radius: var(--radius-m);
+  padding: 3px;
+  border-radius: 9px;
 }
 ion-segment-button {
   --color: var(--ion-color-medium-shade);
   --color-checked: var(--ion-color-primary);
-  --indicator-color: var(--ion-color-secondary);
-  text-transform: none;
+  --indicator-color: var(--lb-sky);
+  --indicator-box-shadow: none;
+  --padding-start: 6px;
+  --padding-end: 6px;
+  min-width: 0;
+  min-height: 48px;
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Input fields: light fill, rounded, deep teal focus */
+ion-input,
+ion-textarea {
+  --background: var(--lb-field);
+  --border-radius: 6px;
+  --border-color: var(--ion-color-medium-tint);
+  --border-width: 1px;
+  --highlight-color-focused: var(--ion-color-primary);
+  --highlight-color-invalid: var(--ion-color-danger);
+  --padding-start: var(--space-3);
+  --padding-end: var(--space-3);
+  font-size: 0.875rem;
+}
+ion-searchbar {
+  --background: var(--lb-field);
+  --border-radius: 8px;
+  --box-shadow: none;
+  --icon-color: var(--ion-color-primary);
+  --placeholder-color: var(--ion-color-medium);
+  padding-inline: 0;
+}
+ion-select {
+  --highlight-color-focused: var(--ion-color-primary);
+  font-size: 0.875rem;
+}
+ion-checkbox {
+  --border-radius: 4px;
+  --border-color: var(--ion-color-medium);
+  --checkbox-background-checked: var(--ion-color-primary);
+  --border-color-checked: var(--ion-color-primary);
+  font-size: 0.875rem;
+}
+ion-fab-button {
+  --background: var(--ion-color-secondary);
+  --color: var(--ion-color-secondary-contrast);
+  --box-shadow: var(--elevation-1);
+}
+
+button:focus-visible,
+a:focus-visible,
+ion-button:focus-visible,
+ion-tab-button:focus-visible {
+  outline: 2px solid var(--ion-color-secondary);
+  outline-offset: 3px;
+}
+
+/* Alerts, toasts, and the refresher */
+ion-alert .alert-wrapper {
+  border-radius: var(--radius-l);
+}
+ion-alert .alert-button {
+  color: var(--ion-color-primary);
+  font-weight: 700;
+}
+ion-alert .alert-button.alert-button-role-destructive {
+  color: var(--ion-color-danger);
+}
+ion-toast {
+  --border-radius: var(--radius-m);
+}
+ion-refresher-content {
+  --color: var(--ion-color-primary);
+}
+
+/* Shared parts in a grid must be able to shrink */
+app-stat-tile {
+  min-width: 0;
 }
 
 /* Big numbers use the heading font */
@@ -89,4 +388,29 @@ ion-segment-button {
   font-family: var(--font-heading);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* Wide screens (admin web app): the content has a maximum width */
+@media (min-width: 768px) {
+  ion-content::part(scroll) {
+    width: 100%;
+    max-width: 960px;
+    margin-inline: auto;
+  }
+  .ion-padding,
+  .ion-padding-horizontal {
+    --ion-padding: 28px;
+  }
+  ion-content.ion-padding {
+    --padding-top: 24px;
+  }
+  ion-tab-bar[slot='bottom'] {
+    padding-inline: max(12px, calc((100% - 760px) / 2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ion-tab-button ion-icon {
+    transition: none;
+  }
 }

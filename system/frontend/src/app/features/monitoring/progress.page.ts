@@ -39,8 +39,6 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
         [value]="progress().percent"
         [secondary]="progress().loggedPercent"
         [size]="190"
-        color="success"
-        secondaryColor="primary"
         [caption]="ui.hoursOf(progress().approvedMinutes, progress().requiredMinutes)"
       />
       <div class="tiles">
@@ -95,42 +93,55 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     </ion-content>
   `,
   styles: `
+    app-progress-ring {
+      margin: 20px 0 24px;
+    }
     .tiles {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 16px 0;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2);
+      margin: 18px 0;
     }
     .end {
-      text-align: center;
-      padding: 10px;
-      border-radius: 12px;
+      padding: var(--space-3);
+      border-radius: 9px;
       background: var(--ion-color-light);
+      text-align: center;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--ion-color-medium-shade);
     }
     .end strong {
       color: var(--ion-color-primary);
     }
+    ion-card {
+      margin: 18px 0;
+    }
     h3 {
-      margin: 0 0 6px;
+      margin: 20px 0 var(--space-3);
+      font-size: 1rem;
       font-weight: 700;
       color: var(--ion-color-primary);
+    }
+    ion-card h3 {
+      margin-top: 0;
     }
     .legend {
       display: flex;
       flex-wrap: wrap;
       gap: 6px 14px;
-      list-style: none;
-      padding: 0;
       margin: 10px 0 0;
-      font-size: 0.75em;
+      padding: 0;
+      list-style: none;
+      font-size: 0.75rem;
       color: var(--ion-color-medium-shade);
     }
     .dot {
       display: inline-block;
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
+      margin-right: var(--space-1);
       border-radius: 50%;
-      margin-right: 4px;
     }
     .dot.success {
       background: var(--ion-color-success);
@@ -144,26 +155,26 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     .dot.medium {
       background: var(--ion-color-medium);
     }
-    ion-list {
-      background: transparent;
-      padding: 0;
-    }
     ion-item {
-      --background: var(--ion-color-light);
+      --min-height: 76px;
+      --background: var(--lb-cream);
       --border-width: 0;
-      margin-bottom: 8px;
-      border-radius: 12px;
+      --padding-start: 14px;
+      --inner-padding-end: var(--space-3);
+      margin-bottom: var(--space-2);
+      border: 1px solid var(--lb-cream-border);
+      border-radius: 10px;
     }
     ion-item h2 {
+      margin-bottom: var(--space-2);
+      font-family: var(--ion-font-family);
+      font-size: 0.875rem;
       font-weight: 600;
+      color: var(--ion-color-dark);
     }
     ion-item p {
+      font-size: 0.75rem;
       color: var(--ion-color-medium-shade);
-    }
-    .proto {
-      display: block;
-      margin-top: 16px;
-      font-size: 0.75em;
     }
   `,
 })

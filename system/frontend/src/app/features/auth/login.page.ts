@@ -58,51 +58,68 @@ import { STRINGS } from '../../shared/strings';
   `,
   styles: `
     .login {
-      max-width: 420px;
-      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      max-width: 420px;
+      min-height: 100%;
+      margin: 0 auto;
     }
 
-    /* Top part in the primary color with the logo */
+    /* Top part in the primary color with soft bands, the logo, and a curved amber edge */
     .hero {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 48px 16px 40px;
-      background: var(--ion-color-primary);
+      justify-content: center;
+      padding: 36px 28px 48px;
       border-bottom: 8px solid var(--ion-color-secondary);
       border-radius: 0 0 50% 50% / 0 0 32px 32px;
+      background:
+        linear-gradient(138deg, transparent 32%, rgba(var(--ion-color-tertiary-rgb), 0.13) 32% 53%, transparent 53%),
+        linear-gradient(38deg, transparent 44%, rgba(var(--ion-color-tertiary-rgb), 0.12) 44% 69%, transparent 69%),
+        var(--ion-color-primary);
     }
     /* The logo image has a white background. A white panel keeps it clean on the primary color. */
     .logo {
-      width: 85%;
-      padding: 12px 16px;
-      border-radius: 16px;
+      width: 100%;
+      max-width: 340px;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-l);
       background: var(--ion-color-primary-contrast);
     }
     .logo img {
       display: block;
       width: 100%;
+      height: auto;
     }
     h1 {
-      margin: 0;
-      font-size: 1.6rem;
+      margin: 0 0 2px;
+      font-size: 1.45rem;
+      color: var(--ion-color-primary);
     }
 
     form {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      padding: 16px 24px 24px;
+      gap: 14px;
+      padding: var(--space-3) var(--space-5) var(--space-6);
     }
     ion-note {
-      font-size: 0.85rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
     }
     ion-button {
-      min-height: 48px;
+      margin: 10px 0 0;
+      font-size: 0.95rem;
+    }
+    @media (min-width: 600px) {
+      .login {
+        min-height: calc(100% - 80px);
+        margin-block: 40px;
+        overflow: hidden;
+        border: 1px solid var(--ion-color-light-shade);
+        border-radius: var(--radius-l);
+      }
     }
   `,
 })

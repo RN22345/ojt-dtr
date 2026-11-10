@@ -1,11 +1,12 @@
-// A small number tile: a label, a large value, and an optional note (for example "Logged hours: 212.5").
+// A small number tile: a large value, a label, and an optional note (for example "Logged hours: 212.5").
+// The value is primary by default. The color "success" and the color "danger" change the value color.
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-stat-tile',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="tile" [style.border-left-color]="'var(--ion-color-' + color() + ')'">
+    <div class="tile">
       <span class="label">{{ label() }}</span>
       <span class="value">{{ value() }}</span>
       @if (note()) {
@@ -14,28 +15,46 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     </div>
   `,
   styles: `
+    :host {
+      display: block;
+      min-width: 0;
+    }
     .tile {
       display: flex;
       flex-direction: column;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border-left: 4px solid;
-      background: var(--ion-color-light, #f4f5f8);
+      gap: var(--space-1);
       height: 100%;
-    }
-    .label {
-      font-size: 0.75em;
-      color: var(--ion-color-medium-shade);
+      padding: 14px var(--space-3);
+      border-radius: 9px;
+      background: var(--ion-color-light);
     }
     .value {
+      order: 1;
+      color: var(--ion-color-primary);
       font-family: var(--font-heading);
-      font-size: 1.3em;
+      font-size: clamp(1rem, 4vw, 1.35rem);
       font-weight: 700;
+      line-height: 1.25;
       font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    :host([color='success']) .value {
+      color: var(--ion-color-success-shade);
+    }
+    :host([color='danger']) .value {
+      color: var(--ion-color-danger);
+    }
+    .label,
+    .note {
+      color: var(--ion-color-medium-shade);
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+    .label {
+      order: 2;
     }
     .note {
-      font-size: 0.7em;
-      color: var(--ion-color-medium-shade);
+      order: 3;
     }
   `,
 })

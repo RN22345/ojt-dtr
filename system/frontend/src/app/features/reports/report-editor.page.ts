@@ -168,41 +168,60 @@ function toSmallDataUrl(file: File): Promise<string> {
     .head {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
+      align-items: center;
+      gap: var(--space-3);
+      margin: var(--space-1) 0 var(--space-4);
     }
     h2 {
       margin: 0;
-      font-size: 1.1em;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--ion-color-primary);
     }
     h3 {
-      margin: 16px 0 6px;
+      margin: var(--space-5) 0 var(--space-2);
+      font-size: 0.9375rem;
+      color: var(--ion-color-primary);
     }
     .hours {
-      margin: 4px 0;
+      margin: var(--space-1) 0;
+      font-size: 0.875rem;
+      line-height: 1.6;
       color: var(--ion-color-medium-shade);
+    }
+    app-bar-chart {
+      padding: 18px var(--space-3) var(--space-3);
+      border-radius: 10px;
+      background: var(--lb-cream);
     }
     .block {
       display: block;
-      margin: 8px 0;
+      margin: var(--space-3) 0;
+      padding: 10px var(--space-3);
+      border-radius: 6px;
+      background: var(--lb-mist);
+      font-size: 0.875rem;
+      line-height: 1.5;
     }
     ion-textarea {
-      margin-top: 16px;
+      margin-top: var(--space-4);
     }
     .photos {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
     }
     .photo {
       position: relative;
+      min-width: 0;
     }
     .photo img {
+      display: block;
       width: 100%;
       aspect-ratio: 1;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: var(--space-2);
     }
     .remove {
       position: absolute;
@@ -211,18 +230,32 @@ function toSmallDataUrl(file: File): Promise<string> {
       margin: 0;
     }
     .unsaved {
-      color: var(--ion-color-warning-shade);
       margin-bottom: 0;
+      font-size: 0.875rem;
+      color: var(--ion-color-warning-shade);
     }
     .actions {
       display: grid;
-      gap: 4px;
-      margin: 8px 0;
+      gap: var(--space-2);
+      margin: var(--space-4) 0 var(--space-5);
     }
-    .proto {
-      display: block;
-      margin-top: 16px;
-      font-size: 0.75em;
+    .actions ion-button {
+      margin: 0;
+    }
+    ion-item {
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      --border-color: var(--ion-color-light-shade);
+    }
+    ion-item h3 {
+      margin: 0 0 5px;
+      font-family: var(--ion-font-family);
+      font-size: 0.875rem;
+    }
+    ion-item p {
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--ion-color-medium-shade);
     }
   `,
 })
