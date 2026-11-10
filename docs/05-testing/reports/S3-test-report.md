@@ -9,7 +9,7 @@ This report gives the results of the S3 tests and the status of the S3 gate. It 
 | Stage | S3 |
 | Dates | 2026-11-11 to 2026-11-14 (work started 2026-10-30, D-65). Tests ran on 2026-10-30 and 2026-11-08. |
 | Build or commit | `bfbf648` and earlier on the branch `s3/reports-corrections-admin` (not merged into `main`) |
-| Gate result | Fail for now (not passed yet). Draft. Open items: the web part of TC-ST-ACC-01, and the S1 and S2 gates (section 8). |
+| Gate result | Fail for now (not passed yet). Draft. Open items: the S1 and S2 gates (section 8). All S3 test cases are run. |
 | Prepared by | Claude Code (desktop), for the developer |
 
 Test devices:
@@ -26,10 +26,10 @@ Test devices:
 | L1 Unit | 3 | 3 | 3 | 0 | 0 | 0 |
 | L2 Component integration | 5 | 5 | 5 | 0 | 0 | 0 |
 | L3 Subsystem integration | 2 | 2 | 2 | 0 | 0 | 0 |
-| L4 System | 4 | 4 | 2 (2 part pass) | 0 | 0 | 0 |
+| L4 System | 4 | 4 | 3 (1 part pass) | 0 | 0 | 0 |
 | L5 Acceptance | 0 | 0 | 0 | 0 | 0 | 0 |
 
-The two part passes are TC-ST-ADM-01 and TC-ST-ACC-01. For TC-ST-ADM-01, the S3 part passes. The CSV export (FR-EXP-03) is S4 work. For TC-ST-ACC-01, the web part is not run yet.
+The part pass is TC-ST-ADM-01: the S3 part passes. The CSV export (FR-EXP-03) is S4 work.
 
 Automated test totals on 2026-11-08:
 
@@ -108,7 +108,7 @@ Server state: 2 corrections `approved` (kind add). The server made 2 new punches
 | TC-ST-FAC-01 | Facilitator review offline | Pass in N1, N2, and N3 (two emulators). See the steps below. |
 | TC-ST-ADM-01 | Admin full cycle | Part pass. The S3 part passes (browser preview, N1). The CSV export (FR-EXP-03) is S4 work. |
 | TC-ST-ADM-02 | Admin web app offline | Pass. The offline state was simulated with the browser `offline` and `online` events. The web app showed the offline message, disabled the save buttons, and kept the form values. |
-| TC-ST-ACC-01 | Role and platform access | Part pass. The web part is open. See below. |
+| TC-ST-ACC-01 | Role and platform access | Pass (2026-11-10). See below. |
 
 Steps of TC-ST-FAC-01:
 
@@ -132,7 +132,7 @@ TC-ST-ACC-01 details:
 |---|---|
 | A typed URL of another role is blocked (web app) | Pass. The admin typed `/ojt/home` and `/facilitator/home`. The app went back to `/admin/dashboard`. |
 | Admin login on the mobile app fails | Pass. The mobile app refuses the admin login with the message "This account cannot use this app. OJT and facilitator accounts use the mobile app. Admin accounts use the web app." |
-| OJT login on the web app fails | Open. This part is not run yet. |
+| OJT login on the web app fails | Pass (2026-11-10). The user logged in as `ojt1` in the browser preview. The web app refused the login with the same message. |
 
 NOTE: The browser tests of the admin web found DEF-017 and DEF-018. Section 6 gives the details.
 
@@ -142,8 +142,8 @@ Sync bar check: after the device tests, a query of the sync bar first hit a stal
 
 | Rule | Result | Evidence |
 |---|---|---|
-| G1 All planned test cases run | No | 14 of 14 run (section 2), but the web part of TC-ST-ACC-01 is not run. |
-| G2 "Must" test cases pass | No | The web part of TC-ST-ACC-01 is open (FR-AUTH-03, QR-SE-01). |
+| G1 All planned test cases run | Yes | 14 of 14 run (section 2) |
+| G2 "Must" test cases pass | Yes | All "Must" cases pass. The CSV part of TC-ST-ADM-01 (FR-EXP-03, "Should") is S4 work. |
 | G3 Zero open S1 and S2 defects | Yes | Section 6, `defect-log.md` |
 | G4 Lint, type check, and builds pass | Yes | Lint 0 errors. The frontend build passes. |
 | G5 Regression suites pass | Part | The automated suites pass: frontend 256 of 256, backend 119 of 119 (and 43 of 43 after DEF-018). The L3 and L4 test cases of S1 and S2 are not run again yet (test plan, section 9). Do this at the gate check. |
@@ -157,16 +157,16 @@ Sync bar check: after the device tests, a query of the sync bar first hit a stal
 | Criterion | Result | Evidence |
 |---|---|---|
 | S2 gate passed (entry criterion) | No | S3 work started early (D-65). The S2 gate waits for the S1 gate. |
-| Common gate rules | No | G1, G2, G8, and G9 (section 3) |
+| Common gate rules | No | G8 and G9 (section 3) |
 | The report cycle passes in N1, N2, and N3 | Yes | TC-SI-RPT-01 (section 2.3). TC-ST-FAC-01 also passes in N1, N2, and N3. |
-| The access matrix tests pass 100% | No | TC-ST-ACC-01: the web part is open. TC-CI-ACL-02 and the Edge Function part of TC-CI-ACL-03 pass. |
+| The access matrix tests pass 100% | Yes | TC-ST-ACC-01, TC-CI-ACL-02, and the Edge Function part of TC-CI-ACL-03 pass. |
 
 ## 5. Quality measures in this stage
 
 | QR ID | Target | Measured value | Pass or fail |
 |---|---|---|---|
 | QR-MA-05 | Coverage: backend 70% | Backend 92.4% of the rule items (73 of 79, D-52). Frontend value for S3: not measured in this draft. | Pass (backend) |
-| QR-SE-01 | Each user reads and sends only own scope | TC-CI-ACL-02 (pass). TC-ST-ACC-01 (part pass). | Part pass |
+| QR-SE-01 | Each user reads and sends only own scope | TC-CI-ACL-02 (pass). TC-ST-ACC-01 (pass). | Pass |
 | QR-SF-03 | No silent delete of local changes | D-69: the device keeps the records that have a local change when the scope changes. Examined in TC-CI-ACL-02 (client part). | Pass |
 
 NOTE: The test plan does not set a quality measure for S3 other than the items above. The S4 report gives the full quality results.
@@ -194,7 +194,7 @@ NOTE: A CI run ended the browser session of the seed admin, because the admin te
 Limits and open test items:
 
 1. Done 2026-11-09: TC-U-COR-01 runs in the L2 test of TC-CI-AUD-01 (D-71).
-2. The web part of TC-ST-ACC-01 is not run (an OJT login on the web app must fail).
+2. Done 2026-11-10: the web part of TC-ST-ACC-01 passes.
 3. The emulator keyboard does not open (`hw.keyboard=no`). The test script set the text fields and started the pull (`sync.trigger()`) through the DevTools protocol. Thus the typing of text by hand is not tested on the emulator.
 4. Pull-to-refresh is not tested. The OJT and facilitator devices pulled with `sync.trigger()`.
 5. The user did the logins on the devices. At 21:08:37 the `fac1` session ended because of the TC-ST-ACC-01 admin check on that device (section 2.3). The facilitator device was logged in again before the test continued at 21:10:26.
@@ -218,7 +218,6 @@ The S3 gate does not pass yet. This is a draft. The S3 gate waits for these acti
 
 1. The S1 gate passes (S1 report, section 5). KA-01 is open: keep-alive source B does not exist (D-45), so TC-ST-Q-RE-05 does not pass. On 2026-11-09 the user put the decision about source B (cron-job.org) on hold.
 2. The S2 gate passes (S2 report, section 8). It waits for the S1 gate.
-3. Run the web part of TC-ST-ACC-01: an OJT login on the web app must fail. Record the result.
-4. At the gate check, run the regression suites again, including the L3 and L4 test cases of S1 and S2. Then update this report and `PROGRESS.md`.
+3. At the gate check, run the regression suites again, including the L3 and L4 test cases of S1 and S2. Then update this report and `PROGRESS.md`.
 
-New gate date: the S3 end date, 2026-11-14, or earlier when items 1 to 3 are done.
+New gate date: the S3 end date, 2026-11-14, or earlier when items 1 and 2 are done.
