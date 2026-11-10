@@ -29,7 +29,7 @@ This report gives the results of the S1 tests and the status of the S1 gate. It 
 | TC-CI-ACL-03 | L2 | Admin access matrix | Pass. The Edge Function part waits for S3. |
 | TC-SI-AUTH-01 | L3 | Login for each role on the device and the web | Pass (Android emulator and web) |
 | TC-SI-PLUG-01 | L3 | Plugin smoke test | Pass on the emulator: 13 of 13 calls. Run again on a real phone. |
-| TC-ST-Q-RE-05 | L4 | Keep-alive check | Fail now. Source B does not exist (D-45). Source A passes: the first scheduled run was on 2026-10-26 at 06:10 UTC (heartbeat `github` on `dev`). The backup part passes: the newest backup is from 2026-10-26. |
+| TC-ST-Q-RE-05 | L4 | Keep-alive check | Pass (2026-11-10, `dev`; `prod` does not exist yet, D-40). Source A: newest heartbeat `github` 2026-11-09 07:56 UTC (21 hours old); scheduled runs each day. Source B: cron-job.org job `ojt-dtr-dev heartbeat` (each day 21:17 Asia/Manila), test run on 2026-11-10 04:55 UTC gave HTTP 200, heartbeat `cronjob` on `dev`. Backup: newest `backup-ojt-dtr-dev-20261107-2154` (3 days old). The first scheduled run of source B is on 2026-11-10 at 21:17. Examine it at the next routine check. |
 
 | Level | Planned | Run | Pass | Part pass | Fail |
 |---|---|---|---|---|---|
@@ -69,23 +69,23 @@ No open S1 or S2 defects.
 | Criterion | Status |
 |---|---|
 | G1: all S1 test cases run | Yes |
-| G2: "Must" test cases pass | No. TC-ST-Q-RE-05 (QR-RE-06) fails. |
+| G2: "Must" test cases pass | Yes. TC-ST-Q-RE-05 passes (2026-11-10). |
 | G3: zero open S1 and S2 defects | Yes |
 | G4: lint, type check, builds | Yes |
 | G5: regression suites | Yes (CI) |
 | G6: coverage | Yes. Backend 88.2% of the rule items (D-52), target 70%. |
 | G7: this report | Draft |
 | G8: `PROGRESS.md` shows the result | At the gate check |
-| G9: keep-alive check | No |
+| G9: keep-alive check | Yes (TC-ST-Q-RE-05, 2026-11-10) |
 | CI on each push | Yes |
 | Login for each role on Android and the web | Yes |
-| Keep-alive sources A, B, and C | A runs (first scheduled run 2026-10-26). B is deferred (D-45). C is not set up. |
+| Keep-alive sources A, B, and C | A runs each day. B exists (cron-job.org, 2026-11-10). C (calendar reminders) is the user's item. |
 | First own backup | Yes. `backup-ojt-dtr-dev-20261026-0657`, decrypt test passed. |
 
 Open items before the gate:
 
 1. Done 2026-10-26: source A had a scheduled run (06:10 UTC, about 5 hours after the cron time).
-2. Source B: set up (runbook, section 3.4).
+2. Done 2026-11-10: source B set up (runbook, section 3.4).
 3. Source C: calendar reminders on Monday and Thursday.
 4. Done 2026-10-26: the backend coverage. The user accepted D-52. The L2 tests cover 88.2% of the items (60 of 68).
-5. Run TC-ST-Q-RE-05 again.
+5. Done 2026-11-10: TC-ST-Q-RE-05 passes.
