@@ -47,6 +47,11 @@ export const STRINGS = {
     noOpenSession: 'No open work session',
     timeInHint: 'Tap the button below to time in.',
     workweek: 'Current workweek',
+    calendar: 'DTR calendar',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    calendarDayHours: (date: string, hours: string) => `${date}, ${hours} logged`,
+    calendarHours: (hours: number, minutes: number) => [hours ? `${hours}h` : '', minutes ? `${minutes}m` : ''].filter(Boolean).join(' '),
     saved: { in: 'Time-in saved. It will sync.', out: 'Time-out saved. It will sync.' },
     noLocation: 'The location was not available. The punch is saved without a location.',
     failure: {

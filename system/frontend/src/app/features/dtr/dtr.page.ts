@@ -1,44 +1,22 @@
 // OJT DTR page (FR-DTR-01, FR-DTR-02, FR-DTR-06, FR-DTR-07, FR-SYNC-03). The time-in is one tap on this tab
 // (QR-FS-03). The punch is saved offline first (system modules 5.1). Pull down to sync (FR-SYNC-03).
 import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
-import { IonButton, IonContent, IonIcon, IonRefresher, IonRefresherContent, IonSpinner, ToastController } from '@ionic/angular';
-import { addIcons } from 'ionicons';
-import { calendarOutline } from 'ionicons/icons';
+import { IonButton, IonContent, IonRefresher, IonRefresherContent, IonSpinner, ToastController } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { SyncService } from '../../data/sync/sync.service';
 import { GEOLOCATION } from '../../plugins/geolocation.plugin';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
-import { dateLabel, timeOfDay } from '../../shared/utils/format';
-import { localDate, PROJECT_TIME_ZONE, weekStart } from '../../shared/utils/hours';
+import { timeOfDay } from '../../shared/utils/format';
+import { DtrCalendarComponent } from './dtr-calendar.component';
 import { HistoryWeek } from './dtr-history';
 import { DtrHistoryComponent } from './dtr-history.component';
 import { DtrService } from './dtr.service';
 
-addIcons({ calendarOutline });
-
-const monthFormat = new Intl.DateTimeFormat('en-PH', {
-  timeZone: PROJECT_TIME_ZONE,
-  month: 'long',
-  year: 'numeric',
-});
-const weekdayFormat = new Intl.DateTimeFormat('en-PH', { timeZone: 'UTC', weekday: 'short' });
-
-function workweek(now: Date) {
-  const today = localDate(now);
-  const monday = new Date(`${weekStart(now)}T00:00:00Z`);
-  return Array.from({ length: 5 }, (_, index) => {
-    const day = new Date(monday);
-    day.setUTCDate(monday.getUTCDate() + index);
-    const date = day.toISOString().slice(0, 10);
-    return { date, label: dateLabel(date), weekday: weekdayFormat.format(day), number: day.getUTCDate(), today: date === today };
-  });
-}
-
 @Component({
   selector: 'app-dtr-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonIcon, IonSpinner, DtrHistoryComponent],
+  imports: [PageHeaderComponent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonSpinner, DtrCalendarComponent, DtrHistoryComponent],
   template: `
     <app-page-header [title]="strings.pages.ojtDtr" />
     <ion-content class="ion-padding">
@@ -66,19 +44,7 @@ function workweek(now: Date) {
         </div>
       </section>
 
-      <section class="workweek" [attr.aria-label]="text.workweek">
-        <h2><ion-icon name="calendar-outline" aria-hidden="true" />{{ month }}</h2>
-        <ul>
-          @for (day of weekdays; track day.date) {
-            <li>
-              <time [attr.datetime]="day.date" [attr.aria-label]="day.label" [attr.aria-current]="day.today ? 'date' : null">
-                <span>{{ day.weekday }}</span>
-                <strong>{{ day.number }}</strong>
-              </time>
-            </li>
-          }
-        </ul>
-      </section>
+      <app-dtr-calendar [weeks]="weeks()" />
 
       <h2>{{ text.history }}</h2>
       <app-dtr-history [weeks]="weeks()" />
@@ -161,51 +127,11 @@ function workweek(now: Date) {
       font-size: 0.875rem;
     }
     ion-button::part(native) { background: var(--lb-primary-gradient); }
-    .workweek {
-      margin: 16px 8px 23px;
-      padding: 8px 8px 13px;
-      border: 1px solid var(--lb-panel-border);
-      border-radius: 11px;
-      background: var(--lb-panel);
-    }
-    .workweek h2 {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-bottom: 8px;
-      font-size: 1rem;
-    }
     h2 {
       margin: 0 0 10px;
       font-size: 1.1rem;
       color: var(--ion-color-primary);
     }
-    .workweek ul {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 42px));
-      justify-content: center;
-      gap: 10px;
-      padding: 0;
-      margin: 0;
-      list-style: none;
-    }
-    .workweek time {
-      display: grid;
-      min-height: 56px;
-      align-content: center;
-      gap: 3px;
-      padding: 5px 2px;
-      border-radius: 11px;
-      background: var(--ion-color-light);
-      color: var(--ion-color-dark);
-      text-align: center;
-      font-size: 0.6875rem;
-    }
-    .workweek [aria-current='date'] {
-      color: var(--ion-color-primary-contrast);
-      background: var(--lb-primary-gradient);
-    }
-    .workweek strong { font: 700 1rem / 1.3 var(--font-heading); }
   `,
 })
 export class DtrPage {
@@ -215,10 +141,6 @@ export class DtrPage {
   /** The time-in time of the open session ("08:05"), or null. */
   protected readonly openSince = signal<string | null>(null);
   protected readonly busy = signal(false);
-
-  private readonly today = new Date();
-  protected readonly month = monthFormat.format(this.today);
-  protected readonly weekdays = workweek(this.today);
 
   private readonly dtr = inject(DtrService);
   private readonly auth = inject(AuthService);

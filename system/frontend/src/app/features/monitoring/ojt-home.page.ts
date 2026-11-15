@@ -2,8 +2,8 @@
 // Data comes from the prototype store (sample data).
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonButton, IonCard, IonCardContent, IonContent, IonIcon, IonItem, IonLabel, IonList, IonNote } from '@ionic/angular';
-import { checkmarkCircleOutline, hourglassOutline } from 'ionicons/icons';
+import { IonBadge, IonButton, IonCard, IonCardContent, IonContent, IonIcon, IonItem, IonLabel, IonList, IonNote } from '@ionic/angular';
+import { alertCircleOutline, checkmarkCircleOutline, closeCircleOutline, timeOutline } from 'ionicons/icons';
 import { ME, addDays } from '../../data/mock/mock-data';
 import { MockStore } from '../../data/mock/mock-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
@@ -13,9 +13,10 @@ import { UI_STRINGS } from '../../shared/strings-ui';
 import { BarChartComponent, BarItem } from '../../shared/ui/bar-chart.component';
 import { ProgressRingComponent } from '../../shared/ui/progress-ring.component';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
-import { localDate, weekStart } from '../../shared/utils/hours';
+import { localDate, PROJECT_TIME_ZONE, weekStart } from '../../shared/utils/hours';
 
 const DAY_MS = 86_400_000;
+const monthFormat = new Intl.DateTimeFormat('en-PH', { timeZone: PROJECT_TIME_ZONE, month: 'long', year: 'numeric' });
 
 @Component({
   selector: 'app-ojt-home-page',
@@ -23,6 +24,7 @@ const DAY_MS = 86_400_000;
   imports: [
     PageHeaderComponent,
     IonContent,
+    IonBadge,
     IonCard,
     IonCardContent,
     IonButton,
@@ -55,17 +57,22 @@ const DAY_MS = 86_400_000;
       </section>
 
       <section class="panel" aria-labelledby="attendance-title">
-        <h2 id="attendance-title">{{ text.attendance }}</h2>
+        <header class="attendance-heading">
+          <h2 id="attendance-title">{{ text.attendance }}</h2>
+          <p>{{ attendanceMonth }}</p>
+        </header>
         <dl class="attendance-grid">
-          <div class="recorded">
-            <dt>{{ text.recordedDays }}</dt>
-            <dd><ion-icon [icon]="icons.checkmarkCircleOutline" aria-hidden="true" />{{ recordedDays() }}</dd>
-          </div>
-          <div class="pending">
-            <dt>{{ text.pendingCorrections }}</dt>
-            <dd><ion-icon [icon]="icons.hourglassOutline" aria-hidden="true" />{{ pendingCorrections() }}</dd>
-          </div>
+          @for (tile of attendanceTiles(); track tile.status) {
+            <div [class]="tile.status">
+              <dt>{{ tile.label }}</dt>
+              <dd>
+                <ion-icon [icon]="tile.icon" aria-hidden="true" />
+                <span>{{ tile.count ?? text.attendanceDash }}</span>
+              </dd>
+            </div>
+          }
         </dl>
+        <p class="attendance-note">{{ text.attendanceNote }}</p>
       </section>
 
       <section class="panel" aria-labelledby="ojt-progress-title">
@@ -117,6 +124,9 @@ const DAY_MS = 86_400_000;
         @for (action of actions; track action.link) {
           <ion-item [routerLink]="action.link" detail>
             <ion-label>{{ action.label }}</ion-label>
+            @if (action.link === '/ojt/corrections' && pendingCorrections() > 0) {
+              <ion-badge slot="end" color="warning">{{ text.pendingCorrectionCount(pendingCorrections()) }}</ion-badge>
+            }
           </ion-item>
         }
       </ion-list>
@@ -164,21 +174,37 @@ const DAY_MS = 86_400_000;
     }
     .countdown > div:last-child strong { color: var(--ion-color-secondary-shade); }
     .countdown span { width: min-content; min-width: 58px; text-transform: uppercase; font-weight: 700; }
-    .attendance-grid, .progress-grid {
+    .progress-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
+    }
+    .attendance-heading {
+      border-inline-start: 4px solid var(--ion-color-primary);
+      border-radius: 3px;
+      padding-inline-start: 6px;
+      margin-bottom: 8px;
+    }
+    .attendance-heading h2, .attendance-heading p { margin: 0; }
+    .attendance-heading p, .attendance-note { color: var(--ion-color-medium-shade); font-size: 0.6875rem; }
+    .attendance-note { margin: 6px 0 0; }
+    .attendance-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
     }
     .attendance-grid > div {
       display: grid;
       justify-items: center;
       gap: 2px;
-      padding: 6px;
+      padding: 5px 2px;
       border-radius: 10px;
       text-align: center;
     }
-    .recorded { color: var(--ion-color-success-shade); background: var(--lb-online); }
-    .pending { color: var(--ion-color-secondary-shade); background: var(--lb-cream); }
+    .present { color: var(--ion-color-success-shade); background: var(--lb-online); }
+    .absent { color: var(--ion-color-danger); background: var(--lb-danger-soft); }
+    .incomplete { color: var(--lb-sync-attention); background: var(--lb-cream); }
+    .ongoing { color: var(--ion-color-primary); background: var(--lb-mist); }
     .attendance-grid dt { order: 1; }
     .attendance-grid dd { display: grid; justify-items: center; font: 800 1.15rem var(--font-heading); }
     .attendance-grid ion-icon { font-size: 0.875rem; }
@@ -219,7 +245,9 @@ export class OjtHomePage {
   protected readonly text = OJT_STRINGS.home;
   protected readonly ui = UI_STRINGS;
   protected readonly store = inject(MockStore);
-  protected readonly icons = { checkmarkCircleOutline, hourglassOutline };
+  private readonly now = new Date();
+  private readonly attendanceMonthKey = localDate(this.now).slice(0, 7);
+  protected readonly attendanceMonth = monthFormat.format(this.now);
 
   protected readonly actions = [
     { label: this.text.quickCorrections, link: '/ojt/corrections' },
@@ -233,9 +261,16 @@ export class OjtHomePage {
     const end = this.progress().projectedEnd;
     return end ? Math.max(0, (Date.parse(end) - Date.parse(localDate(new Date()))) / DAY_MS) : null;
   });
-  protected readonly recordedDays = computed(() =>
-    Object.values(this.store.me().dailyMinutes).filter((minutes) => minutes > 0).length,
-  );
+  protected readonly attendanceTiles = computed(() => {
+    const present = Object.entries(this.store.me().dailyMinutes)
+      .filter(([date, minutes]) => date.startsWith(this.attendanceMonthKey) && minutes > 0).length;
+    return [
+      { status: 'present', label: this.text.present, icon: checkmarkCircleOutline, count: present },
+      { status: 'absent', label: this.text.absent, icon: closeCircleOutline, count: null },
+      { status: 'incomplete', label: this.text.incomplete, icon: alertCircleOutline, count: null },
+      { status: 'ongoing', label: this.text.ongoing, icon: timeOutline, count: null },
+    ];
+  });
   protected readonly pendingCorrections = computed(() =>
     this.store.correctionsOf(ME).filter((request) => request.status === 'pending').length,
   );
