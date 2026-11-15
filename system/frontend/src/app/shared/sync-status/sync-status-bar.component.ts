@@ -46,19 +46,20 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
   styles: `
     :host {
       display: block;
-      background: var(--ion-background-color);
+      background: var(--lb-screen-surface, var(--ion-background-color));
     }
     .bar {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-1) 10px;
       align-items: center;
-      margin: 7px var(--space-3) 0;
-      padding: 6px 9px;
-      border-radius: 6px;
-      background: rgba(var(--ion-color-success-rgb), 0.14);
+      min-height: 33px;
+      margin: 6px var(--space-2) 0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: var(--lb-online);
       color: var(--ion-color-dark);
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       line-height: 1.45;
     }
     .state,
@@ -75,7 +76,7 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
       color: var(--ion-color-success-shade);
     }
     .count {
-      font-weight: 500;
+      font-weight: 600;
     }
     .bar.offline {
       background: rgba(var(--ion-color-medium-rgb), 0.12);

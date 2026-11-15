@@ -41,7 +41,7 @@ addIcons({ notificationsOutline, personCircleOutline });
         }
         <ion-title>{{ title() }}</ion-title>
         <ion-buttons slot="end">
-          @if (mobileRole()) {
+          @if (mobileRole() && !compact()) {
             <ion-button routerLink="/notifications" [attr.aria-label]="ui.header.notifications">
               <ion-icon slot="icon-only" name="notifications-outline" />
               @if (mock.unreadCount() > 0) {
@@ -109,6 +109,7 @@ export class PageHeaderComponent {
   readonly title = input.required<string>();
   /** If given, the header shows a back button to this URL. */
   readonly backHref = input<string | null>(null);
+  readonly compact = input(false);
 
   protected readonly strings = STRINGS;
   protected readonly ui = UI_STRINGS;

@@ -24,97 +24,119 @@ const STATUS_COLOR = { pending: 'warning', synced: 'success', issue: 'danger' } 
           <ion-note>{{ text.total }}: {{ duration(week.minutes) }}</ion-note>
         </ion-list-header>
         @for (day of week.days; track day.date) {
-          <ion-item lines="none" class="day">
-            <ion-label>{{ date(day.date) }}</ion-label>
-            <ion-note slot="end">{{ duration(day.minutes) }}</ion-note>
-          </ion-item>
-          @for (s of day.sessions; track s.timeIn.id) {
-            <ion-item>
-              <ion-label>
-                <h3>{{ time(s.timeIn) }} – {{ s.timeOut ? time(s.timeOut) : text.open }}</h3>
-                <p class="flags">
-                  <ion-badge [color]="statusColor(s.timeIn)">{{ text.status[s.timeIn.syncStatus] }}</ion-badge>
-                  @if (s.timeOut) {
-                    <ion-badge [color]="statusColor(s.timeOut)">{{ text.status[s.timeOut.syncStatus] }}</ion-badge>
-                  }
-                  @if (s.missingTimeOut) {
-                    <ion-badge color="danger">{{ text.missingTimeOut }}</ion-badge>
-                  }
-                  @if (showDoubtful() && (s.timeIn.doubtfulTime || s.timeOut?.doubtfulTime)) {
-                    <ion-badge color="tertiary">{{ text.doubtfulTime }}</ion-badge>
-                  }
-                  @if (s.timeIn.lat === null) {
-                    <ion-badge color="light">{{ text.noLocationFlag }}</ion-badge>
-                  }
-                </p>
-              </ion-label>
-              <ion-note slot="end">{{ s.timeOut ? duration(s.minutes) : '' }}</ion-note>
+          <div class="day-card">
+            <ion-item lines="none" class="day">
+              <ion-label>{{ date(day.date) }}</ion-label>
+              <ion-note slot="end">{{ duration(day.minutes) }}</ion-note>
             </ion-item>
-          }
+            @for (s of day.sessions; track s.timeIn.id) {
+              <ion-item lines="none" class="session">
+                <ion-label>
+                  <h3>{{ time(s.timeIn) }} – {{ s.timeOut ? time(s.timeOut) : text.open }}</h3>
+                  <p class="flags">
+                    <ion-badge [color]="statusColor(s.timeIn)">{{ text.status[s.timeIn.syncStatus] }}</ion-badge>
+                    @if (s.timeOut) {
+                      <ion-badge [color]="statusColor(s.timeOut)">{{ text.status[s.timeOut.syncStatus] }}</ion-badge>
+                    }
+                    @if (s.missingTimeOut) {
+                      <ion-badge color="danger">{{ text.missingTimeOut }}</ion-badge>
+                    }
+                    @if (showDoubtful() && (s.timeIn.doubtfulTime || s.timeOut?.doubtfulTime)) {
+                      <ion-badge color="tertiary">{{ text.doubtfulTime }}</ion-badge>
+                    }
+                    @if (s.timeIn.lat === null) {
+                      <ion-badge color="light">{{ text.noLocationFlag }}</ion-badge>
+                    }
+                  </p>
+                </ion-label>
+                <ion-note slot="end">{{ s.timeOut ? duration(s.minutes) : '' }}</ion-note>
+              </ion-item>
+            }
+          </div>
         }
       </ion-list>
     }
   `,
   styles: `
     ion-list {
+      padding: 0;
       margin-bottom: 18px;
     }
     ion-list-header {
       --padding-start: 0;
-      gap: var(--space-2);
-      min-height: 36px;
       padding-inline-start: 0;
-      font-size: 0.875rem;
-      font-weight: 600;
+      min-height: 28px;
+      font-size: 0.8125rem;
+      font-family: var(--ion-font-family);
+      font-weight: 700;
+      color: var(--ion-color-dark);
+      gap: 8px;
     }
     ion-list-header ion-label {
-      margin-block: var(--space-2);
+      margin-block: 4px;
     }
     ion-note {
       flex-shrink: 0;
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
+      color: var(--ion-color-medium);
       font-variant-numeric: tabular-nums;
     }
     ion-item {
-      --min-height: 58px;
-      --padding-start: 10px;
-      --inner-padding-end: var(--space-2);
-      --border-color: var(--ion-color-light);
+      --min-height: 0;
+      --padding-start: 8px;
+      --inner-padding-end: 8px;
+    }
+    .day-card {
+      margin-bottom: 9px;
+      border: 1px solid var(--lb-panel-border);
+      border-radius: 11px;
+      background: var(--lb-panel);
     }
     .day {
-      --min-height: 36px;
-      --background: var(--ion-color-light);
-      --border-width: 0;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--ion-color-primary);
+      border-bottom: 1px solid var(--lb-panel-border);
+      font-size: 0.75rem;
+      font-weight: 700;
+      --color: var(--ion-color-primary);
     }
     .day ion-label {
-      margin-block: 6px;
+      margin-block: 4px;
     }
-    h3 {
+    ion-item ion-note[slot='end'] {
+      align-self: auto;
+      margin: 4px 0 4px 5px;
+      padding: 0;
+    }
+    .session + .session { border-top: 1px solid var(--lb-panel-border); }
+    .session ion-label { margin-block: 5px; }
+    .session h3 {
       font-family: var(--ion-font-family);
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       font-weight: 500;
       font-variant-numeric: tabular-nums;
     }
     .flags {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--space-1);
+      gap: 4px;
       margin: 5px 0 0;
     }
     ion-badge {
       padding: 3px 7px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      border-radius: 5px;
     }
-    ion-badge[color='success'] {
-      --ion-color-base: rgba(var(--ion-color-success-rgb), 0.15);
-      --ion-color-contrast: var(--ion-color-success-shade);
+    ion-badge.ion-color-success {
+      background: var(--lb-online);
+      color: var(--ion-color-success-shade);
+    }
+    ion-badge.ion-color-light {
+      background: var(--lb-panel-border);
+      color: var(--ion-color-dark);
     }
     :host > p {
-      margin: var(--space-3) 0;
-      font-size: 0.875rem;
+      margin: 12px 0;
+      font-size: 0.8125rem;
       line-height: 1.6;
       color: var(--ion-color-medium-shade);
     }

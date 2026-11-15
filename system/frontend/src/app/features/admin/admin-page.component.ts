@@ -38,14 +38,16 @@ import { AdminOnline } from './admin-online.service';
     }
     app-admin-page > ion-content {
       flex: 1 1 auto;
+      --background: var(--lb-page);
     }
+    app-admin-page > ion-content::part(scroll) { max-width: none; }
     .adm-page {
       max-width: 1200px;
       margin: 0 auto;
-      padding: var(--space-4);
+      padding: var(--space-5) clamp(14px, 2vw, 24px);
       display: flex;
       flex-direction: column;
-      gap: var(--space-4);
+      gap: var(--space-3);
     }
     .adm-offline,
     .adm-error,
@@ -78,20 +80,35 @@ import { AdminOnline } from './admin-online.service';
     .adm-bar > ion-input,
     .adm-bar > ion-select {
       flex: 1 1 200px;
-      min-width: 160px;
+      min-width: min(160px, 100%);
+      --background: var(--lb-panel);
+    }
+    .adm-bar > ion-button:only-child { margin-inline-start: auto; }
+    .adm-page ion-button {
+      min-height: 36px;
+      font-size: 0.8125rem;
+    }
+    .adm-page ion-button:not([color]):not(.button-outline):not(.button-clear) {
+      --background: var(--lb-primary-gradient);
+      --background-hover: var(--ion-color-primary-tint);
+      --background-activated: var(--ion-color-primary-shade);
+      --color: var(--ion-color-primary-contrast);
     }
     .adm-tiles {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
       gap: var(--space-3);
     }
+    .adm-tiles > app-stat-tile { --ion-color-light: var(--lb-panel); }
+    .adm-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .adm-form {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
       gap: var(--space-4);
       padding: var(--space-4);
-      border-radius: var(--radius-m);
-      background: var(--ion-color-light);
+      border: 1px solid var(--lb-panel-border);
+      border-radius: var(--radius-s);
+      background: var(--lb-panel);
     }
     .adm-form h2,
     .adm-form .adm-wide {
@@ -108,23 +125,50 @@ import { AdminOnline } from './admin-online.service';
     }
     .adm-scroll {
       overflow-x: auto;
+      border: 1px solid var(--lb-panel-border);
+      border-radius: 7px;
+      background: var(--lb-panel);
     }
     .adm-table {
       width: 100%;
+      min-width: 540px;
       border-collapse: collapse;
-      font-size: 0.9rem;
+      font-size: 0.8125rem;
     }
     .adm-table th,
     .adm-table td {
-      padding: var(--space-2) var(--space-3);
-      text-align: left;
-      border-bottom: 1px solid var(--ion-color-light-shade);
+      padding: 9px 13px;
+      text-align: start;
       vertical-align: middle;
     }
     .adm-table th {
-      font-weight: 600;
+      border-bottom: 1px solid var(--lb-panel-border);
+      background: var(--lb-admin-muted, var(--ion-color-light));
+      font-weight: 650;
       color: var(--ion-color-medium-shade);
       white-space: nowrap;
+    }
+    .adm-table tbody tr + tr { border-top: 1px solid var(--lb-panel-border); }
+    .adm-table ion-button {
+      margin: 0;
+      --padding-start: var(--space-3);
+      --padding-end: var(--space-3);
+      min-height: 32px;
+    }
+    .adm-table ion-button:focus-visible { outline-offset: -2px; }
+    .adm-table ion-badge {
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 650;
+    }
+    .adm-table ion-badge[color='success'] {
+      --ion-color-base: var(--lb-admin-success, var(--ion-color-success));
+      --ion-color-contrast: var(--ion-color-dark);
+    }
+    .adm-table ion-badge[color='medium'] {
+      --ion-color-base: var(--ion-color-light);
+      --ion-color-contrast: var(--ion-color-dark);
     }
     .adm-table .adm-num {
       text-align: right;
@@ -133,10 +177,14 @@ import { AdminOnline } from './admin-online.service';
     .adm-sub {
       margin: 0;
       font-size: 1rem;
+      color: var(--ion-color-primary);
     }
     .adm-muted {
       color: var(--ion-color-medium-shade);
       font-size: 0.85rem;
+    }
+    @media (max-width: 520px) {
+      .adm-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
   `,
 })

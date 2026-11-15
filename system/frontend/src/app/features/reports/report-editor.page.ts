@@ -165,6 +165,7 @@ function toSmallDataUrl(file: File): Promise<string> {
     </ion-content>
   `,
   styles: `
+    ion-content { --background: var(--lb-page, var(--ion-background-color)); }
     .head {
       display: flex;
       justify-content: space-between;
@@ -185,11 +186,12 @@ function toSmallDataUrl(file: File): Promise<string> {
     }
     .hours {
       margin: var(--space-1) 0;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       line-height: 1.6;
       color: var(--ion-color-medium-shade);
     }
     app-bar-chart {
+      display: block;
       padding: 18px var(--space-3) var(--space-3);
       border-radius: 10px;
       background: var(--lb-cream);
@@ -200,11 +202,15 @@ function toSmallDataUrl(file: File): Promise<string> {
       padding: 10px var(--space-3);
       border-radius: 6px;
       background: var(--lb-mist);
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       line-height: 1.5;
     }
     ion-textarea {
       margin-top: var(--space-4);
+      --background: var(--lb-panel, var(--ion-background-color));
+      --border-radius: 7px;
+      --border-color: var(--ion-color-light-shade);
+      --highlight-color-focused: var(--ion-color-primary);
     }
     .photos {
       display: grid;
@@ -241,6 +247,11 @@ function toSmallDataUrl(file: File): Promise<string> {
     }
     .actions ion-button {
       margin: 0;
+      min-height: 44px;
+    }
+    ion-list {
+      padding: 0;
+      background: transparent;
     }
     ion-item {
       --padding-start: 0;

@@ -1,7 +1,9 @@
 // Notifications list for OJT and facilitator (FR-NOTI-05).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonButton, IonContent, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton } from '@ionic/angular';
+import { IonButton, IonContent, IonIcon, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { notificationsOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { homePath } from '../../core/auth/access';
 import { WorkStore } from '../../data/store/work-store.service';
@@ -14,93 +16,118 @@ import { localDate } from '../../shared/utils/hours';
 
 type Filter = 'all' | 'unread';
 
+addIcons({ notificationsOutline });
+
 @Component({
   selector: 'app-notifications-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonButton, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton],
+  imports: [PageHeaderComponent, IonContent, IonButton, IonIcon, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton],
   template: `
-    <app-page-header [title]="strings.pages.notifications" [backHref]="home()" />
-    <ion-content>
-      <div class="ion-padding">
+    <app-page-header [title]="strings.pages.notifications" [backHref]="home()" [compact]="true" />
+    <ion-content class="ion-padding">
+      @if (items().length === 0) {
+        <p class="empty">{{ filter() === 'all' ? text.empty : text.emptyUnread }}</p>
+      }
+      <ion-list>
+        @for (n of items(); track n.id) {
+          <ion-item button [detail]="false" lines="none" (click)="open(n.id, n.link)">
+            <ion-icon slot="start" name="notifications-outline" aria-hidden="true" />
+            <ion-label class="ion-text-wrap">
+              <h2 [class.unread]="!n.read">{{ n.title }}</h2>
+              <p>{{ n.body }}<span aria-hidden="true"> · </span>{{ n.when }}</p>
+            </ion-label>
+            @if (!n.read) {
+              <span slot="end" class="dot" [attr.aria-label]="text.unreadMark"></span>
+            }
+          </ion-item>
+        }
+      </ion-list>
+      <div class="controls">
         <ion-segment [value]="filter()" (ionChange)="filter.set($any($event).detail.value)">
           <ion-segment-button value="all"><ion-label>{{ text.all }}</ion-label></ion-segment-button>
           <ion-segment-button value="unread"><ion-label>{{ text.unread }}</ion-label></ion-segment-button>
         </ion-segment>
-        <ion-button class="gap" fill="outline" [disabled]="store.unreadCount() === 0" (click)="store.markAllRead()">{{ text.markAll }}</ion-button>
+        <ion-button fill="clear" [disabled]="store.unreadCount() === 0" (click)="store.markAllRead()">{{ text.markAll }}</ion-button>
       </div>
-      @if (items().length === 0) {
-        <p class="ion-padding">{{ filter() === 'all' ? text.empty : text.emptyUnread }}</p>
-      }
-      <ion-list>
-        @for (n of items(); track n.id) {
-          <ion-item button detail (click)="open(n.id, n.link)">
-            @if (!n.read) {
-              <span slot="start" class="dot" [attr.aria-label]="text.unreadMark"></span>
-            }
-            <ion-label class="ion-text-wrap">
-              <h2 [class.unread]="!n.read">{{ n.title }}</h2>
-              <p>{{ n.body }}</p>
-              <p>{{ n.when }}</p>
-            </ion-label>
-          </ion-item>
-        }
-      </ion-list>
     </ion-content>
   `,
   styles: `
-    .gap {
-      margin: var(--space-3) 0 0;
-      --border-radius: 6px;
-      font-size: 0.75rem;
+    ion-content {
+      --background: var(--lb-page);
+      --padding-start: 16px;
+      --padding-end: 16px;
     }
-    ion-list {
-      margin: 0 var(--space-4);
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    ion-segment {
+      --background: var(--lb-panel);
+      flex: 1 1 138px;
+      width: auto;
+    }
+    ion-segment-button {
+      --color: var(--ion-color-medium-shade);
+      --color-checked: var(--ion-color-primary);
+      --indicator-color: var(--ion-color-secondary);
+      min-height: 36px;
+    }
+    .controls ion-button {
+      margin: 0;
+      --color: var(--ion-color-primary);
+      --padding-start: 10px;
+      --padding-end: 10px;
+      font-size: 0.75rem;
     }
     ion-item {
       --background: var(--lb-mist);
+      --min-height: 63px;
       --border-width: 0;
-      --padding-start: var(--space-3);
-      --inner-padding-end: 10px;
-      --detail-icon-color: var(--ion-color-primary);
-      --detail-icon-opacity: 0.5;
-      margin: 0 0 var(--space-2);
-      border: 1px solid rgba(var(--ion-color-primary-rgb), 0.06);
-      border-radius: var(--space-2);
+      --padding-start: 9px;
+      margin: 0 0 8px;
+      border-radius: 10px;
+      box-shadow: 0 1px var(--lb-panel-border);
     }
-    ion-item:nth-child(even) {
+    ion-item:first-child { --background: var(--lb-notification-soft); }
+    ion-item:is(:nth-child(4n + 2), :nth-child(4n + 3)) {
       --background: var(--lb-cream);
     }
+    ion-icon {
+      font-size: 21px;
+      color: var(--ion-color-medium-shade);
+      margin-inline-end: 11px;
+    }
     ion-label {
-      margin: var(--space-3) 0;
+      margin: 9px 0;
     }
     ion-item h2 {
-      margin-bottom: 3px;
+      font-weight: 500;
       font-family: var(--ion-font-family);
       font-size: 0.875rem;
-      font-weight: 500;
-      line-height: 1.5;
-      color: var(--ion-color-dark);
+      line-height: 1.35;
+      margin-bottom: 2px;
+      color: var(--ion-text-color);
     }
     ion-item p {
       font-size: 0.75rem;
-      line-height: 1.6;
+      line-height: 1.45;
       color: var(--ion-color-medium-shade);
     }
-    ion-item p:last-child {
-      margin-top: 3px;
-    }
     .dot {
+      width: 9px;
+      height: 9px;
+      margin-inline: 7px 0;
       flex-shrink: 0;
-      width: 8px;
-      height: 8px;
-      margin-right: var(--space-3);
       border-radius: 50%;
-      background: var(--ion-color-primary);
+      background: var(--lb-unread);
     }
     ion-item h2.unread {
       font-weight: 700;
-      color: var(--ion-color-primary);
     }
+    .empty { color: var(--ion-color-medium-shade); }
   `,
 })
 export class NotificationsPage {

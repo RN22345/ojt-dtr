@@ -9,7 +9,6 @@ import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
 import { BarChartComponent, BarItem } from '../../shared/ui/bar-chart.component';
 import { ProgressRingComponent } from '../../shared/ui/progress-ring.component';
-import { StatTileComponent } from '../../shared/ui/stat-tile.component';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
 import { dateLabel } from '../../shared/utils/format';
 
@@ -28,36 +27,29 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     IonLabel,
     RouterLink,
     ProgressRingComponent,
-    StatTileComponent,
     BarChartComponent,
     StatusBadgeComponent,
   ],
   template: `
     <app-page-header [title]="strings.pages.ojtProgress" />
     <ion-content class="ion-padding">
+      @let hours = progress();
       <app-progress-ring
-        [value]="progress().percent"
-        [secondary]="progress().loggedPercent"
-        [size]="190"
-        [caption]="ui.hoursOf(progress().approvedMinutes, progress().requiredMinutes)"
+        [value]="hours.percent"
+        [secondary]="hours.loggedPercent"
+        [size]="138"
+        color="primary"
+        secondaryColor="primary"
+        [caption]="ui.hoursOf(hours.approvedMinutes, hours.requiredMinutes)"
       />
-      <div class="tiles">
-        <app-stat-tile [label]="home.logged" [value]="ui.hours(progress().loggedMinutes)" color="primary" />
-        <app-stat-tile [label]="home.approved" [value]="ui.hours(progress().approvedMinutes)" color="success" />
-        <app-stat-tile [label]="home.remaining" [value]="ui.hours(progress().remainingMinutes)" color="medium" />
-      </div>
-      <p class="end">
-        <strong>{{ text.projectedEnd }}:</strong>
-        {{ endText() }}
-      </p>
 
-      <ion-card>
+      <h2>{{ text.weeks }}</h2>
+      <ion-card class="weekly-chart">
         <ion-card-content>
-          <h3>{{ text.weeks }}</h3>
           @if (bars().length === 0) {
             <p>{{ text.noWeeks }}</p>
           } @else {
-            <app-bar-chart [items]="bars()" [selected]="selected()" [height]="170" [label]="text.weeks" (barSelect)="select($event)" />
+            <app-bar-chart [items]="bars()" [selected]="selected()" [height]="150" [label]="text.weeks" (barSelect)="select($event)" />
             <ul class="legend" [attr.aria-label]="text.legend">
               <li><span class="dot success"></span>{{ text.legendApproved }}</li>
               <li><span class="dot warning"></span>{{ text.legendSubmitted }}</li>
@@ -65,6 +57,7 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
               <li><span class="dot medium"></span>{{ text.legendOther }}</li>
             </ul>
           }
+          <p class="strip"><strong>{{ text.totalHours }}</strong><strong>{{ ui.hours(hours.loggedMinutes) }}</strong></p>
         </ion-card-content>
       </ion-card>
 
@@ -76,6 +69,16 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
           </ion-card-content>
         </ion-card>
       }
+
+
+      <dl class="tiles">
+        <div><dt>{{ home.logged }}</dt><dd>{{ ui.hours(hours.loggedMinutes) }}</dd></div>
+        <div class="approved"><dt>{{ home.approved }}</dt><dd>{{ ui.hours(hours.approvedMinutes) }}</dd></div>
+      </dl>
+      <dl class="progress-details">
+        <div><dt>{{ home.remaining }}</dt><dd>{{ ui.hours(hours.remainingMinutes) }}</dd></div>
+        <div><dt>{{ text.projectedEnd }}</dt><dd>{{ endText() }}</dd></div>
+      </dl>
 
       <h3>{{ text.weekList }}</h3>
       <ion-list>
@@ -93,89 +96,87 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     </ion-content>
   `,
   styles: `
+    ion-content { --background: var(--lb-page); }
     app-progress-ring {
-      margin: 20px 0 24px;
+      --lb-ring-center: var(--lb-panel);
+      display: block;
+      margin: 4px 0 28px;
     }
-    .tiles {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-2);
-      margin: 18px 0;
+    h2, h3 { margin: 0 0 14px; font-size: 1rem; color: var(--ion-color-dark); }
+    ion-card, .tiles > div, .progress-details, ion-item {
+      background: var(--lb-panel);
+      border: 1px solid var(--lb-panel-border);
+      border-radius: 12px;
     }
-    .end {
-      padding: var(--space-3);
-      border-radius: 9px;
+    ion-card { margin: 0 0 18px; }
+    ion-card-content { padding: 10px 12px; }
+    .weekly-chart ion-card-content { padding: 10px; }
+    .strip, .progress-details > div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .strip {
+      margin: 10px 0 0;
+      padding: 6px 8px;
+      border-radius: 6px;
       background: var(--ion-color-light);
-      text-align: center;
-      font-size: 0.875rem;
-      line-height: 1.6;
+      color: var(--ion-color-primary);
+    }
+    .strip::before { content: ''; width: 4px; height: 1em; border-radius: 2px; background: currentColor; }
+    .strip strong:first-of-type { margin-inline-end: auto; }
+    .tiles, .progress-details {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tiles > div { display: grid; gap: 3px; padding: 12px; }
+    .tiles dt { order: 1; color: var(--ion-color-medium-shade); font-size: 0.75rem; }
+    .tiles dd {
+      margin: 0;
+      font: 800 1.35rem var(--font-heading);
+      color: var(--ion-color-dark);
+    }
+    .tiles .approved dd { color: var(--ion-color-success-shade); }
+    .progress-details {
+      padding: 10px 12px;
       color: var(--ion-color-medium-shade);
+      font-size: 0.75rem;
     }
-    .end strong {
-      color: var(--ion-color-primary);
-    }
-    ion-card {
-      margin: 18px 0;
-    }
-    h3 {
-      margin: 20px 0 var(--space-3);
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--ion-color-primary);
-    }
-    ion-card h3 {
-      margin-top: 0;
-    }
+    .progress-details dd { margin: 0; color: var(--ion-color-primary); font-weight: 700; }
     .legend {
       display: flex;
       flex-wrap: wrap;
       gap: 6px 14px;
-      margin: 10px 0 0;
-      padding: 0;
       list-style: none;
-      font-size: 0.75rem;
+      padding: 0;
+      margin: 10px 0 0;
+      font-size: 0.6875rem;
       color: var(--ion-color-medium-shade);
     }
-    .dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      margin-right: var(--space-1);
-      border-radius: 50%;
-    }
-    .dot.success {
-      background: var(--ion-color-success);
-    }
-    .dot.warning {
-      background: var(--ion-color-warning);
-    }
-    .dot.danger {
-      background: var(--ion-color-danger);
-    }
-    .dot.medium {
-      background: var(--ion-color-medium);
-    }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 4px; }
+    .dot.success { background: var(--ion-color-success); }
+    .dot.warning { background: var(--ion-color-warning); }
+    .dot.danger { background: var(--ion-color-danger); }
+    .dot.medium { background: var(--ion-color-medium); }
+    ion-list { padding: 0; }
     ion-item {
-      --min-height: 76px;
-      --background: var(--lb-cream);
+      --min-height: 64px;
+      --background: var(--lb-panel);
       --border-width: 0;
       --padding-start: 14px;
-      --inner-padding-end: var(--space-3);
-      margin-bottom: var(--space-2);
-      border: 1px solid var(--lb-cream-border);
-      border-radius: 10px;
+      --inner-padding-end: 12px;
+      margin-bottom: 8px;
     }
     ion-item h2 {
-      margin-bottom: var(--space-2);
       font-family: var(--ion-font-family);
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       font-weight: 600;
-      color: var(--ion-color-dark);
+      margin-bottom: 8px;
     }
-    ion-item p {
-      font-size: 0.75rem;
-      color: var(--ion-color-medium-shade);
-    }
+    ion-item p { font-size: 0.6875rem; color: var(--ion-color-medium-shade); }
   `,
 })
 export class ProgressPage {

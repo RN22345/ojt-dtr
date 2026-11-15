@@ -32,6 +32,14 @@ p {
 ion-content {
   --background: var(--ion-background-color);
 }
+:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page,
+    app-sync-issues-page, app-notifications-page) {
+  --lb-screen-surface: var(--lb-page);
+}
+:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page,
+    app-sync-issues-page, app-notifications-page) ion-content {
+  --background: var(--lb-screen-surface);
+}
 ion-content.ion-padding {
   --padding-top: 14px;
   --padding-bottom: 28px;
@@ -66,6 +74,26 @@ ion-header ion-buttons ion-button {
   font-weight: 400;
 }
 
+:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page,
+    app-sync-issues-page, app-profile-page, app-notifications-page) app-page-header ion-toolbar {
+  --min-height: 68px;
+}
+:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page,
+    app-sync-issues-page, app-profile-page, app-notifications-page) app-page-header ion-title {
+  font-size: 1.125rem;
+}
+
+app-admin-page app-page-header ion-toolbar {
+  --background: var(--lb-panel);
+  --color: var(--ion-color-dark);
+  --min-height: 44px;
+  --border-width: 0 0 1px;
+  --border-color: var(--lb-panel-border);
+}
+app-admin-page app-page-header ion-buttons ion-button {
+  --color: var(--lb-admin-link);
+}
+
 /* Bottom navigation: a raised amber icon in a smooth white notch */
 ion-tab-bar[slot='bottom'] {
   --lb-nav-height: clamp(66px, 16vw, 118px);
@@ -85,6 +113,10 @@ ion-tab-bar[slot='bottom'] {
   border-radius: 0;
   overflow: visible;
   contain: none;
+}
+app-tab-shell:has(:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page):not(.ion-page-hidden))
+  ion-tab-bar[slot='bottom'] {
+  --lb-nav-notch: var(--lb-page);
 }
 ion-tab-bar[slot='bottom'] ion-tab-button {
   position: relative;
@@ -139,7 +171,7 @@ ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected::before {
   z-index: 0;
   width: min(calc(var(--lb-nav-active-size) * 2.25), 100%);
   height: calc(var(--lb-nav-active-size) * 0.78);
-  background: var(--ion-background-color);
+  background: var(--lb-nav-notch, var(--ion-background-color));
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 112 44' preserveAspectRatio='none'%3E%3Cpath d='M0 0 C24 0 23 40 56 40 S88 0 112 0 Z' fill='white'/%3E%3C/svg%3E");
   mask-size: 100% 100%;
   transform: translateX(-50%);
@@ -152,12 +184,11 @@ ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected ion-icon {
   padding: calc((var(--lb-nav-active-size) - var(--lb-nav-active-icon-size)) / 2);
   border-radius: 50%;
   background: var(--ion-color-secondary);
-  color: var(--ion-color-secondary-contrast);
+  color: var(--ion-color-primary-contrast);
   font-size: var(--lb-nav-active-icon-size);
 }
-/* White label: amber text on teal fails the contrast rule. The amber icon shows the selected tab. */
 ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected ion-label {
-  color: var(--ion-color-primary-contrast);
+  color: var(--ion-color-secondary-tint);
   font-weight: 700;
 }
 /* The raised icon goes above the tab bar. More space at the bottom keeps the last item visible. */
@@ -168,22 +199,30 @@ ion-tabs ion-content.ion-padding {
 /* Top navigation (admin web app) */
 ion-tab-bar[slot='top'] {
   --background: var(--ion-color-primary);
-  --color: var(--lb-mist);
-  --color-selected: var(--ion-color-secondary);
-  min-height: 68px;
-  padding: var(--space-2) var(--space-4);
+  --color: var(--ion-color-primary-contrast);
+  --color-selected: var(--ion-color-secondary-tint);
+  min-height: 44px;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 0;
   border: 0;
 }
 ion-tab-bar[slot='top'] ion-tab-button {
   --background: transparent;
-  font-size: 0.75rem;
+  --color: var(--ion-color-primary-contrast);
+  --color-selected: var(--ion-color-secondary-tint);
+  flex: 1 0 92px;
+  min-height: 44px;
+  max-width: none;
+  font-size: 0.625rem;
   letter-spacing: 0;
 }
 ion-tab-bar[slot='top'] ion-tab-button ion-icon {
-  font-size: 22px;
+  font-size: 18px;
 }
-ion-tab-bar[slot='top'] ion-tab-button.tab-selected {
-  box-shadow: inset 0 -3px var(--ion-color-secondary);
+ion-tab-bar[slot='top'] ion-tab-button:focus-visible {
+  outline-offset: -3px;
 }
 
 /* Buttons: rounded, no capital letters */

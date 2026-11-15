@@ -26,3 +26,7 @@
 @import "@ionic/angular/css/flex-utils.css";
 
 /* Light theme only (docs/04-uiux/design-system.md, section 6). The dark palettes are not imported. */
+
+app-login-page ion-content.web ion-input input:-webkit-autofill {
+  box-shadow: 0 0 0 100px var(--background, #f2f3f6) inset;
+}

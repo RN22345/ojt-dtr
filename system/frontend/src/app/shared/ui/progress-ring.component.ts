@@ -21,7 +21,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
           [attr.stroke-dasharray]="circumference" [attr.stroke-dashoffset]="offset(clamped())" />
       </svg>
       <div class="center">
-        <span class="value">{{ clamped() }}%</span>
+        <span class="value">{{ valueText() || clamped() + '%' }}</span>
         @if (caption()) {
           <span class="caption">{{ caption() }}</span>
         }
@@ -59,12 +59,14 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     }
     .center {
       position: absolute;
-      inset: 0;
+      inset: 12%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: var(--space-1);
+      border-radius: 50%;
+      background: var(--lb-ring-center, transparent);
       text-align: center;
     }
     .value {
@@ -94,6 +96,7 @@ export class ProgressRingComponent {
   /** Optional second percent behind the main arc. */
   readonly secondary = input<number | null>(null);
   readonly size = input(160);
+  readonly valueText = input('');
   readonly caption = input('');
   readonly label = input('Progress');
 

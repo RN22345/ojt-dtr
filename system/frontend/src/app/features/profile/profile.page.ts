@@ -1,9 +1,9 @@
 // Profile for OJT and facilitator: assignment, contact number, password change (FR-PROF-01, FR-PROF-02, FR-AUTH-06).
 // The mobile Log out button is here. It uses the logout flow of the page header (FR-AUTH-05).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { IonButton, IonCheckbox, IonContent, IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, ToastController } from '@ionic/angular';
+import { IonButton, IonCheckbox, IonContent, IonIcon, IonInput, IonNote, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { logOutOutline } from 'ionicons/icons';
+import { logOutOutline, personOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { homePath } from '../../core/auth/access';
 import { WorkStore } from '../../data/store/work-store.service';
@@ -15,150 +15,185 @@ import { dateLabel } from '../../shared/utils/format';
 
 const MIN_PASSWORD = 8;
 
-addIcons({ logOutOutline });
+addIcons({ logOutOutline, personOutline });
 
 @Component({
   selector: 'app-profile-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonButton, IonCheckbox, IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote],
+  imports: [PageHeaderComponent, IonContent, IonButton, IonCheckbox, IonIcon, IonInput, IonNote],
   template: `
-    <app-page-header #header [title]="strings.pages.profile" [backHref]="home()" />
+    <app-page-header #header [title]="strings.pages.profile" [backHref]="home()" [compact]="true" />
     <ion-content>
       <div class="ion-padding">
         <div class="who">
-          <div class="avatar" role="img" [attr.aria-label]="text.photo">{{ text.photo }}</div>
+          <span class="avatar" aria-hidden="true"><ion-icon name="person-outline" /></span>
           <div>
             <h2>{{ auth.profile()?.fullName }}</h2>
             <p>{{ roleText() }}</p>
           </div>
         </div>
         @if (isOjt()) {
-          <h3>{{ text.assignment }}</h3>
-          <ion-list lines="none">
-            <ion-item><ion-label><p>{{ text.company }}</p><h3>{{ me().companyName }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.facilitator }}</p><h3>{{ me().facilitatorName }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.batch }}</p><h3>{{ me().batchName }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.requiredHours }}</p><h3>{{ me().requiredHours }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.startDate }}</p><h3>{{ date(me().startDate) }}</h3></ion-label></ion-item>
-            @if (me().contactNumber) {
-              <ion-item><ion-label><p>{{ text.contact }}</p><h3>{{ me().contactNumber }}</h3></ion-label></ion-item>
+          <dl class="facts" [attr.aria-label]="text.assignment">
+            @if (me().email; as email) {
+              <div><dt>{{ text.email }}</dt><dd>{{ email }}</dd></div>
             }
-          </ion-list>
+            @if (me().contactNumber; as contact) {
+              <div><dt>{{ text.contact }}</dt><dd>{{ contact }}</dd></div>
+            }
+            <div><dt>{{ text.company }}</dt><dd>{{ me().companyName }}</dd></div>
+            <div><dt>{{ text.facilitator }}</dt><dd>{{ me().facilitatorName }}</dd></div>
+            <div><dt>{{ text.batch }}</dt><dd>{{ me().batchName }}</dd></div>
+            <div><dt>{{ text.requiredHours }}</dt><dd>{{ ui.hours(me().requiredHours * 60) }}</dd></div>
+            @if (me().startDate; as startDate) {
+              <div><dt>{{ text.startDate }}</dt><dd>{{ date(startDate) }}</dd></div>
+            }
+          </dl>
         } @else {
           <p>{{ text.assignedOjts(store.assignedOjts().length) }}</p>
         }
 
-        <h3>{{ text.password }}</h3>
-        <ion-input [label]="text.current" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="current-password"
-          [value]="current()" (ionInput)="current.set($any($event).detail.value ?? '')" />
-        <ion-input class="gap" [label]="text.next" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
-          [value]="next()" (ionInput)="next.set($any($event).detail.value ?? '')" />
-        <ion-input class="gap" [label]="text.confirmPassword" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
-          [value]="confirm()" (ionInput)="confirm.set($any($event).detail.value ?? '')" />
-        <ion-checkbox [checked]="show()" (ionChange)="show.set($any($event).detail.checked)">{{ text.show }}</ion-checkbox>
-        @if (passwordProblem(); as problem) {
-          <p><ion-note color="danger">{{ problem }}</ion-note></p>
-        }
-        @if (passwordFailure(); as failure) {
-          <p><ion-note color="danger">{{ failure }}</ion-note></p>
-        }
-        <ion-button [disabled]="passwordProblem() !== null || busy()" (click)="changePassword()">{{ text.change }}</ion-button>
-
-        <p><ion-note>{{ text.version }}</ion-note></p>
+        <details class="password">
+          <summary>{{ text.password }}</summary>
+          <ion-input [label]="text.current" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="current-password"
+            [value]="current()" (ionInput)="current.set($any($event).detail.value ?? '')" />
+          <ion-input class="gap" [label]="text.next" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
+            [value]="next()" (ionInput)="next.set($any($event).detail.value ?? '')" />
+          <ion-input class="gap" [label]="text.confirmPassword" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
+            [value]="confirm()" (ionInput)="confirm.set($any($event).detail.value ?? '')" />
+          <ion-checkbox [checked]="show()" (ionChange)="show.set($any($event).detail.checked)">{{ text.show }}</ion-checkbox>
+          @if (passwordProblem(); as problem) {
+            <p><ion-note color="danger">{{ problem }}</ion-note></p>
+          }
+          @if (passwordFailure(); as failure) {
+            <p><ion-note color="danger">{{ failure }}</ion-note></p>
+          }
+          <ion-button [disabled]="passwordProblem() !== null || busy()" (click)="changePassword()">{{ text.change }}</ion-button>
+        </details>
 
         <ion-button class="logout" expand="block" fill="outline" color="danger" [disabled]="header.busy()" (click)="header.logout()">
           <ion-icon slot="start" name="log-out-outline" aria-hidden="true" />
           {{ strings.logout }}
         </ion-button>
+        <p class="version"><ion-note>{{ text.version }}</ion-note></p>
       </div>
     </ion-content>
   `,
   styles: `
+    ion-content { --background: var(--lb-panel, var(--ion-background-color)); }
     .who {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: var(--space-4);
-      margin: var(--space-3) 0 28px;
+      gap: 18px;
+      margin: 8px 0 24px;
       text-align: center;
     }
     .who h2 {
       margin: 0;
-      font-size: 1.25rem;
-      line-height: 1.5;
+      font-weight: 700;
+      font-size: 1.5rem;
+      line-height: 1.3;
       color: var(--ion-color-dark);
     }
     .who p {
       display: inline-block;
-      margin: 7px 0 0;
-      padding: var(--space-1) var(--space-3);
-      border-radius: var(--space-1);
+      margin: 6px 0 0;
+      padding: 5px 16px;
+      border-radius: 4px;
       background: var(--ion-color-secondary);
-      color: var(--ion-color-secondary-contrast);
-      font-size: 0.75rem;
+      color: var(--ion-color-dark);
+      font-size: 0.6875rem;
       font-weight: 600;
     }
     .avatar {
-      display: grid;
-      place-items: center;
-      flex: 0 0 auto;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--ion-color-medium);
-      width: 84px;
-      height: 84px;
-      overflow: hidden;
-      border: 1px solid var(--ion-color-primary);
+      position: relative;
+      width: 68px;
+      height: 68px;
+      margin-block: 4px;
+      border: 2px solid currentColor;
       border-radius: 50%;
-      background: rgba(var(--ion-color-tertiary-rgb), 0.08);
-    }
-    h3 {
-      margin: var(--space-5) 0 var(--space-3);
-      font-size: 0.9375rem;
+      overflow: hidden;
       color: var(--ion-color-primary);
     }
-    ion-item {
-      --padding-start: 0;
-      --inner-padding-end: 0;
-      --min-height: 48px;
-      margin: 0;
-      border-bottom: 1px solid var(--ion-color-light-shade);
+    .avatar ion-icon {
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 60px;
+      --ionicon-stroke-width: 14px;
+      clip-path: inset(0 0 16%);
     }
-    ion-item ion-label {
+    .facts {
+      margin: 0;
+      background: var(--lb-panel, var(--ion-background-color));
+      border: 1px solid var(--lb-panel-border, var(--ion-color-light-shade));
+      border-radius: 12px;
+    }
+    .facts div {
       display: grid;
-      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr);
-      align-items: start;
-      gap: var(--space-3);
-      margin: var(--space-3) 0;
-    }
-    ion-item p {
-      margin: 0;
+      grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 10px 14px;
       font-size: 0.75rem;
-      line-height: 1.6;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .facts div + div { border-top: 1px solid var(--lb-panel-border, var(--ion-color-light-shade)); }
+    dt {
       color: var(--ion-color-medium-shade);
     }
-    ion-item h3 {
+    dd {
       margin: 0;
-      font-family: var(--ion-font-family);
-      font-size: 0.875rem;
-      line-height: 1.6;
-      white-space: normal;
-      overflow-wrap: anywhere;
+      text-align: right;
+      font-weight: 650;
       color: var(--ion-color-dark);
     }
+    summary {
+      padding: 12px 4px;
+      color: var(--ion-color-primary);
+      font-size: 0.8125rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .password summary {
+      width: fit-content;
+      margin: 0 auto;
+      color: var(--ion-color-danger);
+      font-size: 0.875rem;
+    }
+    details[open] summary { margin-bottom: 8px; }
+    .version { text-align: center; font-size: 0.75rem; }
+    ion-input {
+      font-size: 0.875rem;
+      --border-radius: 7px;
+      --border-color: var(--ion-color-light-shade);
+    }
     ion-checkbox {
-      margin-top: var(--space-3);
+      margin-top: 12px;
+      --checkbox-background-checked: var(--ion-color-primary);
+      --border-color-checked: var(--ion-color-primary);
+      font-size: 0.8125rem;
+      --size: 18px;
     }
     ion-button {
-      margin-top: var(--space-3);
+      margin-top: 12px;
+      min-height: 44px;
+      --box-shadow: none;
     }
     .gap {
-      margin-top: var(--space-2);
+      margin-top: 8px;
     }
     .logout {
-      margin: var(--space-5) 0 var(--space-2);
+      --border-width: 1px;
+      --border-radius: 12px;
+      min-height: 48px;
+      margin: 32px 0 8px;
+    }
+    .logout::part(native) {
+      background: var(--lb-danger-soft);
     }
   `,
 })

@@ -25,7 +25,9 @@ const COLORS: Record<string, string> = {
       max-width: 100%;
     }
     ion-badge {
+      min-width: var(--lb-badge-min-width, 0);
       padding: 6px 10px;
+      border-radius: var(--lb-badge-radius, 5px);
       line-height: 1.25;
     }
     ion-badge[color='medium'] {

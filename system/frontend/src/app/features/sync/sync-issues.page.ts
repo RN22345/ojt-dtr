@@ -1,7 +1,9 @@
 // "Sync issues" screen (FR-SYNC-06, TC-ST-OJT-03): each change that the server did not accept, the cause,
 // and the user actions "Try again" and "Discard my change" (offline sync design, section 3).
 import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
-import { AlertController, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent } from '@ionic/angular';
+import { AlertController, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonIcon } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { checkmarkOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { SyncIssue, SyncIssueRepository } from '../../data/repositories/sync-issue.repository';
 import { SyncService } from '../../data/sync/sync.service';
@@ -9,17 +11,26 @@ import { PageHeaderComponent } from '../../shared/page-header/page-header.compon
 import { STRINGS } from '../../shared/strings';
 import { issueCause, issueTime, issueTitle } from './sync-issue-text';
 
+addIcons({ checkmarkOutline });
+
 @Component({
   selector: 'app-sync-issues-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonButton],
+  imports: [PageHeaderComponent, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonButton, IonIcon],
   template: `
-    <app-page-header [title]="strings.pages.syncIssues" [backHref]="home()" />
+    <app-page-header [title]="strings.pages.syncIssues" [backHref]="home()" [compact]="true" />
     <ion-content class="ion-padding">
       @if (issues().length === 0) {
-        <p class="empty">{{ text.none }}</p>
+        <section class="clear-state" aria-labelledby="sync-clear-title">
+          <div class="clipboard" aria-hidden="true">
+            <span class="clip"></span>
+            <span class="check"><ion-icon name="checkmark-outline" /></span>
+          </div>
+          <h2 id="sync-clear-title">{{ text.none }}</h2>
+          <p>{{ text.allAccepted }}</p>
+        </section>
       } @else {
-        <p>{{ text.intro }}</p>
+        <p class="intro">{{ text.intro }}</p>
       }
       @for (issue of issues(); track issue.opId) {
         <ion-card>
@@ -30,7 +41,7 @@ import { issueCause, issueTime, issueTitle } from './sync-issue-text';
           <ion-card-content>
             <p>{{ cause(issue) }}</p>
             <div class="actions">
-              <ion-button size="small" [disabled]="busy()" (click)="retry(issue)">{{ text.retry }}</ion-button>
+              <ion-button class="retry" [disabled]="busy()" (click)="retry(issue)">{{ text.retry }}</ion-button>
               <ion-button size="small" fill="outline" color="danger" [disabled]="busy()" (click)="discard(issue)">
                 {{ text.discard }}
               </ion-button>
@@ -41,91 +52,99 @@ import { issueCause, issueTime, issueTitle } from './sync-issue-text';
     </ion-content>
   `,
   styles: `
-    p {
-      margin: var(--space-2) 0 var(--space-5);
-      font-size: 0.875rem;
-      line-height: 1.6;
-      color: var(--ion-color-dark);
+    ion-content {
+      --background: var(--lb-page);
+      --padding-start: 14px;
+      --padding-end: 14px;
     }
-    /* No issue: a check mark on a document, drawn with CSS */
-    p.empty {
+    .intro { max-width: 34ch; margin: 4px 6px 28px; font-size: 0.8125rem; }
+    .clear-state { margin: clamp(72px, 17vh, 146px) auto 24px; text-align: center; }
+    .clear-state h2 { margin: 10px 0 4px; font-size: 1.35rem; color: var(--ion-color-primary); }
+    .clear-state p { margin: 0; color: var(--ion-color-medium-shade); font-size: 0.8125rem; }
+    .clipboard {
       position: relative;
-      max-width: 340px;
-      margin: 100px auto var(--space-5);
-      padding-top: 148px;
-      text-align: center;
-      font-family: var(--font-heading);
-      font-size: 1rem;
+      display: grid;
+      place-items: center;
+      width: 128px;
+      height: 139px;
+      margin-inline: auto;
+      border: 7px solid var(--ion-color-primary);
+      border-radius: 17px;
+      background: color-mix(in srgb, var(--lb-mist), var(--lb-panel) 48%);
+      box-shadow: inset 0 0 0 10px var(--lb-page);
+    }
+    .clip {
+      position: absolute;
+      top: -25px;
+      width: 61px;
+      height: 38px;
+      border-radius: 21px 21px 2px 2px;
+      background: radial-gradient(circle at 50% 33%, var(--lb-page) 0 6px, transparent 7px), var(--ion-color-primary);
+      box-shadow: 0 0 0 5px var(--lb-page);
+    }
+    .clipboard::before,
+    .clipboard::after {
+      content: '+';
+      position: absolute;
+      color: var(--ion-color-secondary);
+      font-size: 20px;
       font-weight: 700;
-      color: var(--ion-color-primary);
     }
-    p.empty::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: calc(50% - 46px);
-      width: 92px;
-      height: 120px;
-      border: 4px solid var(--ion-color-primary);
-      border-radius: 10px;
-      background: radial-gradient(circle at 50% 56%, var(--ion-color-success) 0 27px, transparent 28px), var(--lb-mist);
-      box-shadow: inset 0 0 0 8px var(--ion-background-color);
-    }
-    p.empty::after {
-      content: '';
-      position: absolute;
-      top: 49px;
-      left: calc(50% - 8px);
-      width: 15px;
-      height: 27px;
-      border: solid var(--ion-color-success-contrast);
-      border-width: 0 4px 4px 0;
-      transform: rotate(45deg);
+    .clipboard::before { left: -23px; top: 23px; }
+    .clipboard::after { right: -22px; top: 65px; }
+    .check {
+      display: grid;
+      place-items: center;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: var(--lb-sync-check);
+      color: var(--lb-panel);
+      font-size: 48px;
     }
     ion-card {
-      margin: 0 0 var(--space-4);
-      border-color: rgba(var(--ion-color-primary-rgb), 0.16);
-      border-radius: 10px;
+      margin: 0 0 16px;
+      background: var(--lb-panel);
+      border-color: var(--lb-panel-border);
     }
     ion-card-header {
-      gap: 6px;
-      padding: var(--space-4) 14px 10px;
+      padding: 16px 14px 10px;
     }
+    ion-card-title { font-size: 1.25rem; margin-bottom: 5px; }
     ion-card-subtitle {
-      font-size: 0.75rem;
-      font-weight: 500;
+      font-size: 0.6875rem;
+      font-weight: 700;
       line-height: 1.5;
       letter-spacing: 0;
+      text-transform: uppercase;
       color: var(--ion-color-medium-shade);
     }
     ion-card-content {
-      padding: 0 14px var(--space-4);
+      padding: 0 14px 16px;
+      font-size: 0.8125rem;
       line-height: 1.6;
-    }
-    ion-card-content p {
-      margin: 0;
     }
     .actions {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--space-2);
-      margin-top: 20px;
+      gap: 8px;
+      margin-top: 30px;
     }
     .actions ion-button {
       flex: 1 1 auto;
       margin: 0;
-      --border-radius: 7px;
-      --padding-start: var(--space-3);
-      --padding-end: var(--space-3);
+      min-height: 40px;
+      --border-radius: 11px;
+      --padding-start: 12px;
+      --padding-end: 12px;
       font-size: 0.75rem;
+      font-weight: 600;
     }
-    /* "Try again" is the main action: primary fill */
-    .actions ion-button:not([color]) {
-      --background: var(--ion-color-primary);
-      --background-hover: var(--ion-color-primary-tint);
-      --background-activated: var(--ion-color-primary-shade);
-      --color: var(--ion-color-primary-contrast);
+    .retry::part(native) {
+      background: var(--lb-primary-gradient, var(--ion-color-primary));
+      color: var(--ion-color-primary-contrast);
     }
+    .actions ion-button[color='danger']::part(native) { background: var(--lb-danger-soft); }
   `,
 })
 export class SyncIssuesPage {
