@@ -1,4 +1,4 @@
-// FR-SYNC-04 and FR-SYNC-08: the network status and the number of unsynced changes, on each mobile page.
+// (sync-status-bar.component.ts) FR-SYNC-04 and FR-SYNC-08: the network status and the number of unsynced changes, on each mobile page.
 // "Server not reachable" is different from "No network". The issue count opens the "Sync issues" screen.
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -19,7 +19,7 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
   imports: [IonIcon, IonSpinner, RouterLink],
   template: `
     @if (mobile) {
-      <div class="bar" [class]="sync.connection()" role="status" aria-live="polite">
+      <div class="bar" [class]="sync.connection()" [class.attention]="sync.unsynced() > 0 || sync.issues() > 0" role="status" aria-live="polite">
         <span class="state">
           <ion-icon aria-hidden="true" [name]="icon()" />
           {{ text[sync.connection()] }}
@@ -44,23 +44,23 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
     }
   `,
   styles: `
+    :host {
+      display: block;
+      background: var(--lb-screen-surface, var(--ion-background-color));
+    }
     .bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px 12px;
       align-items: center;
-      padding: 6px 16px;
-      font-size: 0.85rem;
-      background: var(--ion-color-success-tint);
-      color: var(--ion-color-success-contrast);
-    }
-    .bar.offline {
-      background: var(--ion-color-medium-tint);
-      color: var(--ion-color-medium-contrast);
-    }
-    .bar.unreachable {
-      background: var(--ion-color-warning-tint);
-      color: var(--ion-color-warning-contrast);
+      gap: 4px 10px;
+      min-height: var(--lb-sync-height, 0);
+      margin: 6px 10px 0;
+      padding: 6px 7px;
+      border-radius: 8px;
+      background: var(--lb-online);
+      color: var(--ion-color-dark);
+      font-size: var(--lb-sync-font-size, 0.625rem);
+      line-height: 1.45;
     }
     .state,
     .count,
@@ -70,16 +70,44 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
       gap: 4px;
     }
     .state {
+      font-weight: 700;
+    }
+    .state ion-icon { color: var(--ion-color-success-shade); }
+    .online.attention :is(.state, .count, .issues) { color: var(--lb-sync-attention); }
+    .count {
       font-weight: 600;
+    }
+    .bar.offline {
+      background: rgba(var(--ion-color-medium-rgb), 0.12);
+      color: var(--ion-color-medium-shade);
+    }
+    .bar.offline :is(.state, ion-icon) {
+      color: var(--ion-color-medium-shade);
+    }
+    .bar.unreachable {
+      background: var(--lb-cream);
+      color: var(--ion-color-dark);
+    }
+    .bar.unreachable :is(.state, ion-icon) {
+      color: var(--ion-color-warning-shade);
+    }
+    ion-icon {
+      flex-shrink: 0;
+      font-size: 17px;
     }
     ion-spinner {
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
     }
     .issues {
-      margin-left: auto;
-      color: var(--ion-color-danger-shade);
-      font-weight: 600;
+      color: var(--ion-color-danger);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .issues:focus-visible {
+      outline: 2px solid var(--ion-color-primary);
+      outline-offset: 3px;
+      border-radius: 2px;
     }
   `,
 })

@@ -18,6 +18,35 @@ const COLORS: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IonBadge],
   template: `<ion-badge [color]="color()">{{ text() }}</ion-badge>`,
+  styles: `
+    :host {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+    }
+    ion-badge {
+      padding: 6px 10px;
+      min-width: var(--lb-badge-min-width, auto);
+      border-radius: var(--lb-badge-radius, 5px);
+      text-align: center;
+      font-size: 0.625rem;
+      font-weight: 600;
+      line-height: 1.25;
+      white-space: normal;
+    }
+    ion-badge[color='medium'] {
+      --ion-color-base: var(--ion-color-primary-contrast);
+      --ion-color-contrast: var(--ion-color-dark);
+    }
+    ion-badge[color='warning'] {
+      --ion-color-base: var(--ion-color-secondary);
+      --ion-color-contrast: var(--ion-color-secondary-contrast);
+    }
+    ion-badge[color='light'] {
+      --ion-color-base: var(--ion-color-light);
+      --ion-color-contrast: var(--ion-color-medium-shade);
+    }
+  `,
 })
 export class StatusBadgeComponent {
   /** draft, submitted, approved, returned, pending, rejected, or none. */

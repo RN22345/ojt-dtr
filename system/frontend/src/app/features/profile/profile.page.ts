@@ -1,11 +1,12 @@
 // Profile for OJT and facilitator: assignment, contact number, password change (FR-PROF-01, FR-PROF-02, FR-AUTH-06).
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { AlertController, IonButton, IonCheckbox, IonContent, IonInput, IonItem, IonLabel, IonList, IonNote, ToastController } from '@ionic/angular';
+import { AlertController, IonButton, IonCheckbox, IonContent, IonIcon, IonInput, IonNote, ToastController } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { logOutOutline, personOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { homePath } from '../../core/auth/access';
 import { MockStore } from '../../data/mock/mock-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
-import { PlaceholderComponent } from '../../shared/placeholder/placeholder.component';
 import { STRINGS } from '../../shared/strings';
 import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -14,134 +15,205 @@ import { dateLabel } from '../../shared/utils/format';
 const PH_MOBILE = /^(09|\+639)\d{9}$/;
 const MIN_PASSWORD = 8;
 
+addIcons({ logOutOutline, personOutline });
+
 @Component({
   selector: 'app-profile-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, PlaceholderComponent, IonContent, IonButton, IonCheckbox, IonInput, IonItem, IonLabel, IonList, IonNote],
+  imports: [PageHeaderComponent, IonContent, IonButton, IonCheckbox, IonIcon, IonInput, IonNote],
   template: `
-    <app-page-header [title]="strings.pages.profile" [backHref]="home()" />
+    <app-page-header #header [title]="strings.pages.profile" [backHref]="home()" [compact]="true" />
     <ion-content>
       <div class="ion-padding">
         <div class="who">
-          <div class="avatar"><app-placeholder [label]="text.photo" /></div>
+          <span class="avatar" aria-hidden="true"><ion-icon name="person-outline" /></span>
           <div>
             <h2>{{ auth.profile()?.fullName }}</h2>
             <p>{{ roleText() }}</p>
           </div>
         </div>
         @if (isOjt()) {
-          <h3>{{ text.assignment }}</h3>
-          <ion-list lines="none">
-            <ion-item><ion-label><p>{{ text.company }}</p><h3>{{ me().companyName }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.facilitator }}</p><h3>{{ me().facilitatorName }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.batch }}</p><h3>{{ me().batchName }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.requiredHours }}</p><h3>{{ me().requiredHours }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.startDate }}</p><h3>{{ date(me().startDate) }}</h3></ion-label></ion-item>
-            <ion-item><ion-label><p>{{ text.email }}</p><h3>{{ me().email }}</h3></ion-label></ion-item>
-          </ion-list>
-          <h3>{{ text.contact }}</h3>
-          <ion-input
-            [label]="text.contact"
-            labelPlacement="floating"
-            fill="outline"
-            type="tel"
-            [value]="contact()"
-            [helperText]="text.contactHint"
-            [errorText]="text.contactInvalid"
-            [class.ion-invalid]="!contactValid()"
-            [class.ion-touched]="true"
-            (ionInput)="contact.set($any($event).detail.value ?? '')"
-          />
-          <ion-button [disabled]="!contactValid() || !contactChanged()" (click)="saveContact()">{{ text.save }}</ion-button>
+          <dl class="facts" [attr.aria-label]="text.assignment">
+            <div><dt>{{ text.email }}</dt><dd>{{ me().email }}</dd></div>
+            <div><dt>{{ text.contact }}</dt><dd>{{ me().contactNumber }}</dd></div>
+            <div><dt>{{ text.company }}</dt><dd>{{ me().companyName }}</dd></div>
+            <div><dt>{{ text.facilitator }}</dt><dd>{{ me().facilitatorName }}</dd></div>
+            <div><dt>{{ text.batch }}</dt><dd>{{ me().batchName }}</dd></div>
+            <div><dt>{{ text.requiredHours }}</dt><dd>{{ ui.hours(me().requiredHours * 60) }}</dd></div>
+            <div><dt>{{ text.startDate }}</dt><dd>{{ date(me().startDate) }}</dd></div>
+          </dl>
+          <details class="contact">
+            <summary>{{ text.editContact }}</summary>
+            <ion-input
+              [label]="text.contact"
+              labelPlacement="floating"
+              fill="outline"
+              type="tel"
+              [value]="contact()"
+              [helperText]="text.contactHint"
+              [errorText]="text.contactInvalid"
+              [class.ion-invalid]="!contactValid()"
+              [class.ion-touched]="true"
+              (ionInput)="contact.set($any($event).detail.value ?? '')"
+            />
+            <ion-button [disabled]="!contactValid() || !contactChanged()" (click)="saveContact()">{{ text.save }}</ion-button>
+          </details>
         } @else {
           <p>{{ text.assignedOjts(store.assignedOjts().length) }}</p>
         }
 
-        <h3>{{ text.password }}</h3>
-        <ion-input [label]="text.current" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="current-password"
-          [value]="current()" (ionInput)="current.set($any($event).detail.value ?? '')" />
-        <ion-input class="gap" [label]="text.next" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
-          [value]="next()" (ionInput)="next.set($any($event).detail.value ?? '')" />
-        <ion-input class="gap" [label]="text.confirmPassword" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
-          [value]="confirm()" (ionInput)="confirm.set($any($event).detail.value ?? '')" />
-        <ion-checkbox [checked]="show()" (ionChange)="show.set($any($event).detail.checked)">{{ text.show }}</ion-checkbox>
-        @if (passwordProblem(); as problem) {
-          <p><ion-note color="danger">{{ problem }}</ion-note></p>
-        }
-        @if (passwordFailure(); as failure) {
-          <p><ion-note color="danger">{{ failure }}</ion-note></p>
-        }
-        <ion-button [disabled]="passwordProblem() !== null || busy()" (click)="changePassword()">{{ text.change }}</ion-button>
+        <details class="password">
+          <summary>{{ text.password }}</summary>
+          <ion-input [label]="text.current" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="current-password"
+            [value]="current()" (ionInput)="current.set($any($event).detail.value ?? '')" />
+          <ion-input class="gap" [label]="text.next" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
+            [value]="next()" (ionInput)="next.set($any($event).detail.value ?? '')" />
+          <ion-input class="gap" [label]="text.confirmPassword" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
+            [value]="confirm()" (ionInput)="confirm.set($any($event).detail.value ?? '')" />
+          <ion-checkbox [checked]="show()" (ionChange)="show.set($any($event).detail.checked)">{{ text.show }}</ion-checkbox>
+          @if (passwordProblem(); as problem) {
+            <p><ion-note color="danger">{{ problem }}</ion-note></p>
+          }
+          @if (passwordFailure(); as failure) {
+            <p><ion-note color="danger">{{ failure }}</ion-note></p>
+          }
+          <ion-button [disabled]="passwordProblem() !== null || busy()" (click)="changePassword()">{{ text.change }}</ion-button>
+        </details>
 
-        <h3>{{ text.data }}</h3>
-        <ion-button color="medium" fill="outline" (click)="reset()">{{ text.reset }}</ion-button>
-        <p><ion-note>{{ text.version }}</ion-note></p>
+        <ion-button class="logout" expand="block" fill="outline" color="danger" [disabled]="header.busy()" (click)="header.logout()">
+          <ion-icon slot="start" name="log-out-outline" aria-hidden="true" />
+          {{ strings.logout }}
+        </ion-button>
+        <details class="data">
+          <summary>{{ text.data }}</summary>
+          <ion-button color="medium" fill="outline" (click)="reset()">{{ text.reset }}</ion-button>
+          <p><ion-note>{{ text.version }}</ion-note></p>
+        </details>
       </div>
       <ion-note class="ion-padding ion-text-center note">{{ ui.prototypeNote }}</ion-note>
     </ion-content>
   `,
   styles: `
+    ion-content { --background: var(--lb-panel, var(--ion-background-color)); }
     .who {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
+      gap: 18px;
+      margin: 8px 0 24px;
+      text-align: center;
     }
     .who h2 {
       margin: 0;
       font-weight: 700;
-      color: var(--ion-color-primary);
+      font-size: 1.5rem;
+      line-height: 1.3;
+      color: var(--ion-color-dark);
     }
     .who p {
-      margin: 4px 0 0;
-      color: var(--ion-color-medium-shade);
+      display: inline-block;
+      margin: 6px 0 0;
+      padding: 5px 16px;
+      border-radius: 4px;
+      background: var(--ion-color-secondary);
+      color: var(--ion-color-dark);
+      font-size: 0.6875rem;
+      font-weight: 600;
     }
     .avatar {
-      width: 72px;
-      height: 72px;
+      position: relative;
+      width: 68px;
+      height: 68px;
+      margin-block: 4px;
+      border: 2px solid currentColor;
       border-radius: 50%;
       overflow: hidden;
-      border: 3px solid var(--ion-color-primary);
-    }
-    h3 {
-      margin: 20px 0 8px;
-      font-weight: 700;
       color: var(--ion-color-primary);
     }
-    ion-list {
-      background: transparent;
-      padding: 0;
+    .avatar ion-icon {
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 60px;
+      --ionicon-stroke-width: 14px;
+      clip-path: inset(0 0 16%);
     }
-    ion-item {
-      --background: var(--ion-color-light);
-      --border-width: 0;
-      margin-bottom: 6px;
+    .facts {
+      margin: 0;
+      background: var(--lb-panel, var(--ion-background-color));
+      border: 1px solid var(--lb-panel-border, var(--ion-color-light-shade));
       border-radius: 12px;
     }
-    ion-item p {
-      font-size: 0.8rem;
+    .facts div {
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .facts div + div { border-top: 1px solid var(--lb-panel-border, var(--ion-color-light-shade)); }
+    dt {
       color: var(--ion-color-medium-shade);
     }
-    ion-item h3 {
-      margin: 2px 0 0;
-      font-size: 1rem;
-      font-weight: 600;
+    dd {
+      margin: 0;
+      text-align: right;
+      font-weight: 650;
       color: var(--ion-color-dark);
+    }
+    summary {
+      padding: 12px 4px;
+      color: var(--ion-color-primary);
+      font-size: 0.8125rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .password summary {
+      width: fit-content;
+      margin: 0 auto;
+      color: var(--ion-color-danger);
+      font-size: 0.875rem;
+    }
+    details[open] summary { margin-bottom: 8px; }
+    .data { margin-top: 6px; }
+    ion-input {
+      font-size: 0.875rem;
+      --border-radius: 7px;
+      --border-color: var(--ion-color-light-shade);
     }
     ion-checkbox {
       margin-top: 12px;
       --checkbox-background-checked: var(--ion-color-primary);
       --border-color-checked: var(--ion-color-primary);
+      font-size: 0.8125rem;
+      --size: 18px;
     }
     ion-button {
       margin-top: 12px;
+      min-height: 44px;
+      --box-shadow: none;
     }
     .gap {
       margin-top: 8px;
     }
+    .logout {
+      --border-width: 1px;
+      --border-radius: 12px;
+      min-height: 48px;
+      margin: 32px 0 8px;
+    }
+    .logout::part(native) {
+      background: var(--lb-danger-soft);
+    }
     .note {
       display: block;
-      font-size: 0.75em;
+      font-size: 0.6875rem;
+      line-height: 1.5;
     }
   `,
 })

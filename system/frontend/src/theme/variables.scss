@@ -1,99 +1,121 @@
-/* src/theme/variables.scss
-   All colors and fonts of the app are here. Page files use var(--ion-color-...) only.
-   Source: the UI/UX team (log-bound repository, 2026-10-28), with the colors and fonts
-   of the UI/UX head (2026-10-30): teal replaces blue, amber replaces orange (D-64). */
+/* LogBound theme from the mood board and mobile designs. */
 
-/* FONTS (D-64): Plus Jakarta Sans for big text, headers, and sub headers. Inter for small text.
-   The font files come from npm (@fontsource-variable) and are in the app bundle,
-   so they operate offline. Do not load fonts from a CDN. */
+/* FONTS: Plus Jakarta Sans for big text, headers, and sub headers. Inter for small text.
+   The font files come from npm (@fontsource-variable) and work offline. */
 @import '@fontsource-variable/inter/index.css';
 @import '@fontsource-variable/plus-jakarta-sans/index.css';
 
 :root {
-  /* Palette
-     Teal        #0F766E -> primary   (header, tab bar, titles)
-     Amber       #F59E0B -> secondary (main buttons, active tab)
-     Light amber #FBBF24 -> warning   (submitted, notes)
-     Dark teal   #115E59 -> tertiary
-     Black       #111111 -> text / dark
-     White       #FFFFFF -> background */
+  /* Mood board palette
+     Deep teal   #174F63 -> primary   (header, tab bar, titles, main arcs/bars)
+     Amber       #F5A623 -> secondary (main buttons, active tab, submitted)
+     Sea green   #60A199 -> tertiary
+     Sky blue    #80BBC8 -> --lb-sky  (secondary arcs, tracks)
+     Mist        #D1EDED -> --lb-mist (sync bar, soft panels)
+     Cream       #FFF3DC -> --lb-cream (cards) */
+  --lb-sky: #80bbc8;
+  --lb-mist: #d1eded;
+  --lb-cream: #fff3dc;
+  --lb-sea: #60a199;
+  --lb-cream-border: #e4d9c5;
+  --lb-border: #d9dee6;
+  --lb-field: #f8f9fc;
+  --lb-danger-soft: #fcedef;
+  --lb-online: #d3f7e5;
+  --lb-page: #f0f6fb;
+  --lb-panel: #ffffff;
+  --lb-panel-border: #d3d5d8;
+  --lb-primary-gradient: linear-gradient(160deg, #2d8298, #0b3444 93%);
+  --lb-amber-gradient: linear-gradient(160deg, #ffc65d, #f5a623 55%, #db7e09 96%);
+  --lb-notification-soft: #def0f3;
+  --lb-unread: #0054dc;
+  --lb-sync-attention: #8b5100;
+  --lb-sync-check: #42cf85;
+  --lb-admin-muted: #f2f3f6;
+  --lb-admin-canvas: #f2f3f6;
+  --lb-admin-badge: #f1cb80;
+  --lb-admin-success: #28ce50;
+  --lb-admin-link: #0054dc;
+  color-scheme: light;
 
-  /* Primary: Teal */
-  --ion-color-primary: #0f766e;
-  --ion-color-primary-rgb: 15, 118, 110;
+  /* Primary: deep teal */
+  --ion-color-primary: #174f63;
+  --ion-color-primary-rgb: 23, 79, 99;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #0d6861;
-  --ion-color-primary-tint: #27847c;
+  --ion-color-primary-shade: #144658;
+  --ion-color-primary-tint: #2e6073;
 
-  /* Secondary: Amber - dark text, because white text on amber is hard to read */
-  --ion-color-secondary: #f59e0b;
-  --ion-color-secondary-rgb: 245, 158, 11;
-  --ion-color-secondary-contrast: #111111;
-  --ion-color-secondary-contrast-rgb: 17, 17, 17;
-  --ion-color-secondary-shade: #d88b0a;
-  --ion-color-secondary-tint: #f6a823;
+  /* Secondary: amber (white text, as in the Figma buttons) */
+  --ion-color-secondary: #f5a623;
+  --ion-color-secondary-rgb: 245, 166, 35;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #d8921f;
+  --ion-color-secondary-tint: #f6b03a;
 
-  /* Tertiary: dark teal */
-  --ion-color-tertiary: #115e59;
-  --ion-color-tertiary-rgb: 17, 94, 89;
-  --ion-color-tertiary-contrast: #ffffff;
-  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
-  --ion-color-tertiary-shade: #0f534e;
-  --ion-color-tertiary-tint: #296e6a;
+  /* Tertiary: sea green */
+  --ion-color-tertiary: #60a199;
+  --ion-color-tertiary-rgb: 96, 161, 153;
+  --ion-color-tertiary-contrast: #0e2f3b;
+  --ion-color-tertiary-contrast-rgb: 14, 47, 59;
+  --ion-color-tertiary-shade: #548e87;
+  --ion-color-tertiary-tint: #70aaa3;
 
   /* Success: green (approved) */
-  --ion-color-success: #1e9e54;
-  --ion-color-success-rgb: 30, 158, 84;
+  --ion-color-success: #2f9e57;
+  --ion-color-success-rgb: 47, 158, 87;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #1a8b4a;
-  --ion-color-success-tint: #34a865;
+  --ion-color-success-shade: #298b4c;
+  --ion-color-success-tint: #44a968;
 
-  /* Warning: light amber (submitted) - dark text so it can be read */
-  --ion-color-warning: #fbbf24;
-  --ion-color-warning-rgb: 251, 191, 36;
-  --ion-color-warning-contrast: #111111;
-  --ion-color-warning-contrast-rgb: 17, 17, 17;
-  --ion-color-warning-shade: #dda820;
-  --ion-color-warning-tint: #fbc53a;
+  /* Warning: amber (submitted, pending). Dark text for small badges. */
+  --ion-color-warning: #f5a623;
+  --ion-color-warning-rgb: 245, 166, 35;
+  --ion-color-warning-contrast: #12262e;
+  --ion-color-warning-contrast-rgb: 18, 38, 46;
+  --ion-color-warning-shade: #d8921f;
+  --ion-color-warning-tint: #f6b03a;
 
   /* Danger: red (errors, returned) */
-  --ion-color-danger: #d6232f;
-  --ion-color-danger-rgb: 214, 35, 47;
+  --ion-color-danger: #c8102e;
+  --ion-color-danger-rgb: 200, 16, 46;
   --ion-color-danger-contrast: #ffffff;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #bc1f29;
-  --ion-color-danger-tint: #da3944;
+  --ion-color-danger-shade: #b00e29;
+  --ion-color-danger-tint: #ce2843;
 
   /* Medium: gray (draft, small text) */
-  --ion-color-medium: #6b7280;
-  --ion-color-medium-rgb: 107, 114, 128;
+  --ion-color-medium: #6b7a82;
+  --ion-color-medium-rgb: 107, 122, 130;
   --ion-color-medium-contrast: #ffffff;
   --ion-color-medium-contrast-rgb: 255, 255, 255;
-  --ion-color-medium-shade: #5e6471;
-  --ion-color-medium-tint: #7a808d;
+  --ion-color-medium-shade: #5e6c73;
+  --ion-color-medium-tint: #7a8890;
 
-  /* Light: card background (light teal gray) */
-  --ion-color-light: #f1f6f5;
-  --ion-color-light-rgb: 241, 246, 245;
-  --ion-color-light-contrast: #111111;
-  --ion-color-light-contrast-rgb: 17, 17, 17;
-  --ion-color-light-shade: #d4d8d8;
-  --ion-color-light-tint: #f2f7f6;
+  /* Light: tile and track background (pale blue gray) */
+  --ion-color-light: #eef2f8;
+  --ion-color-light-rgb: 238, 242, 248;
+  --ion-color-light-contrast: #12262e;
+  --ion-color-light-contrast-rgb: 18, 38, 46;
+  --ion-color-light-shade: #d2dde3;
+  --ion-color-light-tint: #f1f5f8;
 
-  /* Dark: Black */
-  --ion-color-dark: #111111;
-  --ion-color-dark-rgb: 17, 17, 17;
+  /* Dark: ink */
+  --ion-color-dark: #12262e;
+  --ion-color-dark-rgb: 18, 38, 46;
   --ion-color-dark-contrast: #ffffff;
   --ion-color-dark-contrast-rgb: 255, 255, 255;
-  --ion-color-dark-shade: #0f0f0f;
-  --ion-color-dark-tint: #292929;
+  --ion-color-dark-shade: #10222a;
+  --ion-color-dark-tint: #2a3b43;
 
   /* Page */
   --ion-background-color: #ffffff;
-  --ion-text-color: #111111;
-  --ion-item-background: #ffffff;
+  --ion-text-color: #20252e;
+  --ion-text-color-rgb: 32, 37, 46;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-item-background: transparent;
 
   /* Header bar */
   --ion-toolbar-background: var(--ion-color-primary);
@@ -101,17 +123,16 @@
 
   /* Bottom tab bar */
   --ion-tab-bar-background: var(--ion-color-primary);
-  --ion-tab-bar-color: #ffffff;
+  --ion-tab-bar-color: rgba(255, 255, 255, 0.78);
   --ion-tab-bar-color-selected: var(--ion-color-secondary);
 
   /* Fonts */
-  --font-heading: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif; /* big text, headers */
-  --ion-font-family: 'Inter Variable', 'Inter', sans-serif; /* small text, buttons, inputs */
+  --font-heading: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
+  --ion-font-family: 'Inter Variable', 'Inter', sans-serif;
 }
 
-/* ---------- Small global styles (shared by all pages) ---------- */
+/* ---------- Global styles shared by all pages ---------- */
 
-/* Big text, headers, and sub headers use Plus Jakarta Sans. All other text uses Inter. */
 h1,
 h2,
 h3,
@@ -121,45 +142,423 @@ ion-title {
   font-weight: 700;
 }
 
-/* Floating rounded tab bar */
-ion-tab-bar {
-  margin: 0 12px 12px;
-  border-radius: 16px;
-  border: none;
+body {
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Rounded buttons, no CAPITAL letters */
-ion-button {
-  --border-radius: 10px;
-  text-transform: none;
+ion-content {
+  --background: var(--ion-background-color);
+}
+
+:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page,
+    app-sync-issues-page, app-profile-page, app-notifications-page) {
+  --lb-toolbar-height: 68px;
+  --lb-toolbar-top-space: 18px;
+  --lb-toolbar-title-size: 1.125rem;
+  --lb-sync-font-size: 0.6875rem;
+  --lb-sync-height: 33px;
+}
+
+:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page,
+    app-sync-issues-page, app-notifications-page) {
+  --lb-screen-surface: var(--lb-page);
+}
+
+.ion-padding,
+.ion-padding-horizontal {
+  --ion-padding: 20px;
+}
+
+ion-content.ion-padding {
+  --padding-top: 14px;
+  --padding-bottom: 28px;
+}
+
+h2 { font-size: 1.2rem; line-height: 1.35; }
+h3 { font-size: 0.95rem; line-height: 1.4; }
+p { line-height: 1.55; }
+
+app-stat-tile { min-width: 0; }
+app-progress-ring { display: block; }
+
+/* Recolor the existing transparent logo without changing the image asset. */
+app-login-page .logo img {
+  filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='palette' color-interpolation-filters='sRGB'%3E%3CfeColorMatrix type='matrix' values='.960784 0 .6 0 0 .65098 0 1.00625 0 0 .137255 0 .95625 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3C/svg%3E#palette");
+}
+
+/* Header: deep teal, title on the left, flat */
+ion-header ion-toolbar {
+  --border-width: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --min-height: 60px;
+}
+ion-header::after {
+  display: none;
+}
+ion-header {
+  background: var(--ion-background-color);
+  box-shadow: none;
+}
+ion-title {
+  font-size: 1rem;
+  text-align: left;
+  padding-inline: 12px;
+}
+ion-header ion-buttons ion-button {
+  --color: #ffffff;
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+/* Bottom navigation: raised amber icon in a smooth white notch. */
+ion-tab-bar[slot='bottom'] {
+  --lb-nav-height: clamp(66px, 16vw, 118px);
+  --lb-nav-active-size: clamp(44px, 10.7vw, 78px);
+  --lb-nav-icon-size: clamp(27px, 6.3vw, 46px);
+  --lb-nav-active-icon-size: clamp(27px, 6.8vw, 50px);
+  --lb-nav-label-size: clamp(11px, 2.85vw, 21px);
+  --background: var(--ion-color-primary);
+  --color: var(--lb-mist);
+  --color-selected: var(--ion-color-secondary);
+  box-sizing: content-box;
+  height: var(--lb-nav-height);
+  min-height: var(--lb-nav-height);
+  margin: 0;
+  padding: 0 0 var(--ion-safe-area-bottom, 0px);
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  contain: none;
+}
+app-tab-shell:has(:is(app-ojt-home-page, app-dtr-page, app-reports-page, app-progress-page):not(.ion-page-hidden))
+  ion-tab-bar[slot='bottom'] {
+  --lb-nav-notch: var(--lb-page);
+}
+ion-tab-bar[slot='bottom'] ion-tab-button {
+  position: relative;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  overflow: visible;
+  --background: transparent;
+  --color: var(--lb-mist);
+  --color-selected: var(--ion-color-secondary);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+  height: var(--lb-nav-height);
+  min-height: var(--lb-nav-height);
+  letter-spacing: 0;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button::part(native) {
+  height: 100%;
+  overflow: visible;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button ion-icon {
+  position: absolute;
+  top: calc(var(--lb-nav-height) * 0.16);
+  left: 50%;
+  z-index: 1;
+  width: var(--lb-nav-icon-size);
+  height: var(--lb-nav-icon-size);
+  font-size: var(--lb-nav-icon-size);
+  box-sizing: content-box;
+  margin: 0;
+  transform: translateX(-50%);
+  transition: background-color 0.2s ease;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button ion-label {
+  position: absolute;
+  top: calc(var(--lb-nav-height) * 0.6);
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-size: var(--lb-nav-label-size);
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 0;
+  width: min(calc(var(--lb-nav-active-size) * 2.25), 100%);
+  height: calc(var(--lb-nav-active-size) * 0.78);
+  background: var(--lb-nav-notch, var(--ion-background-color));
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 112 44' preserveAspectRatio='none'%3E%3Cpath d='M0 0 C24 0 23 40 56 40 S88 0 112 0 Z' fill='white'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected ion-icon {
+  top: calc(var(--lb-nav-active-size) * -0.46);
+  width: var(--lb-nav-active-icon-size);
+  height: var(--lb-nav-active-icon-size);
+  box-sizing: content-box;
+  padding: calc((var(--lb-nav-active-size) - var(--lb-nav-active-icon-size)) / 2);
+  color: var(--ion-color-primary-contrast);
+  background: var(--ion-color-secondary);
+  border-radius: 50%;
+  font-size: var(--lb-nav-active-icon-size);
+  box-shadow: none;
+}
+ion-tab-bar[slot='bottom'] ion-tab-button.tab-selected ion-label {
+  color: var(--ion-color-secondary);
+  font-weight: 700;
+}
+
+ion-tab-bar[slot='top'] {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+  --color-selected: var(--ion-color-secondary);
+  height: 44px;
+  min-height: 44px;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  border: 0;
+  padding: 0;
+}
+ion-tab-bar[slot='top'] ion-tab-button {
+  --background: transparent;
+  --background-focused: var(--ion-color-primary-shade);
+  --color-focused: var(--ion-color-primary-contrast);
+  flex: 1 0 92px;
+  max-width: none;
+  min-height: 44px;
+  font-size: 0.625rem;
+  letter-spacing: 0;
+}
+ion-tab-bar[slot='top'] ion-tab-button ion-icon {
+  font-size: 18px;
+}
+ion-tab-bar[slot='top'] ion-tab-button:focus-visible {
+  outline-offset: -3px;
+}
+
+app-admin-preview-page {
+  --lb-toolbar-height: 44px;
+  --lb-toolbar-title-size: 1rem;
+}
+app-admin-preview-page app-page-header ion-toolbar {
+  --background: var(--lb-panel);
+  --color: var(--ion-color-dark);
+  --border-width: 0 0 1px;
+  --border-color: var(--lb-panel-border);
+}
+app-admin-preview-page app-page-header ion-title {
+  font-family: var(--ion-font-family);
+  font-weight: 650;
+}
+app-admin-preview-page app-page-header ion-buttons ion-button {
+  --ion-toolbar-color: var(--lb-admin-link);
+  --color: var(--lb-admin-link);
   font-weight: 600;
 }
 
+/* Buttons: rounded, no capital letters */
+ion-button {
+  --border-radius: 10px;
+  --box-shadow: none;
+  --padding-start: 18px;
+  --padding-end: 18px;
+  min-height: 42px;
+  text-transform: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 /* Main buttons are amber (buttons with a color="" keep their own color) */
-ion-button:not([color]):not(.button-outline):not(.button-clear) {
+ion-button:not([color]):not(.button-outline):not(.button-clear):not(.in-toolbar) {
   --background: var(--ion-color-secondary);
   --background-activated: var(--ion-color-secondary-shade);
   --background-hover: var(--ion-color-secondary-tint);
   --color: var(--ion-color-secondary-contrast);
+  --box-shadow: none;
+}
+ion-button[color='primary']:not(.button-outline):not(.button-clear) {
+  --box-shadow: none;
 }
 
-/* Outline buttons use the teal color */
+/* Outline buttons use the deep teal */
 ion-button.button-outline:not([color]) {
   --border-color: var(--ion-color-primary);
   --color: var(--ion-color-primary);
 }
 
-/* Cards are light, flat, and rounded */
-ion-card {
-  background: var(--ion-color-light);
-  box-shadow: none;
-  border-radius: 16px;
-  margin: 12px 0;
+/* Danger outline buttons: soft pink fill, red border (Figma "Discard", "Change password") */
+ion-button.button-outline[color='danger'] {
+  --background: var(--lb-danger-soft);
+  --border-color: var(--ion-color-danger);
+  --color: var(--ion-color-danger);
 }
 
-/* Input fields */
-ion-input {
-  --border-radius: 10px;
-  --border-color: var(--ion-color-medium-tint);
+/* Cards: cream, flat, rounded */
+ion-card {
+  background: var(--lb-cream);
+  box-shadow: none;
+  color: var(--ion-text-color);
+  border: 1px solid var(--lb-cream-border);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+ion-card[color='danger'] {
+  background: var(--ion-color-danger);
+  border-color: var(--ion-color-danger);
+  color: var(--ion-color-danger-contrast);
+}
+ion-card-content { padding: 16px; font-size: 0.875rem; }
+ion-card-header { padding: 16px 16px 8px; }
+ion-card-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+}
+ion-card-subtitle { font-size: 0.7rem; letter-spacing: 0.02em; }
+
+/* Lists */
+ion-list {
+  background: transparent;
+  padding-block: 0;
+}
+ion-item {
+  --border-color: var(--lb-border);
+  --background: transparent;
+  --min-height: 52px;
+  --inner-padding-end: 12px;
+  font-size: 0.875rem;
+}
+ion-item::part(detail-icon) { color: var(--ion-color-primary); opacity: 0.7; font-size: 16px; }
+ion-note { color: var(--ion-color-medium); line-height: 1.5; }
+ion-list-header {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--ion-color-primary);
+}
+
+/* Compact status labels from the reference. */
+ion-badge {
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: normal;
+}
+ion-chip {
+  --background: var(--lb-mist);
+  --color: var(--ion-color-primary);
+  font-weight: 600;
+}
+
+/* Segments */
+ion-segment {
+  --background: var(--ion-color-light);
+  border-radius: 9px;
+  padding: 3px;
+}
+ion-segment-button {
+  --color: var(--ion-color-medium-shade);
+  --color-checked: var(--ion-color-primary);
+  --indicator-color: var(--lb-sky);
+  text-transform: none;
+  min-width: 0;
+  --padding-start: 6px;
+  --padding-end: 6px;
+  --indicator-box-shadow: none;
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+/* Input fields: light fill, rounded, deep teal focus */
+ion-input,
+ion-textarea {
+  --background: var(--lb-field);
+  --border-radius: 6px;
+  --border-color: #c9cfdb;
+  --border-width: 1px;
   --highlight-color-focused: var(--ion-color-primary);
+  --highlight-color-invalid: var(--ion-color-danger);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: 0.875rem;
+}
+
+ion-searchbar {
+  --background: var(--lb-field);
+  --border-radius: 8px;
+  --box-shadow: none;
+  --icon-color: var(--ion-color-primary);
+  --placeholder-color: var(--ion-color-medium);
+  padding-inline: 0;
+}
+ion-select {
+  --highlight-color-focused: var(--ion-color-primary);
+  font-size: 0.875rem;
+}
+ion-checkbox {
+  --border-radius: 4px;
+  --border-color: var(--ion-color-medium);
+  --checkbox-background-checked: var(--ion-color-primary);
+  --border-color-checked: var(--ion-color-primary);
+  font-size: 0.8rem;
+}
+ion-fab-button {
+  --background: var(--ion-color-secondary);
+  --color: var(--ion-color-secondary-contrast);
+  --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.16);
+}
+
+button:focus-visible,
+a:focus-visible,
+ion-button:focus-visible,
+ion-tab-button:focus-visible {
+  outline: 2px solid var(--ion-color-secondary);
+  outline-offset: 3px;
+}
+
+/* Alerts and toasts */
+ion-alert .alert-wrapper {
+  border-radius: 16px;
+}
+ion-alert .alert-button {
+  color: var(--ion-color-primary);
+  font-weight: 700;
+}
+ion-alert .alert-button.alert-button-role-destructive {
+  color: var(--ion-color-danger);
+}
+ion-toast {
+  --border-radius: 12px;
+}
+
+/* Refresher */
+ion-refresher-content {
+  --color: var(--ion-color-primary);
+}
+
+@media (min-width: 768px) {
+  ion-content::part(scroll) {
+    max-width: 960px;
+    margin-inline: auto;
+    width: 100%;
+  }
+  .ion-padding,
+  .ion-padding-horizontal { --ion-padding: 28px; }
+  ion-content.ion-padding { --padding-top: 24px; }
+  ion-tab-bar[slot='bottom'] {
+    padding-inline: max(12px, calc((100% - 760px) / 2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ion-tab-button ion-icon { transition: none; }
 }

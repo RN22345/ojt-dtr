@@ -43,8 +43,10 @@ export const STRINGS = {
   dtr: {
     timeIn: 'Time in',
     timeOut: 'Time out',
-    openSince: (time: string) => `Work session open since ${time}`,
+    openSince: 'Work session open since',
     noOpenSession: 'No open work session',
+    timeInHint: 'Tap the button below to time in.',
+    workweek: 'Current workweek',
     saved: { in: 'Time-in saved. It will sync.', out: 'Time-out saved. It will sync.' },
     noLocation: 'The location was not available. The punch is saved without a location.',
     failure: {
@@ -77,7 +79,8 @@ export const STRINGS = {
   },
   // FR-SYNC-06: the change, the cause, and the possible user actions.
   issues: {
-    none: 'No sync issues. The server accepted all your changes.',
+    none: 'No sync issues.',
+    allAccepted: 'The server accepted all your changes.',
     intro: 'The server did not accept these changes. For each change, select an action.',
     retry: 'Try again',
     discard: 'Discard my change',

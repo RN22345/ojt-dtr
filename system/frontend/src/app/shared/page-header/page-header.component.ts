@@ -1,4 +1,4 @@
-// The header of each page: the title, the logout button, and the sync status bar (FR-SYNC-04).
+// Page title and sync status (FR-SYNC-04). Admin keeps its web logout here; mobile logout is in Profile.
 // The logout shows the CAUTION with the count of unsynced changes (FR-AUTH-05, QR-SF-01, TC-ST-OJT-04).
 // On mobile, the header also opens the notifications (FR-NOTI-05) and the profile (FR-PROF-01).
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
@@ -16,7 +16,7 @@ import {
   LoadingController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { notificationsOutline, personCircleOutline } from 'ionicons/icons';
+import { chevronBackOutline, notificationsOutline, personCircleOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { LogoutService } from '../../core/auth/logout.service';
 import { MockStore } from '../../data/mock/mock-store.service';
@@ -24,7 +24,7 @@ import { UI_STRINGS } from '../strings-ui';
 import { SyncStatusBarComponent } from '../sync-status/sync-status-bar.component';
 import { STRINGS } from '../strings';
 
-addIcons({ notificationsOutline, personCircleOutline });
+addIcons({ chevronBackOutline, notificationsOutline, personCircleOutline });
 
 @Component({
   selector: 'app-page-header',
@@ -32,15 +32,15 @@ addIcons({ notificationsOutline, personCircleOutline });
   imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonBackButton, IonIcon, IonBadge, RouterLink, SyncStatusBarComponent],
   template: `
     <ion-header>
-      <ion-toolbar>
+      <ion-toolbar [class.compact]="compact()">
         @if (backHref()) {
           <ion-buttons slot="start">
-            <ion-back-button [defaultHref]="backHref()" />
+            <ion-back-button [defaultHref]="backHref()" [icon]="compact() ? 'chevron-back-outline' : undefined" [text]="compact() ? '' : undefined" />
           </ion-buttons>
         }
         <ion-title>{{ title() }}</ion-title>
         <ion-buttons slot="end">
-          @if (mobileRole()) {
+          @if (mobileRole() && !compact()) {
             <ion-button routerLink="/notifications" [attr.aria-label]="ui.header.notifications">
               <ion-icon slot="icon-only" name="notifications-outline" />
               @if (mock.unreadCount() > 0) {
@@ -51,19 +51,88 @@ addIcons({ notificationsOutline, personCircleOutline });
               <ion-icon slot="icon-only" name="person-circle-outline" />
             </ion-button>
           }
-          <ion-button [disabled]="busy()" (click)="logout()">{{ strings.logout }}</ion-button>
+          @if (!mobileRole()) {
+            <ion-button [disabled]="busy()" (click)="logout()">{{ strings.logout }}</ion-button>
+          }
         </ion-buttons>
       </ion-toolbar>
       <app-sync-status-bar />
     </ion-header>
   `,
   styles: `
+    :host {
+      display: block;
+    }
+    ion-header {
+      box-shadow: none;
+      background: var(--lb-screen-surface, var(--ion-background-color));
+    }
+    ion-toolbar {
+      --min-height: calc(var(--lb-toolbar-height, 58px) - var(--lb-toolbar-top-space, 0px));
+      --padding-top: var(--lb-toolbar-top-space, 0px);
+      --padding-start: 8px;
+      --padding-end: 8px;
+      --border-width: 0;
+    }
+    ion-title {
+      padding-inline: 8px;
+      font-size: var(--lb-toolbar-title-size, 1rem);
+      font-weight: 700;
+    }
+    ion-buttons {
+      gap: 0;
+      margin-inline-end: 0;
+    }
+    ion-button {
+      position: relative;
+      --padding-start: 7px;
+      --padding-end: 7px;
+      --color: var(--ion-color-primary-contrast);
+      min-height: 44px;
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 400;
+    }
+    ion-icon {
+      font-size: 21px;
+    }
+    ion-back-button {
+      --color: var(--ion-color-primary-contrast);
+      --icon-font-size: 22px;
+      font-size: 0.75rem;
+    }
     .count {
       position: absolute;
       top: 2px;
       right: 0;
-      font-size: 0.6em;
-      min-width: 16px;
+      min-width: 15px;
+      padding: 2px 4px;
+      border: 2px solid var(--ion-color-primary);
+      border-radius: 8px;
+      font-size: 0.55rem;
+      line-height: 1;
+    }
+    ion-toolbar.compact { --padding-start: 0; }
+    .compact ion-buttons[slot='start'] { margin-inline-start: 0; }
+    .compact ion-back-button {
+      --icon-font-size: 17px;
+      --min-width: 40px;
+      --padding-start: 0;
+      --padding-end: 0;
+      min-width: 40px;
+      width: 40px;
+      margin: 0;
+    }
+    .compact ion-title { padding-inline-start: 0; }
+    @media (max-width: 359px) {
+      ion-title {
+        padding-inline: 4px;
+        font-size: 0.875rem;
+      }
+      ion-button {
+        --padding-start: 5px;
+        --padding-end: 5px;
+      }
     }
   `,
 })
@@ -71,10 +140,11 @@ export class PageHeaderComponent {
   readonly title = input.required<string>();
   /** If given, the header shows a back button to this URL. */
   readonly backHref = input<string | null>(null);
+  readonly compact = input(false);
 
   protected readonly strings = STRINGS;
   protected readonly ui = UI_STRINGS;
-  protected readonly busy = signal(false);
+  readonly busy = signal(false);
   protected readonly mock = inject(MockStore);
   private readonly role = inject(AuthService).role;
   protected readonly mobileRole = computed(() => this.role() === 'ojt' || this.role() === 'facilitator');

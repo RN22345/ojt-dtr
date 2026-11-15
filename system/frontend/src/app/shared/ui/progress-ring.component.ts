@@ -1,4 +1,4 @@
-// Circular progress bar (mood board "progress ring"). Two arcs: the main value, and an optional second
+// (progress-ring.component.ts) Circular progress bar (mood board "progress ring"). Two arcs: the main value, and an optional second
 // value behind it (for example, approved hours over logged hours). Colors are Ionic theme colors.
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
@@ -23,7 +23,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
           [attr.stroke-dasharray]="circumference" [attr.stroke-dashoffset]="offset(clamped())" />
       </svg>
       <div class="center">
-        <span class="value">{{ clamped() }}%</span>
+        <span class="value">{{ valueText() || clamped() + '%' }}</span>
         @if (caption()) {
           <span class="caption">{{ caption() }}</span>
         }
@@ -31,28 +31,36 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     </div>
   `,
   styles: `
+    :host {
+      display: block;
+    }
     .ring {
       position: relative;
       margin: 0 auto;
     }
     svg {
+      display: block;
       width: 100%;
       height: 100%;
       transform: rotate(-90deg);
     }
     circle {
       fill: none;
-      stroke-width: 10;
+      stroke-width: 12;
     }
     .track {
-      stroke: var(--ion-color-light-shade, #e0e0e0);
+      fill: var(--lb-ring-center, none);
+      stroke: var(--lb-sky);
     }
     .arc {
-      stroke-linecap: round;
+      stroke-linecap: butt;
       transition: stroke-dashoffset 0.6s ease;
     }
-    .secondary {
-      opacity: 0.35;
+    .arc.secondary {
+      stroke: var(--lb-sky) !important;
+    }
+    .arc:not(.secondary) {
+      stroke: var(--ion-color-primary) !important;
     }
     .center {
       position: absolute;
@@ -61,18 +69,27 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 4px;
       text-align: center;
     }
     .value {
+      color: var(--ion-color-dark);
       font-family: var(--font-heading);
-      font-size: 1.6em;
-      font-weight: 700;
+      font-size: 1.45em;
+      font-weight: 800;
+      line-height: 1.2;
       font-variant-numeric: tabular-nums;
     }
     .caption {
-      font-size: max(0.75em, 10px);
-      color: var(--ion-color-medium-shade);
-      max-width: 70%;
+      max-width: 68%;
+      color: var(--ion-color-medium);
+      font-size: max(0.52em, 10px);
+      line-height: 1.55;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .arc {
+        transition: none;
+      }
     }
   `,
 })
@@ -85,6 +102,7 @@ export class ProgressRingComponent {
   readonly color = input('primary');
   readonly secondaryColor = input('primary');
   readonly caption = input('');
+  readonly valueText = input('');
   readonly label = input('Progress');
 
   protected readonly radius = RADIUS;

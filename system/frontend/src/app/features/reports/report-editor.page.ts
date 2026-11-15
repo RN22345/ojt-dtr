@@ -162,38 +162,62 @@ function toSmallDataUrl(file: File): Promise<string> {
     .head {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0 16px;
     }
     h2 {
       margin: 0;
-      font-size: 1.1em;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--ion-color-primary);
     }
     h3 {
-      margin: 16px 0 6px;
+      margin: 24px 0 8px;
+      font-size: 0.9375rem;
+      color: var(--ion-color-primary);
     }
     .hours {
       margin: 4px 0;
       color: var(--ion-color-medium-shade);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+    }
+    app-bar-chart {
+      display: block;
+      padding: 18px 12px 12px;
+      background: var(--lb-cream);
+      border-radius: 10px;
     }
     .block {
       display: block;
-      margin: 8px 0;
+      margin: 12px 0;
+      padding: 10px 12px;
+      background: var(--lb-mist);
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      line-height: 1.5;
     }
     ion-textarea {
       margin-top: 16px;
+      --border-radius: 7px;
+      --border-color: var(--ion-color-light-shade);
+      --highlight-color-focused: var(--ion-color-primary);
+      font-size: 0.875rem;
     }
     .photos {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       margin-bottom: 8px;
     }
     .photo {
       position: relative;
+      min-width: 0;
     }
     .photo img {
       width: 100%;
+      display: block;
       aspect-ratio: 1;
       object-fit: cover;
       border-radius: 8px;
@@ -207,16 +231,42 @@ function toSmallDataUrl(file: File): Promise<string> {
     .unsaved {
       color: var(--ion-color-warning-shade);
       margin-bottom: 0;
+      font-size: 0.8125rem;
     }
     .actions {
       display: grid;
-      gap: 4px;
-      margin: 8px 0;
+      gap: 8px;
+      margin: 16px 0 24px;
+    }
+    .actions ion-button {
+      margin: 0;
+      min-height: 44px;
+    }
+    ion-list {
+      padding: 0;
+      background: transparent;
+    }
+    ion-item {
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      --border-color: var(--ion-color-light-shade);
+      font-size: 0.8125rem;
+    }
+    ion-item h3 {
+      margin: 0 0 5px;
+      font-family: var(--ion-font-family);
+      font-size: 0.8125rem;
+    }
+    ion-item p {
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--ion-color-medium-shade);
     }
     .proto {
       display: block;
       margin-top: 16px;
-      font-size: 0.75em;
+      font-size: 0.6875rem;
+      line-height: 1.5;
     }
   `,
 })

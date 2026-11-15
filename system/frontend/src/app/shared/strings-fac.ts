@@ -128,6 +128,7 @@ export const FAC_STRINGS = {
     email: 'Email',
     assignedOjts: (n: number) => `${n} assigned ${n === 1 ? 'OJT' : 'OJTs'}`,
     contact: 'Contact number',
+    editContact: 'Edit contact number',
     contactHint: 'Example: 09171234567 or +639171234567',
     contactInvalid: 'Type a correct Philippine mobile number.',
     save: 'Save',
