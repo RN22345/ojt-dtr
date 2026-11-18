@@ -8,6 +8,7 @@ import { GEOLOCATION } from '../../plugins/geolocation.plugin';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { STRINGS } from '../../shared/strings';
 import { timeOfDay } from '../../shared/utils/format';
+import { DtrCalendarComponent } from './dtr-calendar.component';
 import { HistoryWeek } from './dtr-history';
 import { DtrHistoryComponent } from './dtr-history.component';
 import { DtrService } from './dtr.service';
@@ -15,7 +16,7 @@ import { DtrService } from './dtr.service';
 @Component({
   selector: 'app-dtr-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonSpinner, DtrHistoryComponent],
+  imports: [PageHeaderComponent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonSpinner, DtrCalendarComponent, DtrHistoryComponent],
   template: `
     <app-page-header [title]="strings.pages.ojtDtr" />
     <ion-content class="ion-padding">
@@ -24,27 +25,108 @@ import { DtrService } from './dtr.service';
       </ion-refresher>
 
       <section class="punch" aria-live="polite">
-        <p class="state">{{ openSince() ? text.openSince(openSince()!) : text.noOpenSession }}</p>
-        <ion-button expand="block" size="large" [color]="openSince() ? 'medium' : 'primary'" [disabled]="busy()" (click)="punch()">
-          @if (busy()) {
-            <ion-spinner name="dots" />
+        <div class="clock" aria-hidden="true"></div>
+        <div class="punch-details">
+          @if (openSince(); as time) {
+            <p class="state">{{ text.openSessionSince }}</p>
+            <time class="open-time" [attr.datetime]="time">{{ time }}</time>
           } @else {
-            {{ openSince() ? text.timeOut : text.timeIn }}
+            <p class="state">{{ text.noOpenSession }}</p>
+            <p class="hint">{{ text.timeInHint }}</p>
           }
-        </ion-button>
+          <ion-button expand="block" size="large" [color]="openSince() ? 'primary' : 'secondary'" [disabled]="busy()" (click)="punch()">
+            @if (busy()) {
+              <ion-spinner name="dots" />
+            } @else {
+              {{ openSince() ? text.timeOut : text.timeIn }}
+            }
+          </ion-button>
+        </div>
       </section>
+
+      <app-dtr-calendar [weeks]="weeks()" />
 
       <h2>{{ text.history }}</h2>
       <app-dtr-history [weeks]="weeks()" />
     </ion-content>
   `,
   styles: `
-    .punch {
-      margin-bottom: 24px;
+    ion-content.ion-padding { --background: var(--lb-page); }
+    @media (max-width: 599px) {
+      ion-content.ion-padding {
+        --padding-start: 12px;
+        --padding-end: 12px;
+      }
     }
-    .state {
+    .punch {
+      display: grid;
+      grid-template-columns: minmax(64px, 1fr) minmax(0, 2fr);
+      align-items: center;
+      gap: 14px;
+      min-height: 138px;
+      padding: 14px 20px;
+      background: var(--lb-cream);
+      border-radius: 14px;
+    }
+    .clock {
+      position: relative;
+      box-sizing: border-box;
+      width: clamp(58px, 19vw, 84px);
+      aspect-ratio: 1;
+      margin: auto;
+      border: 4px solid var(--ion-color-primary);
+      border-radius: 50%;
+    }
+    .clock::before, .clock::after {
+      content: '';
+      position: absolute;
+      border: 3px solid var(--ion-color-secondary);
+    }
+    .clock::before {
+      inset: 13%;
+      border-radius: 50%;
+    }
+    .clock::after {
+      inset: 22% auto auto 50%;
+      width: 22%;
+      height: 30%;
+      border-width: 0 0 3px 3px;
+      border-radius: 2px;
+      transform: skewY(20deg);
+    }
+    .punch-details {
+      display: grid;
       text-align: center;
+      color: var(--ion-color-primary);
+    }
+    .state, .hint {
+      margin: 0;
+      line-height: 1.35;
+    }
+    .state { font-weight: 700; }
+    .hint {
+      margin-top: 3px;
+      font-size: 0.6875rem;
       color: var(--ion-color-medium-shade);
+    }
+    .open-time {
+      order: -1;
+      font: 800 1.5rem / 1.25 var(--font-heading);
+      font-variant-numeric: tabular-nums;
+    }
+    ion-button {
+      --border-radius: 8px;
+      --padding-start: 8px;
+      --padding-end: 8px;
+      min-height: 44px;
+      margin: 9px 0 0;
+      font-size: 0.875rem;
+    }
+    ion-button::part(native) { background: var(--lb-primary-gradient); }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+      color: var(--ion-color-primary);
     }
   `,
 })

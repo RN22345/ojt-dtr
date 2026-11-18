@@ -44,42 +44,71 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
     }
   `,
   styles: `
+    :host {
+      display: block;
+      background: var(--lb-screen-surface, var(--ion-background-color));
+    }
     .bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px 12px;
+      gap: var(--space-1) 10px;
       align-items: center;
-      padding: 6px 16px;
-      font-size: 0.85rem;
-      background: var(--ion-color-success-tint);
-      color: var(--ion-color-success-contrast);
-    }
-    .bar.offline {
-      background: var(--ion-color-medium-tint);
-      color: var(--ion-color-medium-contrast);
-    }
-    .bar.unreachable {
-      background: var(--ion-color-warning-tint);
-      color: var(--ion-color-warning-contrast);
+      min-height: 33px;
+      margin: 6px var(--space-2) 0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: var(--lb-online);
+      color: var(--ion-color-dark);
+      font-size: 0.6875rem;
+      line-height: 1.45;
     }
     .state,
     .count,
     .issues {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: var(--space-1);
     }
     .state {
+      font-weight: 700;
+    }
+    .state ion-icon {
+      color: var(--ion-color-success-shade);
+    }
+    .count {
       font-weight: 600;
     }
+    .bar.offline {
+      background: rgba(var(--ion-color-medium-rgb), 0.12);
+      color: var(--ion-color-medium-shade);
+    }
+    .bar.offline .state ion-icon {
+      color: inherit;
+    }
+    .bar.unreachable {
+      background: var(--lb-cream);
+    }
+    .bar.unreachable .state ion-icon {
+      color: var(--ion-color-warning-shade);
+    }
+    ion-icon {
+      flex-shrink: 0;
+      font-size: 15px;
+    }
     ion-spinner {
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
     }
     .issues {
       margin-left: auto;
-      color: var(--ion-color-danger-shade);
-      font-weight: 600;
+      color: var(--ion-color-danger);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .issues:focus-visible {
+      border-radius: 2px;
+      outline: 2px solid var(--ion-color-primary);
+      outline-offset: 3px;
     }
   `,
 })

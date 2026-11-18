@@ -19,19 +19,21 @@ Status: 2026-10-30. Source of the values: the UI/UX team repository `Yandev13/lo
 
 | Token | Name | Hex | Role | Text on it |
 |---|---|---|---|---|
-| `primary` | Teal | `#0F766E` | Header, tab bar, titles, links, selected items | White (5.5:1) |
-| `secondary` | Amber | `#F59E0B` | Main action buttons, the active tab mark, unread marks | Black `#111111` (9.0:1) |
-| `tertiary` | Dark teal | `#115E59` | Charts, second accent | White (7.6:1) |
+| `primary` | Deep teal | `#174F63` | Header, tab bar, titles, links, Time out button | White (9.0:1) |
+| `secondary` | Amber | `#F5A623` | Main action buttons (Time in, Log in), the raised icon of the selected tab, unread marks | Ink `#12262E` (7.7:1) |
+| `tertiary` | Sea green | `#60A199` | Doubtful-time badge, second accent | Ink `#12262E` (5.3:1) |
 | `success` | Green | `#1E9E54` | Approved, synced | White |
-| `warning` | Light amber | `#FBBF24` | Submitted, pending, notes | Black |
-| `danger` | Red | `#D6232F` | Errors, returned, rejected | White |
+| `warning` | Amber | `#F5A623` | Submitted, pending, notes | Ink `#12262E` |
+| `danger` | Red | `#C8102E` | Errors, returned, rejected, the Log out button | White |
 | `medium` | Gray | `#6B7280` | Draft, small text | White |
-| `light` | Mist teal | `#F1F6F5` | Cards, list items, segment background | Black |
-| `dark` | Black | `#111111` | Body text | White |
+| `light` | Light gray-blue | `#EEF2F8` | Stat tiles, list rows, segment background | Ink `#12262E` |
+| `dark` | Ink | `#12262E` | Strong text | White |
 
 Proportion: about 60% white and mist, 30% teal, 10% amber. Use amber only for the one main action on a screen.
 
 CAUTION: Do not put amber text on white or teal. The contrast is less than 4.5:1 (QR-IC-06). Use amber as a fill with black text, or as a mark (line, dot, bar).
+
+Extra tokens of the LogBound redesign (D-74), in `src/theme/variables.scss`: `--lb-sky` `#80BBC8` (second arc of the progress ring, the clock mark), `--lb-mist` `#D1EDED` (ring track, tab icons), `--lb-cream` `#FFF3DC` and `--lb-cream-border` `#E4D9C5` (punch card, week and report cards), `--lb-border` `#D9DEE6`, `--lb-field` `#F8F9FC` (input fields), `--lb-danger-soft` `#FCEDEF`. Do not put amber text on white or on teal. On mobile, the Log out button is on the Profile page.
 
 ### 2.2 Typography
 
@@ -57,7 +59,7 @@ Numbers use `font-variant-numeric: tabular-nums` so that columns of times and ho
 | Component | Look |
 |---|---|
 | Header bar | Teal, white title in Plus Jakarta Sans |
-| Tab bar | Floating, rounded (16px), teal. Selected tab: light amber text and an amber mark. |
+| Tab bar | Bottom, deep teal, full width. Selected tab: a raised amber circle with the icon in a white notch, and a white bold label (D-74). |
 | Main button | Amber fill, black text, 10px corners, no capital letters |
 | Outline button | Teal line and teal text |
 | Card and list item | Mist fill, no shadow, 12px to 16px corners |

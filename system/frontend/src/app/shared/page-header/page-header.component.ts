@@ -1,4 +1,5 @@
-// The header of each page: the title, the logout button, and the sync status bar (FR-SYNC-04).
+// The header of each page: the title and the sync status bar (FR-SYNC-04). The web app (admin) also has the logout button here.
+// On mobile, the logout button is on the Profile page. It calls logout() of this header.
 // The logout shows the CAUTION with the count of unsynced changes (FR-AUTH-05, QR-SF-01, TC-ST-OJT-04).
 // On mobile, the header also opens the notifications (FR-NOTI-05) and the profile (FR-PROF-01).
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
@@ -40,7 +41,7 @@ addIcons({ notificationsOutline, personCircleOutline });
         }
         <ion-title>{{ title() }}</ion-title>
         <ion-buttons slot="end">
-          @if (mobileRole()) {
+          @if (mobileRole() && !compact()) {
             <ion-button routerLink="/notifications" [attr.aria-label]="ui.header.notifications">
               <ion-icon slot="icon-only" name="notifications-outline" />
               @if (mock.unreadCount() > 0) {
@@ -51,19 +52,56 @@ addIcons({ notificationsOutline, personCircleOutline });
               <ion-icon slot="icon-only" name="person-circle-outline" />
             </ion-button>
           }
-          <ion-button [disabled]="busy()" (click)="logout()">{{ strings.logout }}</ion-button>
+          @if (!mobileRole()) {
+            <ion-button [disabled]="busy()" (click)="logout()">{{ strings.logout }}</ion-button>
+          }
         </ion-buttons>
       </ion-toolbar>
       <app-sync-status-bar />
     </ion-header>
   `,
   styles: `
+    :host {
+      display: block;
+    }
+    ion-buttons {
+      gap: 0;
+      margin-inline-end: 0;
+    }
+    ion-button {
+      position: relative;
+      --padding-start: 7px;
+      --padding-end: 7px;
+      margin: 0;
+    }
+    ion-icon {
+      font-size: 21px;
+    }
+    ion-back-button {
+      --color: var(--ion-color-primary-contrast);
+      --icon-font-size: 22px;
+      font-size: 0.75rem;
+    }
     .count {
       position: absolute;
       top: 2px;
       right: 0;
-      font-size: 0.6em;
-      min-width: 16px;
+      min-width: 15px;
+      padding: 2px 4px;
+      border: 2px solid var(--ion-color-primary);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      line-height: 1;
+    }
+    @media (max-width: 359px) {
+      ion-title {
+        padding-inline: var(--space-1);
+        font-size: 0.875rem;
+      }
+      ion-button {
+        --padding-start: 5px;
+        --padding-end: 5px;
+      }
     }
   `,
 })
@@ -71,10 +109,11 @@ export class PageHeaderComponent {
   readonly title = input.required<string>();
   /** If given, the header shows a back button to this URL. */
   readonly backHref = input<string | null>(null);
+  readonly compact = input(false);
 
   protected readonly strings = STRINGS;
   protected readonly ui = UI_STRINGS;
-  protected readonly busy = signal(false);
+  readonly busy = signal(false);
   protected readonly mock = inject(WorkStore);
   private readonly role = inject(AuthService).role;
   protected readonly mobileRole = computed(() => this.role() === 'ojt' || this.role() === 'facilitator');

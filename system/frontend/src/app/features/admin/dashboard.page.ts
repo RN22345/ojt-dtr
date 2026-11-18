@@ -42,7 +42,7 @@ import { DashboardFilter, NO_FILTER, countBy, filterOptions, filterRows, isFilte
         <ion-button fill="clear" [disabled]="loading()" (click)="load()">{{ s.refresh }}</ion-button>
       </div>
 
-      <div class="adm-tiles">
+      <div class="adm-tiles adm-summary">
         <app-stat-tile [label]="t.tilesTotal" [value]="sum().ojts" color="primary" />
         <app-stat-tile [label]="t.tilesLate" [value]="sum().lateReports" color="warning" />
         <app-stat-tile [label]="t.tilesBehind" [value]="sum().behind" color="danger" />
