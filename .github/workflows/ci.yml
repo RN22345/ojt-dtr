@@ -45,10 +45,33 @@ jobs:
       KEEPALIVE_SECRET: ${{ secrets.KEEPALIVE_SECRET_DEV }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+        with:
+          fetch-depth: 0
+      # GitHub does not give the secrets to a pull request from a fork. Thus the L2 tests cannot run for it.
+      # Do not use pull_request_target to get the secrets: the code of the fork could then read them.
+      # A fork pull request that does not change the backend skips the L2 tests (for example, a UI change).
+      # A fork pull request that changes the backend fails. A maintainer must run it from a branch of this repository.
+      - id: scope
+        name: Examine the source of the change
+        working-directory: .
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" | grep -q '^system/backend/'; then
+              echo "::error::This pull request comes from a fork and changes system/backend/. The L2 tests need the dev secrets, which forks do not get. A maintainer must push the change to a branch of this repository."
+              exit 1
+            fi
+            echo "::notice::Pull request from a fork with no backend change: the L2 tests are skipped (forks do not get the dev secrets)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.scope.outputs.run == 'true'
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: system/backend/package-lock.json
-      - run: npm ci
-      - run: npx vitest run
+      - if: steps.scope.outputs.run == 'true'
+        run: npm ci
+      - if: steps.scope.outputs.run == 'true'
+        run: npx vitest run
