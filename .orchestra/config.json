@@ -1,0 +1,31 @@
+{
+    "test":  "cd system/frontend && npx ng test --watch=false",
+    "typecheck":  "cd system/frontend && npx tsc -p tsconfig.app.json --noEmit",
+    "lint":  "cd system/frontend && npx ng lint",
+    "testPaths":  [
+                      "test/*",
+                      "tests/*",
+                      "*/test/*",
+                      "*/tests/*",
+                      "*__tests__/*",
+                      "*.test.*",
+                      "*.spec.*",
+                      "*_test.*",
+                      "test_*",
+                      "*/test_*",
+                      "system/backend/tests-ratelimit/*"
+                  ],
+    "protected":  [
+                      "system/backend/supabase/migrations/*",
+                      "system/backend/supabase/functions/*",
+                      "system/backend/supabase/config.toml",
+                      "system/backend/supabase/seed.sql",
+                      "system/backend/supabase/api-contract.md",
+                      "system/frontend/src/app/data/*",
+                      "system/frontend/src/environments/*",
+                      "system/frontend/android/*",
+                      "system/frontend/capacitor.config.ts",
+                      ".github/workflows/*"
+                  ],
+    "maxWorkers":  8
+}

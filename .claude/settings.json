@@ -1,0 +1,22 @@
+{
+    "permissions":  {
+                        "allow":  [
+                                      "Bash(orchestra next:*)",
+                                      "Bash(orchestra status:*)",
+                                      "Bash(orchestra mode:*)",
+                                      "PowerShell(orchestra next:*)",
+                                      "PowerShell(orchestra status:*)",
+                                      "PowerShell(orchestra mode:*)",
+                                      "Bash(opencode run:*)",
+                                      "Bash(git diff:*)",
+                                      "Bash(git worktree:*)",
+                                      "Bash(git status:*)",
+                                      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File .orchestra/gate.ps1:*)",
+                                      "PowerShell(opencode run:*)",
+                                      "PowerShell(git diff:*)",
+                                      "PowerShell(git worktree:*)",
+                                      "PowerShell(git status:*)",
+                                      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File .orchestra/gate.ps1:*)"
+                                  ]
+                    }
+}

@@ -1,0 +1,292 @@
+{
+    "$schema":  "https://opencode.ai/config.json",
+    "agents":  {
+                   "builder":  {
+                                   "description":  "Implements exactly one task spec from .orchestra/tasks/. Use it for every implementation task.",
+                                   "mode":  "all",
+                                   "model":  "opencode-go/deepseek-v4.1-flash#high",
+                                   "system":  "{file:./.orchestra/builder-prompt.md}",
+                                   "permissions":  [
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*.env",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*.env.*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*.env.example",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "glob",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "grep",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "shell",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "skill",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "test/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "tests/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*/test/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*/tests/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*__tests__/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.test.*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.spec.*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*_test.*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "test_*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*/test_*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "system/backend/tests-ratelimit/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.orchestra/*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.orchestra/reports/*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "subagent",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "question",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "external_directory",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "webfetch",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "websearch",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       }
+                                                   ]
+                               },
+                   "foreman":  {
+                                   "description":  "Runs one PLAN.md milestone: splits it into tasks and delegates each to builder.",
+                                   "mode":  "primary",
+                                   "model":  "opencode-go/deepseek-v4.1-flash#high",
+                                   "system":  "{file:./.orchestra/foreman-prompt.md}",
+                                   "permissions":  [
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*.env",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*.env.*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "read",
+                                                           "resource":  "*.env.example",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "glob",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "grep",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "shell",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "skill",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.orchestra/*",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "PLAN.md",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*/PLAN.md",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.orchestra/*.ps1",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*.orchestra/*-prompt.md",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "subagent",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "subagent",
+                                                           "resource":  "builder",
+                                                           "effect":  "allow"
+                                                       },
+                                                       {
+                                                           "action":  "question",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "external_directory",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "webfetch",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "websearch",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       }
+                                                   ]
+                               }
+               },
+    "commands":  {
+                     "next":  {
+                                  "description":  "Run the foreman on the first unfinished milestone in PLAN.md",
+                                  "agent":  "foreman",
+                                  "template":  "Execute the first milestone in PLAN.md whose Status is not done. If it is escalated, stop and say so."
+                              }
+                 },
+    "mcp":  {
+                "servers":  {
+                                "browse":  {
+                                               "type":  "local",
+                                               "command":  [
+                                                               "C:\\Users\\admin\\.local\\bin\\browse.exe",
+                                                               "mcp"
+                                                           ],
+                                               "environment":  {
+                                                                   "OPENCODE_BROWSER_RUNTIME":  "auto-update"
+                                                               },
+                                               "cwd":  "C:\\Users\\admin",
+                                               "disabled":  true
+                                           },
+                                "anaconda-mcp":  {
+                                                     "type":  "local",
+                                                     "command":  [
+                                                                     "C:\\Users\\admin\\.conda\\envs\\anaconda-mcp\\python.exe",
+                                                                     "-m",
+                                                                     "anaconda_mcp",
+                                                                     "serve"
+                                                                 ],
+                                                     "environment":  {
+
+                                                                     },
+                                                     "disabled":  true
+                                                 }
+                            }
+            }
+}
