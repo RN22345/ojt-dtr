@@ -58,6 +58,11 @@ describe('TC-CI-EXP-02 admin_export_reports', () => {
     expect(data).toEqual([]);
   });
 
+  it('TC-CI-EXP-02 a null batch ID gives error 22023', async () => {
+    const { error } = await admin.rpc('admin_export_reports', { p_batch_id: null });
+    expect(error?.code).toBe('22023');
+  });
+
   it('TC-CI-EXP-02 a facilitator and an OJT are refused', async () => {
     for (const email of [SEED.fac1.email, SEED.ojt1.email]) {
       const client = await signedIn(email);

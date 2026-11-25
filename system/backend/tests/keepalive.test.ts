@@ -36,6 +36,8 @@ describe('TC-ST-Q-RE-05 keep-alive functions (QR-RE-06)', () => {
     expect(wrong.error).not.toBeNull();
     const badSource = await newClient().rpc('heartbeat', { source: 'bad source!', secret: env('KEEPALIVE_SECRET') });
     expect(badSource.error).not.toBeNull();
+    const nullSource = await newClient().rpc('heartbeat', { source: null, secret: env('KEEPALIVE_SECRET') });
+    expect(nullSource.error?.code).toBe('22023');
   });
 
   it('TC-ST-Q-RE-05: heartbeat_status gives zero rows to a user that is not the admin', async () => {

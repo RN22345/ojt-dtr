@@ -174,9 +174,10 @@ CAUTION: Keep `BACKUP_PASSPHRASE` in a password manager also. GitHub does not sh
 ### 6.3 Restore
 
 1. Decrypt the archive: `gpg -d -o backup.tar.gz <name>.tar.gz.gpg`, then `tar -xzf backup.tar.gz`. The archive has `roles.sql`, `schema.sql`, `data.sql`, and `meta.txt`.
-2. Restore the data with `psql` and the session pooler connection string of the target project.
-3. Upload the storage files with the `system/backend/ops/restore-storage` script.
-4. Run the smoke test.
+2. Prepare the data file: `python -I system/backend/ops/prepare-restore.py data.sql data-restore.sql`. The script removes the auth session and token tables (all users log in again) and the empty auth tables (the Auth version of the target can have other columns). It also empties `ops.server_meta` and `ops.settings` first, because the migrations write these rows.
+3. Restore the data with `psql -v ON_ERROR_STOP=1 -1 -f data-restore.sql` and the session pooler connection string of the target project. On the local stack: `docker exec -i supabase_db_ojt-dtr psql -U postgres -d postgres -v ON_ERROR_STOP=1 -1 < data-restore.sql`.
+4. The backup has no storage files (D-78). The devices upload the photos of the last 30 days again.
+5. Run the smoke test.
 
 Do the restore test one time before the S4 gate (TC-ST-Q-RE-04). Use the local stack or the `dev` project.
 

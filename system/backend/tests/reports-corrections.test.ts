@@ -195,8 +195,8 @@ describe('TC-CI-RPT-02 first decision wins (FR-RPT-05, FR-COR-02)', () => {
       }),
     ]);
     expect(created[0].result).toBe('applied');
-    expect((await push(fac1, [op('correction_requests', 'update', id, { status: 'rejected', remark: 'No proof.' })]))[0].result).toBe('applied');
-    const [second] = await push(fac1, [op('correction_requests', 'update', id, { status: 'approved' })]);
+    expect((await push(fac1, [op('correction_requests', 'update', id, { decided_device_id: 'l2-test-device', status: 'rejected', remark: 'No proof.' })]))[0].result).toBe('applied');
+    const [second] = await push(fac1, [op('correction_requests', 'update', id, { decided_device_id: 'l2-test-device', status: 'approved' })]);
     expect(second).toMatchObject({ result: 'conflict', cause: 'decided' });
     expect(second.record?.['status']).toBe('rejected');
   });
@@ -246,11 +246,11 @@ describe('TC-CI-AUD-01 audit entries (FR-AUD-01, QR-SE-07) and correction rules 
     ]);
     expect(created.result).toBe('applied');
 
-    const [noRemark] = await push(fac1, [op('correction_requests', 'update', id, { status: 'rejected' })]);
+    const [noRemark] = await push(fac1, [op('correction_requests', 'update', id, { decided_device_id: 'l2-test-device', status: 'rejected' })]);
     expect(noRemark).toMatchObject({ result: 'rejected', cause: 'remark_required' });
-    const [byOther] = await push(fac2, [op('correction_requests', 'update', id, { status: 'approved' })]);
+    const [byOther] = await push(fac2, [op('correction_requests', 'update', id, { decided_device_id: 'l2-test-device', status: 'approved' })]);
     expect(byOther).toMatchObject({ result: 'rejected', cause: 'forbidden' });
-    const [approved] = await push(fac1, [op('correction_requests', 'update', id, { status: 'approved', remark: 'OK.' })]);
+    const [approved] = await push(fac1, [op('correction_requests', 'update', id, { decided_device_id: 'l2-test-device', status: 'approved', remark: 'OK.' })]);
     expect(approved.result).toBe('applied');
     expect(approved.record).toMatchObject({ status: 'approved', decided_by: SEED.fac1.id });
 
@@ -277,5 +277,53 @@ describe('TC-CI-AUD-01 audit entries (FR-AUD-01, QR-SE-07) and correction rules 
     expect(del.error ?? del.data?.length === 0).toBeTruthy();
     const { data: ojtView } = await ojt4.from('audit_logs').select('id').limit(1);
     expect(ojtView).toEqual([]);
+  });
+});
+
+// TC-ST-Q-SE-04 (QR-SE-05, QR-SE-06), L2 part: each decision has a device ID; punches are append-only.
+describe('TC-ST-Q-SE-04 record integrity', () => {
+  it('TC-ST-Q-SE-04 a report action with no device ID or a too long device ID is rejected', async () => {
+    const week = await freeWeek(ojt4);
+    const reportId = await newReport(ojt4, week, CONTENT);
+    const id = randomUUID();
+    const [noDevice] = await push(ojt4, [op('report_events', 'create', id, { id, report_id: reportId, action: 'submit', remark: null })]);
+    expect(noDevice).toMatchObject({ result: 'rejected', cause: 'invalid_data' });
+    const id2 = randomUUID();
+    const [long] = await push(ojt4, [op('report_events', 'create', id2, { id: id2, report_id: reportId, action: 'submit', remark: null, device_id: 'x'.repeat(201) })]);
+    expect(long).toMatchObject({ result: 'rejected', cause: 'invalid_data' });
+    const [ok] = await push(ojt4, [event(reportId, 'submit')]);
+    expect(ok.result).toBe('applied');
+    expect(ok.record).toMatchObject({ device_id: 'l2-test-device', actor_id: SEED.ojt4.id });
+    expect(typeof ok.record?.['created_at']).toBe('string');
+  });
+
+  it('TC-ST-Q-SE-04 a correction decision with no device ID is rejected', async () => {
+    const id = randomUUID();
+    const [created] = await push(ojt4, [
+      op('correction_requests', 'create', id, {
+        id, ojt_id: SEED.ojt4.id, kind: 'add', punch_type: 'out',
+        requested_time: manilaTime('2026-10-05', 0, 17), reason: 'Integrity test.',
+      }),
+    ]);
+    expect(created.result).toBe('applied');
+    const [noDevice] = await push(fac1, [op('correction_requests', 'update', id, { status: 'rejected', remark: 'No.' })]);
+    expect(noDevice).toMatchObject({ result: 'rejected', cause: 'invalid_data' });
+    const [ok] = await push(fac1, [op('correction_requests', 'update', id, { decided_device_id: 'l2-test-device', status: 'rejected', remark: 'No.' })]);
+    expect(ok.result).toBe('applied');
+    expect(ok.record).toMatchObject({ decided_by: SEED.fac1.id, decided_device_id: 'l2-test-device' });
+    expect(typeof ok.record?.['decided_at']).toBe('string');
+  });
+
+  it('TC-ST-Q-SE-04 no user can update or delete a punch through the Data API', async () => {
+    const { data: rows } = await ojt4.from('punches').select('id, device_time').limit(1);
+    const target = rows![0];
+    for (const client of [ojt4, fac1, admin]) {
+      const upd = await client.from('punches').update({ device_time: '2001-01-01T00:00:00Z' }).eq('id', target.id).select();
+      expect(upd.error?.code).toBe('42501');
+      const del = await client.from('punches').delete().eq('id', target.id).select();
+      expect(del.error?.code).toBe('42501');
+    }
+    const { data: after } = await ojt4.from('punches').select('device_time').eq('id', target.id).single();
+    expect(after!.device_time).toBe(target.device_time);
   });
 });
