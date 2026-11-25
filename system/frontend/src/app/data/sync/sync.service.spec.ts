@@ -82,8 +82,24 @@ describe('sync triggers and retry (offline sync design, section 6)', () => {
     networkListener(false);
     expect(service.connection()).toBe('offline');
     networkListener(true);
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(callTimes(start)).toEqual([0, 5_000, 20_000, 25_000, 30_000]);
+    // D-80 (DEF-020): after an online event, a failed sync tries again after 2 s, three times.
+    // Then the normal delays start again at 5 s.
+    await vi.advanceTimersByTimeAsync(12_000);
+    expect(callTimes(start)).toEqual([0, 5_000, 20_000, 25_000, 27_000, 29_000, 31_000, 36_000]);
+  });
+
+  it('TC-U-SYNC-03: the 2 s tries after an online event stop at the first good sync (D-80)', async () => {
+    const service = TestBed.inject(SyncService);
+    const start = Date.now();
+    await service.start('u1');
+    await vi.advanceTimersByTimeAsync(1_000);
+    networkListener(false);
+    networkListener(true); // sync at 1 s fails
+    await vi.advanceTimersByTimeAsync(1_000);
+    runner.outcome = OK;
+    await vi.advanceTimersByTimeAsync(10_000); // sync at 3 s is good; no more tries
+    expect(callTimes(start)).toEqual([0, 1_000, 3_000]);
+    expect(service.connection()).toBe('online');
   });
 
   it('TC-U-SYNC-03: a repeated online event with no change does not start a sync or reset the delay (DEF-011)', async () => {

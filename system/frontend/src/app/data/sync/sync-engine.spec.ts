@@ -204,6 +204,26 @@ describe('sync engine (offline sync design, sections 4, 5, 8, 12)', () => {
       expect(server.pushed.map((b) => b.length)).toEqual([50, 50, 20]);
       expect(await listOutbox(db, OJT)).toEqual([]);
     });
+
+    it('TC-ST-Q-PE-04 (unit part, DEF-020): the result of a batch of 50 uses one local call for each record, not three', async () => {
+      for (let i = 0; i < 50; i++) {
+        await localPunch(db, `q${i}`);
+      }
+      // Each local call is one bridge call on the device. Count the calls of the whole sync.
+      let calls = 0;
+      const counted = (inner: LocalDb): LocalDb => ({
+        execute: (sql) => (calls++, inner.execute(sql)),
+        run: (sql, params) => (calls++, inner.run(sql, params)),
+        query: (sql, params) => (calls++, inner.query(sql, params)),
+        transaction: (work) => inner.transaction((tx) => work(counted(tx))),
+        close: () => inner.close(),
+      });
+      const countedEngine = new SyncEngine({ db: async () => counted(db), transport: server, userId: () => user, now: () => NOW });
+      await countedEngine.requestSync();
+      expect(await listOutbox(db, OJT)).toEqual([]);
+      expect(await status(db, 'q0')).toBe('synced');
+      expect(calls).toBeLessThanOrEqual(75);
+    });
   });
 
   describe('TC-U-SYNC-04 one sync at a time', () => {
