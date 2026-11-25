@@ -227,6 +227,31 @@ describe('AuthService session restore (frontend rule 12, QR-RE-08)', () => {
     expect(client.auth.signOut).not.toHaveBeenCalled();
   });
 
+  it('TC-SI-AUTH-02 (unit part, DEF-021): with a stored session and a local profile, the start does not wait for the token refresh', async () => {
+    // Offline, supabase-js retries the refresh for about 30 s before getSession() gives a result.
+    const client = fakeSupabase();
+    client.auth.getSession.mockImplementation(() => new Promise(() => undefined));
+    const stored = JSON.stringify({ access_token: 'a', refresh_token: 'r', user: { id: 'u1' } });
+    Object.assign(client.auth, { storageKey: 'k', storage: { getItem: vi.fn(async () => stored) } });
+    const { service } = setup('mobile', profileOf('ojt'), client, profileOf('ojt'));
+    await service.ready();
+    expect(service.role()).toBe('ojt');
+  });
+
+  it('DEF-021: after an early start, a refresh that the server rejects ends the session', async () => {
+    const client = fakeSupabase();
+    client.auth.getSession.mockResolvedValue({
+      data: { session: null },
+      error: { name: 'AuthApiError', status: 400 } as unknown as AuthError,
+    } as never);
+    const stored = JSON.stringify({ access_token: 'a', refresh_token: 'r', user: { id: 'u1' } });
+    Object.assign(client.auth, { storageKey: 'k', storage: { getItem: vi.fn(async () => stored) } });
+    const { service } = setup('mobile', profileOf('ojt'), client, profileOf('ojt'));
+    await service.ready();
+    await vi.waitFor(() => expect(client.auth.signOut).toHaveBeenCalled());
+    expect(service.role()).toBeNull();
+  });
+
   it('DEF-021: a refresh that the server rejects does not use the stored session', async () => {
     const client = fakeSupabase();
     client.auth.getSession.mockResolvedValue({
