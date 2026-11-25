@@ -120,8 +120,13 @@ export class AuthService {
   }
 
   private async restore(): Promise<void> {
-    const { data } = await this.supabase.auth.getSession();
-    const userId = data.session?.user.id;
+    const { data, error } = await this.supabase.auth.getSession();
+    let userId = data.session?.user.id;
+    if (!userId && error?.name === 'AuthRetryableFetchError') {
+      // DEF-021 (FR-AUTH-04): the token expired and the refresh failed with no network. supabase-js keeps the
+      // session in the storage. Use its user ID so that the app opens offline. The refresh runs again later.
+      userId = await this.storedUserId();
+    }
     if (!userId) {
       return;
     }
@@ -134,6 +139,24 @@ export class AuthService {
       return;
     }
     await this.checkServerProfile(userId);
+  }
+
+  /** The user ID of the stored session, or undefined. It reads the auth storage of supabase-js. */
+  private async storedUserId(): Promise<string | undefined> {
+    const auth = this.supabase.auth as unknown as {
+      storageKey?: string;
+      storage?: { getItem(key: string): Promise<string | null> | string | null };
+    };
+    if (!auth.storage || !auth.storageKey) {
+      return undefined;
+    }
+    try {
+      const raw = await auth.storage.getItem(auth.storageKey);
+      const id = raw ? (JSON.parse(raw) as { user?: { id?: unknown } }).user?.id : undefined;
+      return typeof id === 'string' ? id : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   /** The server copy of the profile wins. An inactive account or a wrong platform ends the session. */
