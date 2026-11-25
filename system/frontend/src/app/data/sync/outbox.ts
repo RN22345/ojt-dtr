@@ -81,8 +81,9 @@ export async function takeQueued(db: LocalDb, userId: string, limit: number): Pr
       "select * from outbox where user_id = ? and status = 'queued' order by created_at, rowid limit ?",
       [userId, limit],
     );
-    for (const r of rows) {
-      await tx.run("update outbox set status = 'sending' where op_id = ?", [r.op_id]);
+    if (rows.length > 0) {
+      // DEF-020: one local call sets the whole batch, not one call for each operation.
+      await tx.run(`update outbox set status = 'sending' where op_id in (${rows.map(() => '?').join(', ')})`, rows.map((r) => r.op_id));
     }
     return rows.map((r) => ({ ...fromRow(r), status: 'sending' as const }));
   });
@@ -108,6 +109,41 @@ export async function recoverSending(db: LocalDb, userId: string): Promise<void>
 
 export async function removeOp(db: LocalDb, opId: string): Promise<void> {
   await db.run('delete from outbox where op_id = ?', [opId]);
+}
+
+/**
+ * Removes many operations in one call (DEF-020). Each call is one bridge call on the device.
+ * The push sends at most 50 operations in one batch, below the SQLite limit of 999 parameters.
+ */
+export async function removeOps(db: LocalDb, opIds: readonly string[]): Promise<void> {
+  if (opIds.length === 0) {
+    return;
+  }
+  await db.run(`delete from outbox where op_id in (${opIds.map(() => '?').join(', ')})`, opIds);
+}
+
+/** The key of one record: `entity` and `entity_id`. It finds a record in a `Set` from `entitiesWithOtherOps`. */
+export function recordKey(entity: string, entityId: string): string {
+  return `${entity}\u0000${entityId}`;
+}
+
+/**
+ * The records of `keys` that still have one or more operations in the outbox (DEF-020). One call finds them all.
+ * The push calls it after it removes the good results, so only the operations of `rejected` and `conflict` stay.
+ */
+export async function entitiesWithOtherOps(
+  db: LocalDb,
+  keys: readonly { entity: string; entityId: string }[],
+): Promise<Set<string>> {
+  if (keys.length === 0) {
+    return new Set();
+  }
+  const rows = await db.query<{ entity: string; entity_id: string }>(
+    `select distinct entity, entity_id from outbox
+      where ${keys.map(() => '(entity = ? and entity_id = ?)').join(' or ')}`,
+    keys.flatMap((k) => [k.entity, k.entityId]),
+  );
+  return new Set(rows.map((r) => recordKey(r.entity, r.entity_id)));
 }
 
 /** `serverRecord`: the current server copy, if the server gave it (conflict). The user can take it (FR-SYNC-06). */

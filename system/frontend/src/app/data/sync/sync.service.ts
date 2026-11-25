@@ -16,6 +16,11 @@ export type ConnectionState = 'online' | 'offline' | 'unreachable';
 /** FR-SYNC-02: a sync every 5 minutes while the app is open. */
 export const SYNC_INTERVAL_MS = 5 * 60_000;
 
+/** D-80 (DEF-020): after a network-online event, a failed sync tries again this many times. */
+const ONLINE_TRIES = 3;
+/** D-80 (DEF-020): the delay of the tries after a network-online event. The WebView can be online late. */
+const ONLINE_TRY_DELAY_MS = 2_000;
+
 /** The part of the engine that the service uses. Tests give a fake. */
 export interface SyncRunner {
   requestSync(): Promise<void>;
@@ -50,6 +55,8 @@ export class SyncService {
   private userId: string | null = null;
   private engine: SyncRunner | null = null;
   private failures = 0;
+  /** D-80: the 2 s tries that stay after a network-online event. They do not count as failures. */
+  private onlineTries = 0;
   /** The last network state from the plugin. */
   private networkOnline = true;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -88,6 +95,7 @@ export class SyncService {
     this.userId = null;
     this.engine = null;
     this.failures = 0;
+    this.onlineTries = 0;
   }
 
   /** A local change was saved (section 6, trigger 3). */
@@ -121,6 +129,8 @@ export class SyncService {
   private afterSync(outcome: SyncOutcome | null): void {
     if (!outcome || outcome.ok) {
       this.failures = 0;
+      // D-80: a good sync stops the 2 s tries after a network-online event.
+      this.onlineTries = 0;
       this.connection.set('online');
       return;
     }
@@ -129,11 +139,18 @@ export class SyncService {
       return;
     }
     // Section 13: no answer, a timeout, or a 5xx error. Keep the session and retry later (QR-RE-08).
-    this.failures++;
     // A sync that fails because the network went away during it does not hide "No network".
     if (outcome.error === 'unreachable' && this.connection() !== 'offline') {
       this.connection.set('unreachable');
     }
+    if (this.onlineTries > 0) {
+      // D-80: the first sync after the network event can fail, because the WebView is online late.
+      // These tries are short, and they do not count as failures.
+      this.onlineTries--;
+      this.retryTimer = setTimeout(() => void this.trigger(), ONLINE_TRY_DELAY_MS);
+      return;
+    }
+    this.failures++;
     this.retryTimer = setTimeout(() => void this.trigger(), retryDelayMs(this.failures));
   }
 
@@ -149,6 +166,8 @@ export class SyncService {
     this.clearRetry();
     this.failures = 0;
     this.connection.set(online ? 'online' : 'offline');
+    // D-80: a network-online event gives three short tries. Going offline stops them.
+    this.onlineTries = online ? ONLINE_TRIES : 0;
     if (online) {
       void this.trigger();
     }

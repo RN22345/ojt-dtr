@@ -2,7 +2,17 @@
 // One sync = push all queued operations, then pull all changes. This class has no Angular code and no timers,
 // so that unit tests can run it with sql.js and a fake server. `SyncService` gives the triggers and the retry.
 import { LocalDb, Row } from '../local-db/local-db';
-import { enqueue, hasOtherOps, markOpIssue, recoverSending, removeOp, requeue, takeQueued } from './outbox';
+import {
+  OutboxOp,
+  entitiesWithOtherOps,
+  enqueue,
+  markOpIssue,
+  recordKey,
+  recoverSending,
+  removeOps,
+  requeue,
+  takeQueued,
+} from './outbox';
 import { markIssue, markSynced, mergePage } from './local-merge';
 import { OWN_ENTITIES, createPayload } from './payloads';
 import { logSync } from './sync-log';
@@ -40,6 +50,18 @@ interface UploadRow {
   id: string;
   local_path: string;
   storage_key: string;
+}
+
+/** A record with an `applied` or a `duplicate` result, and the server copy to write (DEF-020). */
+interface SyncDone {
+  entity: string;
+  entityId: string;
+  record: Record<string, unknown> | null;
+}
+
+/** Push step 5: the server has the record (now or already). */
+function isGood(result: PushResult): boolean {
+  return result.result === 'applied' || result.result === 'duplicate';
 }
 
 export interface SyncOutcome {
@@ -167,35 +189,60 @@ export class SyncEngine {
       await this.storeClockOffset(db, response.server_time, sentAt);
 
       const byId = new Map(response.results.map((r) => [r.op_id, r]));
-      await db.transaction(async (tx) => {
-        for (const op of ops) {
-          const result = byId.get(op.opId);
-          if (!result) {
-            await requeue(tx, [op.opId], 'no result');
-            continue;
-          }
-          if (await this.applyResult(tx, op.entity, op.entityId, result)) {
-            counts.issues++;
-          } else {
-            counts.pushed++;
-          }
-        }
-      });
+      await db.transaction((tx) => this.saveResults(tx, ops, byId, counts));
     }
   }
 
-  /** Push steps 5 and 6 (TC-U-SYNC-02). Gives true if the operation became a sync issue. */
-  private async applyResult(db: LocalDb, entity: string, entityId: string, result: PushResult): Promise<boolean> {
-    if (result.result === 'applied' || result.result === 'duplicate') {
-      await removeOp(db, result.op_id);
-      if (!(await hasOtherOps(db, entity, entityId))) {
-        await markSynced(db, entity, entityId, result.record ?? null);
+  /**
+   * Push steps 5 and 6 (TC-U-SYNC-02). DEF-020: the good results of the batch use one delete and one query,
+   * not three local calls for each operation. One local call is one bridge call on the device.
+   * `rejected`, `conflict`, and missing results keep one call for each operation. They are rare.
+   */
+  private async saveResults(
+    db: LocalDb,
+    ops: readonly OutboxOp[],
+    byId: ReadonlyMap<string, PushResult>,
+    counts: { pushed: number; issues: number },
+  ): Promise<void> {
+    const doneOpIds: string[] = [];
+    const done = new Map<string, SyncDone>();
+    for (const op of ops) {
+      const result = byId.get(op.opId);
+      if (!result) {
+        await requeue(db, [op.opId], 'no result');
+        continue;
       }
-      return false;
+      if (!isGood(result)) {
+        await this.saveIssue(db, op, result);
+        counts.issues++;
+        continue;
+      }
+      doneOpIds.push(op.opId);
+      counts.pushed++;
+      // The newest good result of a record gives the copy for `markSynced`. The order of the batch stays the same.
+      done.set(recordKey(op.entity, op.entityId), { entity: op.entity, entityId: op.entityId, record: result.record ?? null });
     }
+    if (doneOpIds.length === 0) {
+      return;
+    }
+    await removeOps(db, doneOpIds);
+    await this.syncDone(db, done);
+  }
+
+  /** The `rejected` and `conflict` results keep their own handling. They are rare. */
+  private async saveIssue(db: LocalDb, op: OutboxOp, result: PushResult): Promise<void> {
     await markOpIssue(db, result.op_id, result.cause ?? result.result, result.record ?? null);
-    await markIssue(db, entity, entityId);
-    return true;
+    await markIssue(db, op.entity, op.entityId);
+  }
+
+  /** The records with no other operation in the outbox go to `synced` with the server copy. */
+  private async syncDone(db: LocalDb, done: ReadonlyMap<string, SyncDone>): Promise<void> {
+    const waiting = await entitiesWithOtherOps(db, [...done.values()]);
+    for (const [key, pair] of done) {
+      if (!waiting.has(key)) {
+        await markSynced(db, pair.entity, pair.entityId, pair.record);
+      }
+    }
   }
 
   /**
