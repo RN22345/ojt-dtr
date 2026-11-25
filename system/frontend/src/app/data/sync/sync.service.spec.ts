@@ -7,7 +7,9 @@ import { APP_LIFECYCLE } from '../../plugins/app-lifecycle.plugin';
 import { NETWORK } from '../../plugins/network.plugin';
 import { RETRY_DELAYS_MS, retryDelayMs } from '../../shared/utils/retry';
 import { SyncOutcome } from './sync-engine';
-import { SYNC_ENGINE_FACTORY, SyncRunner, SyncService } from './sync.service';
+import { STALE_UNSYNCED_MS, SYNC_ENGINE_FACTORY, SyncRunner, SyncService } from './sync.service';
+import { enqueue, removeOps } from './outbox';
+import { STRINGS } from '../../shared/strings';
 import { FILE_UPLOADER } from './file-upload';
 import { SYNC_TRANSPORT } from './sync-transport';
 
@@ -155,5 +157,63 @@ describe('sync triggers and retry (offline sync design, section 6)', () => {
     await vi.advanceTimersByTimeAsync(60_000);
     expect(runner.calls).toHaveLength(1);
     expect(service.sessionRejected()).toBe(true);
+  });
+
+  describe('TC-ST-Q-SF-01 (unit part, QR-SF-04): warning for old unsynced changes', () => {
+    const HOUR = 3_600_000;
+    const addOp = () =>
+      enqueue(db, { userId: 'u1', entity: 'punches', entityId: 'p1', opType: 'create', payload: {} });
+
+    it('the limit is 72 hours, and the warning text exists', () => {
+      expect(STALE_UNSYNCED_MS).toBe(72 * HOUR);
+      expect(typeof STRINGS.sync.stale).toBe('string');
+      expect(STRINGS.sync.stale.length).toBeGreaterThan(0);
+    });
+
+    it('no warning with an empty outbox', async () => {
+      const service = TestBed.inject(SyncService);
+      await service.start('u1');
+      expect(service.staleUnsynced()).toBe(false);
+    });
+
+    it('an unsynced change of 72 hours or more shows the warning, also offline with no new event', async () => {
+      const service = TestBed.inject(SyncService);
+      await service.start('u1');
+      networkListener(false);
+      await addOp();
+      service.changed();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(service.unsynced()).toBe(1);
+      expect(service.staleUnsynced()).toBe(false);
+      // Offline, a sync does not run. The 5-minute timer must still examine the age of the changes.
+      await vi.advanceTimersByTimeAsync(72 * HOUR - 10 * 60_000);
+      expect(service.staleUnsynced()).toBe(false);
+      await vi.advanceTimersByTimeAsync(10 * 60_000);
+      expect(service.staleUnsynced()).toBe(true);
+    });
+
+    it('a change that is old at the app start shows the warning at once', async () => {
+      const service = TestBed.inject(SyncService);
+      await service.start('u1');
+      await addOp();
+      service.stop();
+      vi.setSystemTime(Date.now() + 73 * HOUR);
+      await service.start('u1');
+      expect(service.staleUnsynced()).toBe(true);
+    });
+
+    it('the warning goes away when the old change syncs', async () => {
+      const service = TestBed.inject(SyncService);
+      await service.start('u1');
+      const opId = await addOp();
+      service.stop();
+      vi.setSystemTime(Date.now() + 73 * HOUR);
+      await service.start('u1');
+      expect(service.staleUnsynced()).toBe(true);
+      await removeOps(db, [opId]);
+      runner.outcome = OK;
+      await service.trigger();
+      expect(service.staleUnsynced()).toBe(false);
+    });
   });
 });
