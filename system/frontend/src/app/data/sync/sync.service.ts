@@ -5,7 +5,7 @@ import { LocalDbService } from '../local-db/local-db.service';
 import { APP_LIFECYCLE } from '../../plugins/app-lifecycle.plugin';
 import { NETWORK } from '../../plugins/network.plugin';
 import { retryDelayMs } from '../../shared/utils/retry';
-import { countOutbox } from './outbox';
+import { countOutbox, oldestOutboxAt } from './outbox';
 import { SyncDeps, SyncEngine, SyncOutcome } from './sync-engine';
 import { FILE_UPLOADER } from './file-upload';
 import { SYNC_TRANSPORT } from './sync-transport';
@@ -15,6 +15,9 @@ export type ConnectionState = 'online' | 'offline' | 'unreachable';
 
 /** FR-SYNC-02: a sync every 5 minutes while the app is open. */
 export const SYNC_INTERVAL_MS = 5 * 60_000;
+
+/** QR-SF-04: the app shows a warning when a change is unsynced for 72 hours or more. */
+export const STALE_UNSYNCED_MS = 72 * 3_600_000;
 
 /** D-80 (DEF-020): after a network-online event, a failed sync tries again this many times. */
 const ONLINE_TRIES = 3;
@@ -47,6 +50,8 @@ export class SyncService {
   readonly unsynced = signal(0);
   /** The number of changes on the "Sync issues" screen (FR-SYNC-06). */
   readonly issues = signal(0);
+  /** True when an unsynced change is 72 hours old or more (QR-SF-04). */
+  readonly staleUnsynced = signal(false);
   /** True when the server did not accept the session. AUTH then shows the login screen. The outbox stays. */
   readonly sessionRejected = signal(false);
   /** Goes up by one after each sync and each local change. Pages read the local data again when it changes. */
@@ -77,8 +82,8 @@ export class SyncService {
     this.networkOnline = await this.network.isOnline();
     this.connection.set(this.networkOnline ? 'online' : 'offline');
     this.stops.push(await this.network.onChange((online) => this.onNetworkChange(online)));
-    this.stops.push(await this.lifecycle.onResume(() => void this.trigger()));
-    this.intervalTimer = setInterval(() => void this.trigger(), SYNC_INTERVAL_MS);
+    this.stops.push(await this.lifecycle.onResume(() => void this.tick()));
+    this.intervalTimer = setInterval(() => void this.tick(), SYNC_INTERVAL_MS);
     await this.refreshCounts();
     void this.trigger();
   }
@@ -96,6 +101,16 @@ export class SyncService {
     this.engine = null;
     this.failures = 0;
     this.onlineTries = 0;
+    this.staleUnsynced.set(false);
+  }
+
+  /**
+   * The 5-minute timer and the app resume. The counts refresh also when the app is offline (QR-SF-04),
+   * because a sync does not run offline.
+   */
+  private async tick(): Promise<void> {
+    await this.refreshCounts();
+    await this.trigger();
   }
 
   /** A local change was saved (section 6, trigger 3). */
@@ -192,5 +207,8 @@ export class SyncService {
       [userId],
     );
     this.issues.set(Number(rows[0]?.n ?? 0));
+    const oldest = await oldestOutboxAt(db, userId);
+    const old = oldest !== null && Date.now() - Date.parse(oldest) >= STALE_UNSYNCED_MS;
+    this.staleUnsynced.set(old);
   }
 }

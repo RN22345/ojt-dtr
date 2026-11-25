@@ -175,6 +175,18 @@ export async function countOutbox(db: LocalDb, userId: string): Promise<number> 
   return Number(rows[0]?.n ?? 0);
 }
 
+/**
+ * The time of the oldest unsynced operation of one user, or null (QR-SF-04).
+ * The statuses `queued`, `sending`, and `issue` are all unsynced.
+ */
+export async function oldestOutboxAt(db: LocalDb, userId: string): Promise<string | null> {
+  const rows = await db.query<{ oldest: string | null }>(
+    'select min(created_at) as oldest from outbox where user_id = ?',
+    [userId],
+  );
+  return rows[0]?.oldest ?? null;
+}
+
 /** The newest queued operation of a record, or null. A queued operation is not sent yet, so its payload can change. */
 export async function findQueued(db: LocalDb, entity: string, entityId: string): Promise<OutboxOp | null> {
   const rows = await db.query<OutboxRow>(

@@ -40,6 +40,12 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
             {{ text.issues(sync.issues()) }}
           </a>
         }
+        @if (sync.staleUnsynced()) {
+          <span class="stale" role="alert">
+            <ion-icon aria-hidden="true" name="warning-outline" />
+            {{ text.stale }}
+          </span>
+        }
       </div>
     }
   `,
@@ -109,6 +115,16 @@ const ICONS = { online: 'cloud-done-outline', offline: 'cloud-offline-outline', 
       border-radius: 2px;
       outline: 2px solid var(--ion-color-primary);
       outline-offset: 3px;
+    }
+    /* QR-SF-04: the warning line of the old unsynced changes. */
+    .stale {
+      display: inline-flex;
+      align-items: center;
+      flex-basis: 100%;
+      gap: var(--space-1);
+      /* QR-IC-06: the warning shade on this bar is below 4.5:1, so the text uses the dark color. */
+      color: var(--ion-color-dark);
+      font-weight: 700;
     }
   `,
 })

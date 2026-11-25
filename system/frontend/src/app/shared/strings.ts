@@ -39,6 +39,8 @@ export const STRINGS = {
     allSynced: 'All changes synced',
     unsynced: (count: number) => `${count} unsynced ${count === 1 ? 'change' : 'changes'}`,
     issues: (count: number) => `${count} sync ${count === 1 ? 'issue' : 'issues'}`,
+    // QR-SF-04: a change stays unsynced for 72 hours or more.
+    stale: 'Some changes are not synced for 3 days or more. Connect to the network to sync them.',
   },
   dtr: {
     timeIn: 'Time in',
