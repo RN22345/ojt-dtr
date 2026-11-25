@@ -66,8 +66,29 @@ function checkUserId(v: unknown): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
-  if (req.method !== 'POST') return reply(405, { error: 'method_not_allowed' });
+  // One JSON log line for each request (QR-MA-03). The line has no message, body, email, name, password, or token.
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+  let action: string | null = null;
+
+  function logEnd(status: number, code: string, errorName: string): void {
+    const line = { fn: 'admin-users', request_id: requestId, action, status, code };
+    if (status >= 500) console.error(JSON.stringify({ ...line, error: errorName }));
+    else console.log(JSON.stringify(line));
+  }
+
+  function ok(body: unknown): Response {
+    logEnd(200, 'ok', 'unknown');
+    return reply(200, body);
+  }
+
+  if (req.method === 'OPTIONS') {
+    logEnd(200, 'ok', 'unknown');
+    return new Response('ok', { headers: CORS });
+  }
+  if (req.method !== 'POST') {
+    logEnd(405, 'method_not_allowed', 'unknown');
+    return reply(405, { error: 'method_not_allowed' });
+  }
 
   const url = Deno.env.get('SUPABASE_URL')!;
   const authHeader = req.headers.get('Authorization') ?? '';
@@ -103,6 +124,8 @@ Deno.serve(async (req) => {
       throw new Fail('invalid_json');
     }
     if (!body || typeof body !== 'object') throw new Fail('invalid_json');
+    // Log only a known action name, never other text from the body.
+    action = ['create', 'update', 'deactivate', 'activate', 'reset_password'].includes(String(body.action)) ? String(body.action) : 'unknown';
 
     switch (body.action) {
       case 'create': {
@@ -133,7 +156,7 @@ Deno.serve(async (req) => {
           .update({ role, status: 'active', contact_no: contact })
           .eq('id', data.user.id);
         if (upError) throw new Fail('profile_update_failed', 500);
-        return reply(200, { user_id: data.user.id });
+        return ok({ user_id: data.user.id });
       }
 
       case 'update': {
@@ -153,7 +176,7 @@ Deno.serve(async (req) => {
           });
           if (metaError) throw new Fail('auth_update_failed', 500);
         }
-        return reply(200, { ok: true });
+        return ok({ ok: true });
       }
 
       case 'deactivate':
@@ -172,7 +195,7 @@ Deno.serve(async (req) => {
           ban_duration: off ? '876000h' : 'none',
         });
         if (banError) throw new Fail('auth_update_failed', 500);
-        return reply(200, { ok: true });
+        return ok({ ok: true });
       }
 
       case 'reset_password': {
@@ -185,15 +208,19 @@ Deno.serve(async (req) => {
           if (error.code === 'weak_password') throw new Fail('weak_password');
           throw new Fail('auth_update_failed', 500);
         }
-        return reply(200, { ok: true });
+        return ok({ ok: true });
       }
 
       default:
         throw new Fail('unknown_action');
     }
   } catch (e) {
-    if (e instanceof Fail) return reply(e.status, { error: e.code });
-    console.error('admin-users', e);
+    const errorName = e instanceof Error ? e.name : 'unknown';
+    if (e instanceof Fail) {
+      logEnd(e.status, e.code, errorName);
+      return reply(e.status, { error: e.code });
+    }
+    logEnd(500, 'internal_error', errorName);
     return reply(500, { error: 'internal_error' });
   }
 });

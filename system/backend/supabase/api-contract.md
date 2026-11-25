@@ -2,7 +2,7 @@
 
 This document is the API contract of the OJT-DTR backend (D-23, QR-CO-02). It lists each table, RLS policy, RPC function, and Edge Function. Update it in the same commit as each change to the schema.
 
-Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, `20261026080316_attachments_storage`, `20261030120000_s3_reports_corrections`, and `20261108120000_s3_admin`.
+Status: S3, migrations `20261025134548_core_schema`, `20261025134615_restrict_anon_functions`, `20261026070655_sync_functions`, `20261026071035_strict_time_format`, `20261026080316_attachments_storage`, `20261030120000_s3_reports_corrections`, `20261108120000_s3_admin`, `20261125120000_s4_export`, `20261125130000_def019_rls_speed`, and `20261125140000_s4_integrity`.
 
 ## 1. Interfaces
 
@@ -80,13 +80,13 @@ There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (
 
 | Function | Arguments | Returns | Who | Purpose |
 |---|---|---|---|---|
-| `heartbeat` | `source text`, `secret text` | `timestamptz` | `anon`, `authenticated` (needs the keep-alive secret) | Keep-alive write (runbook, section 3.1). `source`: 1 to 32 letters, digits, `_`, `-`. Wrong secret: error `28000`. |
+| `heartbeat` | `source text`, `secret text` | `timestamptz` | `anon`, `authenticated` (needs the keep-alive secret) | Keep-alive write (runbook, section 3.1). `source`: 1 to 32 letters, digits, `_`, `-`. A null or wrong source: error `22023`. Wrong secret: error `28000`. |
 | `heartbeat_status` | None | Table of `source`, `last_at` | `authenticated` (rows only for admin) | Newest heartbeat of each source |
 | `server_epoch` | None | `uuid` | `authenticated` | Current server epoch (D-19) |
 | `sync_push` | `p_ops jsonb`, `p_device_now timestamptz` (optional) | `jsonb` (see 5.1) | `authenticated`: active OJT and facilitator only | Offline sync design, section 4 |
 | `sync_pull` | `p_cursor bigint` (default 0), `p_epoch uuid` (default null), `p_limit int` (1 to 500, default 500) | `jsonb` (see 5.2) | `authenticated`: active OJT and facilitator only | Offline sync design, section 5 |
 | `admin_dashboard` | None | Table (see 5.3) | `authenticated`: active admin only (others: error `42501`) | Admin dashboard (D-70) |
-| `admin_export_reports` | `p_batch_id uuid` | Table of `ojt_id`, `ojt_name`, `company_name`, `facilitator_name`, `week_start`, `status`, `updated_at`, ordered by `ojt_name`, `week_start` | `authenticated`: active admin only (others: error `42501`) | Report summary of a batch for the CSV export (FR-EXP-03, D-76). One row for each report that is not deleted, of each OJT with an assignment in the batch. Company and facilitator from the active assignment in the batch, else the newest one. |
+| `admin_export_reports` | `p_batch_id uuid` | Table of `ojt_id`, `ojt_name`, `company_name`, `facilitator_name`, `week_start`, `status`, `updated_at`, ordered by `ojt_name`, `week_start` | `authenticated`: active admin only (others: error `42501`) | Report summary of a batch for the CSV export (FR-EXP-03, D-76). A null batch ID: error `22023`. One row for each report that is not deleted, of each OJT with an assignment in the batch. Company and facilitator from the active assignment in the batch, else the newest one. |
 
 ### 5.1 `sync_push`
 
@@ -109,8 +109,8 @@ Entities (S2 and S3):
 |---|---|---|
 | `punches` | `create` | OJT only. `ojt_id` must be the caller. Times: ISO 8601 with a time zone. The server sets `server_received_at`, `doubtful_time` (offline sync design, section 8), `approved`, `version`. |
 | `weekly_reports` | `create`, `update` (content only) | OJT only. `week_start`: ISO date, a Monday. `update` needs `base_version`. A status change is a `report_events` operation. |
-| `report_events` | `create` | Payload: `id`, `report_id`, `action`, `remark`, `device_id`. `submit`: the OJT of the report, status `draft` or `returned`, text in `tasks_done` and `skills_learned`. `approve` and `return`: the active facilitator of the OJT, status `submitted` (else `conflict`, cause `decided`); `return` needs a remark. `approve` sets `approved = true` on the punches of the week (Asia/Manila, FR-RPT-07). Each action writes a notification (D-67). |
-| `correction_requests` | `create`, `update` (decision) | `create`: OJT only. Payload: `id`, `ojt_id`, `kind`, `punch_id` (kind `change`, an own punch), `punch_type` (kind `add`), `requested_time` (not more than 2 minutes after the server time), `reason` (1 to 1000 characters). `update`: the active facilitator of the OJT. Payload: `status` (`approved` or `rejected`), `remark` (needed for `rejected`), `decided_device_id`. Not `pending`: `conflict`, cause `decided`. `approved` makes a new punch with `correction_id` and, for kind `change`, `corrects_punch_id` (D-66). |
+| `report_events` | `create` | Payload: `id`, `report_id`, `action`, `remark`, `device_id` (necessary, 1 to 200 characters). `submit`: the OJT of the report, status `draft` or `returned`, text in `tasks_done` and `skills_learned`. `approve` and `return`: the active facilitator of the OJT, status `submitted` (else `conflict`, cause `decided`); `return` needs a remark. `approve` sets `approved = true` on the punches of the week (Asia/Manila, FR-RPT-07). Each action writes a notification (D-67). |
+| `correction_requests` | `create`, `update` (decision) | `create`: OJT only. Payload: `id`, `ojt_id`, `kind`, `punch_id` (kind `change`, an own punch), `punch_type` (kind `add`), `requested_time` (not more than 2 minutes after the server time), `reason` (1 to 1000 characters). `update`: the active facilitator of the OJT. Payload: `status` (`approved` or `rejected`), `remark` (needed for `rejected`), `decided_device_id` (necessary, 1 to 200 characters). Not `pending`: `conflict`, cause `decided`. `approved` makes a new punch with `correction_id` and, for kind `change`, `corrects_punch_id` (D-66). |
 | `notifications` | `update` | The owner only. Payload: `{read: true}`. Last write wins. |
 | `attachments` | `create` | OJT only. `owner_id` must be the caller. `storage_key` must be `<owner_id>/<id>.jpg`. The file must be in Storage. The server sets `size_bytes` from the Storage file. `report_id` (optional): an own report in `draft` or `returned`, five photos or less for each report (FR-RPT-03). An update gives `append_only`. Send the attachment operation before the punch or report that refers to it. |
 
