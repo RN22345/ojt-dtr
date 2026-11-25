@@ -120,25 +120,53 @@ export class AuthService {
   }
 
   private async restore(): Promise<void> {
+    // DEF-021 (FR-AUTH-04, QR-PE-02): with an expired token and no network, getSession() retries the refresh
+    // for about 30 s. A stored session with a usable local profile opens at once. The session check runs after it.
+    const storedId = await this.storedUserId();
+    if (storedId && (await this.openFromLocal(storedId))) {
+      void this.checkSession();
+      return;
+    }
     const { data, error } = await this.supabase.auth.getSession();
     let userId = data.session?.user.id;
     if (!userId && error?.name === 'AuthRetryableFetchError') {
-      // DEF-021 (FR-AUTH-04): the token expired and the refresh failed with no network. supabase-js keeps the
-      // session in the storage. Use its user ID so that the app opens offline. The refresh runs again later.
-      userId = await this.storedUserId();
+      // The refresh failed with no network. supabase-js keeps the session in the storage.
+      userId = storedId;
     }
     if (!userId) {
       return;
     }
     // FR-AUTH-04 (DEF-016): open from the local profile at once. The server check runs after it. Else an
     // offline start waits for the retries of the profile request (about 7 s).
-    const local = await this.profiles.getLocal(userId).catch(() => null);
-    if (local && local.status === 'active' && roleAllowedOn(local.role, this.platform)) {
-      this.profileState.set(local);
+    if (await this.openFromLocal(userId)) {
       void this.checkServerProfile(userId);
       return;
     }
     await this.checkServerProfile(userId);
+  }
+
+  /** Sets the local profile if it is active and permitted on this platform. Gives true if it did. */
+  private async openFromLocal(userId: string): Promise<boolean> {
+    const local = await this.profiles.getLocal(userId).catch(() => null);
+    if (local && local.status === 'active' && roleAllowedOn(local.role, this.platform)) {
+      this.profileState.set(local);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * DEF-021: the session check after an early start. A network error keeps the session (QR-RE-08).
+   * A refresh that the server rejects, or no session, ends the session.
+   */
+  private async checkSession(): Promise<void> {
+    const { data, error } = await this.supabase.auth.getSession();
+    const userId = data.session?.user.id;
+    if (userId) {
+      await this.checkServerProfile(userId);
+    } else if (error?.name !== 'AuthRetryableFetchError') {
+      await this.endSession();
+    }
   }
 
   /** The user ID of the stored session, or undefined. It reads the auth storage of supabase-js. */
