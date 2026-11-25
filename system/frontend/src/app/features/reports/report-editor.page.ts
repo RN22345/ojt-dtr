@@ -96,6 +96,9 @@ function toSmallDataUrl(file: File): Promise<string> {
             [maxlength]="maxLength"
             [readonly]="!editable()"
             [helperText]="f.required ? text.required : ''"
+            [errorText]="f.required && requiredMissing(f.key) ? text.required : ''"
+            [class.ion-touched]="submitAttempted()"
+            [class.ion-invalid]="f.required && requiredMissing(f.key)"
             [value]="form()[f.key]"
             (ionInput)="setText(f.key, $event)"
           />
@@ -138,7 +141,7 @@ function toSmallDataUrl(file: File): Promise<string> {
           }
           <div class="actions">
             <ion-button expand="block" fill="outline" [disabled]="!dirty()" (click)="save()">{{ text.saveDraft }}</ion-button>
-            <ion-button expand="block" [disabled]="!canSubmit()" (click)="confirmSubmit()">{{ text.submit }}</ion-button>
+            <ion-button expand="block" (click)="confirmSubmit()">{{ text.submit }}</ion-button>
           </div>
         }
         @if (report().status === 'approved') {
@@ -339,6 +342,13 @@ export class ReportEditorPage {
     return this.editable() && now.tasksDone.trim().length > 0 && now.skillsLearned.trim().length > 0;
   });
 
+  /** True after the user pressed Submit. The necessary fields then show their error. */
+  protected readonly submitAttempted = signal(false);
+
+  protected requiredMissing(key: TextKey): boolean {
+    return this.submitAttempted() && this.form()[key].trim().length === 0;
+  }
+
   constructor() {
     // Fill the form when the week changes, or when the stored report changes and the form has no unsaved change.
     // A sync can load the report again while the OJT types. Then the typed text stays.
@@ -413,6 +423,10 @@ export class ReportEditorPage {
   }
 
   protected async confirmSubmit(): Promise<void> {
+    if (!this.canSubmit()) {
+      this.submitAttempted.set(true);
+      return;
+    }
     const alert = await this.alerts.create({
       header: this.text.confirmHeader,
       message: this.text.confirmMessage,

@@ -1,7 +1,7 @@
 // Admin assignments page (FR-ADM-04): assign an OJT to a host company, a facilitator, and a batch; move; deactivate.
 // An OJT has one active assignment (unique index). A move makes the old assignment not active, then adds the new one.
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { IonBadge, IonButton, IonCheckbox, IonNote, IonSelect, IonSelectOption } from '@ionic/angular';
+import { AlertController, IonBadge, IonButton, IonCheckbox, IonNote, IonSelect, IonSelectOption } from '@ionic/angular';
 import { AdminApi } from '../../data/admin/admin-api.service';
 import { AdminUser, Assignment, Batch, Company } from '../../data/admin/admin-models';
 import { STRINGS } from '../../shared/strings';
@@ -124,6 +124,7 @@ import { AdminPageComponent } from './admin-page.component';
 export class AdminAssignmentsPage implements OnInit {
   private readonly api = inject(AdminApi);
   private readonly online = inject(AdminOnline);
+  private readonly alerts = inject(AlertController);
   protected readonly pages = STRINGS.pages;
   protected readonly s = ADM_STRINGS;
   protected readonly t = ADM_STRINGS.assignments;
@@ -216,15 +217,33 @@ export class AdminAssignmentsPage implements OnInit {
       return;
     }
     const f = this.form();
-    if (await this.run(() => this.api.assign(f, this.current()?.id ?? null))) {
+    const current = this.current();
+    if (current && !(await this.confirm(this.t.move, this.t.confirmMove))) {
+      return;
+    }
+    if (await this.run(() => this.api.assign(f, current?.id ?? null))) {
       this.form.set(EMPTY_ASSIGNMENT);
       this.submitted.set(false);
     }
   }
 
   protected async deactivate(assignment: Assignment): Promise<void> {
-    if (this.canSave()) {
+    if (this.canSave() && (await this.confirm(this.t.deactivate, this.t.confirmDeactivate))) {
       await this.run(() => this.api.setAssignmentActive(assignment.id, false));
     }
+  }
+
+  /** Shows a confirmation. Gives true only when the user confirms. */
+  private async confirm(header: string, message: string): Promise<boolean> {
+    const alert = await this.alerts.create({
+      header,
+      message,
+      buttons: [
+        { text: this.s.cancel, role: 'cancel' },
+        { text: this.t.confirm, role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    return (await alert.onDidDismiss()).role === 'confirm';
   }
 }

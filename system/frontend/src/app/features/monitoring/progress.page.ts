@@ -10,6 +10,7 @@ import { UI_STRINGS } from '../../shared/strings-ui';
 import { BarChartComponent, BarItem } from '../../shared/ui/bar-chart.component';
 import { ProgressRingComponent } from '../../shared/ui/progress-ring.component';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
+import { SyncBadgeComponent } from '../../shared/ui/sync-badge.component';
 import { dateLabel } from '../../shared/utils/format';
 
 const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: 'warning', returned: 'danger' };
@@ -29,6 +30,7 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     ProgressRingComponent,
     BarChartComponent,
     StatusBadgeComponent,
+    SyncBadgeComponent,
   ],
   template: `
     <app-page-header [title]="strings.pages.ojtProgress" />
@@ -88,7 +90,10 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
               <h2>{{ text.selectedWeek(dateLabel(row.week)) }}</h2>
               <p>{{ ui.hours(row.minutes) }}</p>
             </ion-label>
-            <app-status-badge slot="end" [status]="row.status" />
+            <div slot="end" class="end">
+              <app-status-badge [status]="row.status" />
+              <app-sync-badge [status]="row.syncStatus" />
+            </div>
           </ion-item>
         }
       </ion-list>
@@ -177,6 +182,12 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
       margin-bottom: 8px;
     }
     ion-item p { font-size: 0.6875rem; color: var(--ion-color-medium-shade); }
+    .end {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
   `,
 })
 export class ProgressPage {
@@ -197,11 +208,15 @@ export class ProgressPage {
 
   /** Newest first, for the list. */
   protected readonly rows = computed(() =>
-    this.store.weeksOf(this.store.meId()).map((week) => ({
-      week,
-      minutes: this.store.weekMinutes(this.store.meId(), week),
-      status: this.store.report(this.store.meId(), week)?.status ?? 'none',
-    })),
+    this.store.weeksOf(this.store.meId()).map((week) => {
+      const report = this.store.report(this.store.meId(), week);
+      return {
+        week,
+        minutes: this.store.weekMinutes(this.store.meId(), week),
+        status: report?.status ?? 'none',
+        syncStatus: report?.syncStatus ?? 'none',
+      };
+    }),
   );
 
   /** Oldest first, for the chart. */

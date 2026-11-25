@@ -8,6 +8,7 @@ import { STRINGS } from '../../shared/strings';
 import { FAC_STRINGS } from '../../shared/strings-fac';
 import { UI_STRINGS } from '../../shared/strings-ui';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
+import { SyncBadgeComponent } from '../../shared/ui/sync-badge.component';
 import { dateLabel, timeOfDay } from '../../shared/utils/format';
 
 type Kind = 'reports' | 'corrections';
@@ -16,7 +17,7 @@ type Filter = 'pending' | 'decided';
 @Component({
   selector: 'app-reviews-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, RouterLink, StatusBadgeComponent],
+  imports: [PageHeaderComponent, IonContent, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, RouterLink, StatusBadgeComponent, SyncBadgeComponent],
   template: `
     <app-page-header [title]="strings.pages.facReviews" />
     <ion-content>
@@ -51,7 +52,10 @@ type Filter = 'pending' | 'decided';
                 <p>{{ r.hours }}</p>
                 <p>{{ text.submittedOn(r.submitted) }}</p>
               </ion-label>
-              <app-status-badge slot="end" [status]="r.status" />
+              <div slot="end" class="end">
+                <app-status-badge [status]="r.status" />
+                <app-sync-badge [status]="r.syncStatus" />
+              </div>
             </ion-item>
           }
         </ion-list>
@@ -68,7 +72,10 @@ type Filter = 'pending' | 'decided';
                 <p>{{ c.date }}</p>
                 <p>{{ text.requested(c.original, c.requestedTime) }}</p>
               </ion-label>
-              <app-status-badge slot="end" [status]="c.status" />
+              <div slot="end" class="end">
+                <app-status-badge [status]="c.status" />
+                <app-sync-badge [status]="c.syncStatus" />
+              </div>
             </ion-item>
           }
         </ion-list>
@@ -78,6 +85,12 @@ type Filter = 'pending' | 'decided';
   styles: `
     .filter {
       margin-top: 8px;
+    }
+    .end {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
     }
     .note {
       display: block;
@@ -107,6 +120,7 @@ export class ReviewsPage {
           hours: UI_STRINGS.hours(this.store.weekMinutes(r.ojtId, r.weekStart)),
           submitted: sent ? `${dateLabel(sent.at.slice(0, 10))} ${timeOfDay(sent.at)}` : '',
           status: r.status,
+          syncStatus: r.syncStatus,
           sortKey: sent?.at ?? r.updatedAt,
         };
       })
@@ -126,6 +140,7 @@ export class ReviewsPage {
         original: c.originalTime ?? FAC_STRINGS.reviews.none,
         requestedTime: c.requestedTime,
         status: c.status,
+        syncStatus: c.syncStatus,
         createdAt: c.createdAt,
       }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),

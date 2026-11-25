@@ -55,15 +55,15 @@ addIcons({ logOutOutline, personOutline });
         <details class="password">
           <summary>{{ text.password }}</summary>
           <ion-input [label]="text.current" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="current-password"
-            [value]="current()" (ionInput)="current.set($any($event).detail.value ?? '')" />
+            [errorText]="currentError()" [class.ion-touched]="currentTouched()" [class.ion-invalid]="!!currentError()"
+            [value]="current()" (ionInput)="current.set($any($event).detail.value ?? '')" (ionBlur)="currentTouched.set(true)" />
           <ion-input class="gap" [label]="text.next" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
-            [value]="next()" (ionInput)="next.set($any($event).detail.value ?? '')" />
+            [errorText]="nextError()" [class.ion-touched]="nextTouched()" [class.ion-invalid]="!!nextError()"
+            [value]="next()" (ionInput)="next.set($any($event).detail.value ?? '')" (ionBlur)="nextTouched.set(true)" />
           <ion-input class="gap" [label]="text.confirmPassword" labelPlacement="floating" fill="outline" [type]="type()" autocomplete="new-password"
-            [value]="confirm()" (ionInput)="confirm.set($any($event).detail.value ?? '')" />
+            [errorText]="confirmError()" [class.ion-touched]="confirmTouched()" [class.ion-invalid]="!!confirmError()"
+            [value]="confirm()" (ionInput)="confirm.set($any($event).detail.value ?? '')" (ionBlur)="confirmTouched.set(true)" />
           <ion-checkbox [checked]="show()" (ionChange)="show.set($any($event).detail.checked)">{{ text.show }}</ion-checkbox>
-          @if (passwordProblem(); as problem) {
-            <p><ion-note color="danger">{{ problem }}</ion-note></p>
-          }
           @if (passwordFailure(); as failure) {
             <p><ion-note color="danger">{{ failure }}</ion-note></p>
           }
@@ -221,6 +221,30 @@ export class ProfilePage {
   protected readonly type = computed(() => (this.show() ? 'text' : 'password'));
   protected readonly busy = signal(false);
   protected readonly passwordFailure = signal<string | null>(null);
+  protected readonly currentTouched = signal(false);
+  protected readonly nextTouched = signal(false);
+  protected readonly confirmTouched = signal(false);
+
+  /** The error of the current password field. It shows after the user touched the field. */
+  protected readonly currentError = computed(() =>
+    this.currentTouched() && !this.current() ? this.text.currentRequired : '',
+  );
+
+  /** The error of the new password field. It shows after the user touched the field. */
+  protected readonly nextError = computed(() => {
+    if (!this.nextTouched()) {
+      return '';
+    }
+    if (this.next().length < MIN_PASSWORD) {
+      return this.text.tooShort;
+    }
+    return this.next() === this.current() ? this.text.same : '';
+  });
+
+  /** The error of the confirm field. It shows after the user touched the field. */
+  protected readonly confirmError = computed(() =>
+    this.confirmTouched() && this.next() !== this.confirm() ? this.text.mismatch : '',
+  );
 
   /** The first problem of the password form, or null when the form is valid. */
   protected readonly passwordProblem = computed(() => {
@@ -246,6 +270,9 @@ export class ProfilePage {
         this.current.set('');
         this.next.set('');
         this.confirm.set('');
+        this.currentTouched.set(false);
+        this.nextTouched.set(false);
+        this.confirmTouched.set(false);
         await this.toast(this.text.changed, 'success');
       } else {
         this.passwordFailure.set(this.text.failure[result.reason]);

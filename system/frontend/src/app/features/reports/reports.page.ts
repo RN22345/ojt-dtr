@@ -3,6 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton } from '@ionic/angular';
+import { SyncStatus } from '../../data/repositories/punch.repository';
 import { addDays } from '../../data/store/store-models';
 import { WorkStore } from '../../data/store/work-store.service';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
@@ -11,6 +12,7 @@ import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
 import { StatTileComponent } from '../../shared/ui/stat-tile.component';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
+import { SyncBadgeComponent } from '../../shared/ui/sync-badge.component';
 import { dateLabel } from '../../shared/utils/format';
 
 type Filter = 'all' | 'todo' | 'submitted' | 'approved';
@@ -20,6 +22,7 @@ interface Row {
   end: string;
   minutes: number;
   status: string;
+  syncStatus: SyncStatus | 'none';
   remark: string | null;
 }
 
@@ -42,7 +45,7 @@ function matches(filter: Filter, status: string): boolean {
 @Component({
   selector: 'app-reports-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonButton, NgTemplateOutlet, IonContent, IonSegment, IonSegmentButton, IonList, IonItem, IonLabel, RouterLink, StatusBadgeComponent, StatTileComponent],
+  imports: [PageHeaderComponent, IonButton, NgTemplateOutlet, IonContent, IonSegment, IonSegmentButton, IonList, IonItem, IonLabel, RouterLink, StatusBadgeComponent, SyncBadgeComponent, StatTileComponent],
   template: `
     <app-page-header [title]="strings.pages.ojtReports" />
     <ion-content class="ion-padding">
@@ -87,7 +90,10 @@ function matches(filter: Filter, status: string): boolean {
                   <p class="remark">{{ text.returnedRemark(row.remark) }}</p>
                 }
               </ion-label>
-              <app-status-badge slot="end" [status]="row.status" />
+              <div slot="end" class="end">
+                <app-status-badge [status]="row.status" />
+                <app-sync-badge [status]="row.syncStatus" />
+              </div>
             </ion-item>
           }
         </ion-list>
@@ -182,8 +188,14 @@ function matches(filter: Filter, status: string): boolean {
       color: var(--ion-color-danger);
       margin-top: 6px;
     }
-    app-status-badge {
+    .end {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
       margin-left: 10px;
+    }
+    app-status-badge {
       --lb-badge-min-width: 80px;
       --lb-badge-radius: 8px;
     }
@@ -216,6 +228,7 @@ export class ReportsPage {
         end: addDays(week, 6),
         minutes: this.store.weekMinutes(this.store.meId(), week),
         status,
+        syncStatus: report?.syncStatus ?? 'none',
         remark: status === 'returned' ? (last?.remark ?? null) : null,
       };
     }),

@@ -143,6 +143,8 @@ export const OJT_STRINGS = {
     range: 'Date range',
     from: 'From',
     to: 'To',
+    fromRequired: 'Choose a start date.',
+    toRequired: 'Choose an end date.',
     chipWeek: 'This week',
     chipLastWeek: 'Last week',
     chipMonth: 'This month',

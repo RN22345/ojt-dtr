@@ -9,6 +9,7 @@ import { PageHeaderComponent } from '../../shared/page-header/page-header.compon
 import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
+import { SyncBadgeComponent } from '../../shared/ui/sync-badge.component';
 import { dateLabel, timeOfDay } from '../../shared/utils/format';
 import { localDate } from '../../shared/utils/hours';
 
@@ -17,7 +18,7 @@ addIcons({ add });
 @Component({
   selector: 'app-corrections-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeaderComponent, IonContent, IonCard, IonCardContent, IonFab, IonFabButton, IonIcon, IonNote, RouterLink, StatusBadgeComponent],
+  imports: [PageHeaderComponent, IonContent, IonCard, IonCardContent, IonFab, IonFabButton, IonIcon, IonNote, RouterLink, StatusBadgeComponent, SyncBadgeComponent],
   template: `
     <app-page-header [title]="text.title" backHref="/ojt/home" />
     <ion-content class="ion-padding">
@@ -31,7 +32,10 @@ addIcons({ add });
           <ion-card-content>
             <div class="top">
               <strong>{{ row.kindText }}: {{ row.punchText }}</strong>
-              <app-status-badge [status]="row.status" />
+              <div class="badges">
+                <app-status-badge [status]="row.status" />
+                <app-sync-badge [status]="row.syncStatus" />
+              </div>
             </div>
             <p>{{ dateLabel(row.date) }}</p>
             <p>{{ row.timeText }}</p>
@@ -69,6 +73,13 @@ addIcons({ add });
       align-items: center;
       gap: 8px;
     }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+    }
     p {
       margin: 4px 0;
     }
@@ -95,6 +106,7 @@ export class CorrectionsPage {
       id: c.id,
       date: c.date,
       status: c.status,
+      syncStatus: c.syncStatus,
       reason: c.reason,
       remark: c.remark,
       kindText: c.kind === 'add' ? this.text.kindAdd : this.text.kindChange,

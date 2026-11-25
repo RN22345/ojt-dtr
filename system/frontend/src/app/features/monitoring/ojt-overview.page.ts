@@ -10,6 +10,7 @@ import { BarChartComponent, BarItem } from '../../shared/ui/bar-chart.component'
 import { ProgressRingComponent } from '../../shared/ui/progress-ring.component';
 import { StatTileComponent } from '../../shared/ui/stat-tile.component';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
+import { SyncBadgeComponent } from '../../shared/ui/sync-badge.component';
 import { dateLabel } from '../../shared/utils/format';
 
 const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: 'warning', returned: 'danger' };
@@ -19,7 +20,7 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     PageHeaderComponent, IonContent, IonButton, IonList, IonItem, IonLabel, IonNote, RouterLink,
-    ProgressRingComponent, StatTileComponent, StatusBadgeComponent, BarChartComponent,
+    ProgressRingComponent, StatTileComponent, StatusBadgeComponent, BarChartComponent, SyncBadgeComponent,
   ],
   template: `
     <app-page-header [title]="ojt()?.fullName ?? ''" backHref="/facilitator/overview" />
@@ -59,7 +60,10 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
                 <h3>{{ common.weekOf(date(w.week)) }}</h3>
                 <p>{{ ui.hours(w.minutes) }}</p>
               </ion-label>
-              <app-status-badge slot="end" [status]="w.status" />
+              <div slot="end" class="end">
+                <app-status-badge [status]="w.status" />
+                <app-sync-badge [status]="w.syncStatus" />
+              </div>
             </ion-item>
           }
         </ion-list>
@@ -74,7 +78,10 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
                 <h3>{{ common.punchType[c.punchType] }}, {{ date(c.date) }}</h3>
                 <p>{{ common.kind[c.kind] }}</p>
               </ion-label>
-              <app-status-badge slot="end" [status]="c.status" />
+              <div slot="end" class="end">
+                <app-status-badge [status]="c.status" />
+                <app-sync-badge [status]="c.syncStatus" />
+              </div>
             </ion-item>
           }
         </ion-list>
@@ -92,6 +99,12 @@ const STATUS_COLOR: Record<string, string> = { approved: 'success', submitted: '
     .note {
       display: block;
       font-size: 0.75em;
+    }
+    .end {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
     }
   `,
 })
@@ -111,7 +124,13 @@ export class OjtOverviewPage {
   protected readonly weeks = computed(() =>
     this.store.weeksOf(this.ojtId()).map((week) => {
       const report = this.store.report(this.ojtId(), week);
-      return { week, minutes: this.store.weekMinutes(this.ojtId(), week), status: report?.status ?? 'none', reportId: report?.id ?? null };
+      return {
+        week,
+        minutes: this.store.weekMinutes(this.ojtId(), week),
+        status: report?.status ?? 'none',
+        syncStatus: report?.syncStatus ?? 'none',
+        reportId: report?.id ?? null,
+      };
     }),
   );
 

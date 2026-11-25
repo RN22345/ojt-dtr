@@ -259,6 +259,9 @@ export class AdminUsersPage implements OnInit {
     if (!user || !this.canSave() || this.passwordError()) {
       return;
     }
+    if (!(await this.confirmResetPassword(user))) {
+      return;
+    }
     await this.run(() => this.api.resetPassword(user.id, this.newPassword()), this.s.saved);
   }
 
@@ -279,5 +282,19 @@ export class AdminUsersPage implements OnInit {
     });
     await alert.present();
     return (await alert.onDidDismiss()).role === 'destructive';
+  }
+
+  /** Shows a confirmation before a password reset. Gives true only when the user confirms. */
+  private async confirmResetPassword(user: AdminUser): Promise<boolean> {
+    const alert = await this.alerts.create({
+      header: this.t.resetPassword,
+      message: this.t.confirmResetPassword(user.fullName),
+      buttons: [
+        { text: this.s.cancel, role: 'cancel' },
+        { text: this.t.confirm, role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    return (await alert.onDidDismiss()).role === 'confirm';
   }
 }

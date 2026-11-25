@@ -4,15 +4,14 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { IonBadge, IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/angular';
 import { Punch } from '../../data/repositories/punch.repository';
 import { STRINGS } from '../../shared/strings';
+import { SyncBadgeComponent } from '../../shared/ui/sync-badge.component';
 import { dateLabel, duration, timeOfDay } from '../../shared/utils/format';
 import { HistoryWeek } from './dtr-history';
-
-const STATUS_COLOR = { pending: 'warning', synced: 'success', issue: 'danger' } as const;
 
 @Component({
   selector: 'app-dtr-history',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonList, IonListHeader, IonItem, IonLabel, IonNote, IonBadge],
+  imports: [IonList, IonListHeader, IonItem, IonLabel, IonNote, IonBadge, SyncBadgeComponent],
   template: `
     @if (weeks().length === 0) {
       <p>{{ text.noPunches }}</p>
@@ -34,9 +33,9 @@ const STATUS_COLOR = { pending: 'warning', synced: 'success', issue: 'danger' } 
                 <ion-label>
                   <h3>{{ time(s.timeIn) }} – {{ s.timeOut ? time(s.timeOut) : text.open }}</h3>
                   <p class="flags">
-                    <ion-badge [color]="statusColor(s.timeIn)">{{ text.status[s.timeIn.syncStatus] }}</ion-badge>
+                    <app-sync-badge [status]="s.timeIn.syncStatus" />
                     @if (s.timeOut) {
-                      <ion-badge [color]="statusColor(s.timeOut)">{{ text.status[s.timeOut.syncStatus] }}</ion-badge>
+                      <app-sync-badge [status]="s.timeOut.syncStatus" />
                     }
                     @if (s.missingTimeOut) {
                       <ion-badge color="danger">{{ text.missingTimeOut }}</ion-badge>
@@ -126,10 +125,6 @@ const STATUS_COLOR = { pending: 'warning', synced: 'success', issue: 'danger' } 
       font-weight: 600;
       border-radius: 5px;
     }
-    ion-badge.ion-color-success {
-      background: var(--lb-online);
-      color: var(--ion-color-success-shade);
-    }
     ion-badge.ion-color-light {
       background: var(--lb-panel-border);
       color: var(--ion-color-dark);
@@ -153,9 +148,5 @@ export class DtrHistoryComponent {
 
   protected time(p: Punch): string {
     return timeOfDay(p.deviceTime);
-  }
-
-  protected statusColor(p: Punch): string {
-    return STATUS_COLOR[p.syncStatus];
   }
 }

@@ -39,7 +39,11 @@ type Chip = 'week' | 'lastWeek' | 'month' | 'all';
           [label]="text.from"
           [value]="from()"
           [max]="today"
+          [errorText]="fromError()"
+          [class.ion-touched]="fromTouched()"
+          [class.ion-invalid]="!!fromError()"
           (ionInput)="from.set(valueOf($event))"
+          (ionBlur)="fromTouched.set(true)"
         />
         <ion-input
           type="date"
@@ -48,12 +52,13 @@ type Chip = 'week' | 'lastWeek' | 'month' | 'all';
           [label]="text.to"
           [value]="to()"
           [max]="today"
+          [errorText]="toError()"
+          [class.ion-touched]="toTouched()"
+          [class.ion-invalid]="!!toError()"
           (ionInput)="to.set(valueOf($event))"
+          (ionBlur)="toTouched.set(true)"
         />
       </div>
-      @if (!rangeValid()) {
-        <p class="error">{{ text.invalidRange }}</p>
-      }
 
       <h3>{{ text.preview }}</h3>
       @if (rangeValid() && rows().length === 0) {
@@ -106,9 +111,6 @@ type Chip = 'week' | 'lastWeek' | 'month' | 'all';
       gap: 8px;
       margin-top: 8px;
     }
-    .error {
-      color: var(--ion-color-danger);
-    }
     .empty {
       color: var(--ion-color-medium-shade);
     }
@@ -154,6 +156,8 @@ export class ExportPage {
 
   protected readonly from = signal(`${this.today.slice(0, 8)}01`);
   protected readonly to = signal(this.today);
+  protected readonly fromTouched = signal(false);
+  protected readonly toTouched = signal(false);
 
   private readonly store = inject(WorkStore);
   private readonly punches = inject(PunchRepository);
@@ -165,6 +169,20 @@ export class ExportPage {
   private readonly sessions = signal<WorkSession[]>([]);
 
   protected readonly rangeValid = computed(() => !!this.from() && !!this.to() && this.from() <= this.to());
+
+  /** The error of the From field. It shows after the user touched the field. */
+  protected readonly fromError = computed(() => (this.fromTouched() && !this.from() ? this.text.fromRequired : ''));
+
+  /** The error of the To field. The order of the dates shows at the To field. */
+  protected readonly toError = computed(() => {
+    if (!this.toTouched()) {
+      return '';
+    }
+    if (!this.to()) {
+      return this.text.toRequired;
+    }
+    return this.from() && this.from() > this.to() ? this.text.invalidRange : '';
+  });
 
   protected readonly rows = computed(() => dtrPdfDays(this.sessions(), this.from(), this.to()));
 
