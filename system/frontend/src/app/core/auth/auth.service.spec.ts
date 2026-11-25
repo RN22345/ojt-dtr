@@ -206,6 +206,40 @@ describe('AuthService session restore (frontend rule 12, QR-RE-08)', () => {
     expect(service.role()).toBeNull();
   });
 
+  it('TC-SI-AUTH-02 (unit part, DEF-021): an expired token with no network keeps the stored session and opens offline', async () => {
+    // supabase-js gives session null and an AuthRetryableFetchError when the refresh fails offline.
+    // The session stays in the storage.
+    const client = fakeSupabase();
+    client.auth.getSession.mockResolvedValue({
+      data: { session: null },
+      error: { name: 'AuthRetryableFetchError', status: 0 } as unknown as AuthError,
+    } as never);
+    const stored = JSON.stringify({ access_token: 'a', refresh_token: 'r', user: { id: 'u1' } });
+    const withStorage = Object.assign(client, {
+      auth: Object.assign(client.auth, {
+        storageKey: 'sb-test-auth-token',
+        storage: { getItem: vi.fn(async (key: string) => (key === 'sb-test-auth-token' ? stored : null)) },
+      }),
+    });
+    const { service } = setup('mobile', new Error('fetch failed'), withStorage, profileOf('ojt'));
+    await service.ready();
+    expect(service.role()).toBe('ojt');
+    expect(client.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('DEF-021: a refresh that the server rejects does not use the stored session', async () => {
+    const client = fakeSupabase();
+    client.auth.getSession.mockResolvedValue({
+      data: { session: null },
+      error: { name: 'AuthApiError', status: 400 } as unknown as AuthError,
+    } as never);
+    const stored = JSON.stringify({ access_token: 'a', refresh_token: 'r', user: { id: 'u1' } });
+    Object.assign(client.auth, { storageKey: 'k', storage: { getItem: vi.fn(async () => stored) } });
+    const { service } = setup('mobile', profileOf('ojt'), client, profileOf('ojt'));
+    await service.ready();
+    expect(service.role()).toBeNull();
+  });
+
   it('does nothing when no session is stored', async () => {
     const { service, fetchById } = setup('mobile', profileOf('ojt'));
     await service.ready();
