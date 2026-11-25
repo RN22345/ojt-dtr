@@ -77,3 +77,4 @@ This document records each project decision and its reason. Add new decisions at
 | Supabase + Express API on a free host | More TypeScript backend code | Two free services to keep awake. More work. |
 | MongoDB Atlas + Express API | The user knows MongoDB. | The data is relational (assignments, weeks, approvals). Auth, storage, and access rules must be built by hand. Needs a free API host that sleeps. |
 | Firebase (Firestore) | Built-in offline cache | Firestore offline replaces the SQLite and outbox design, so less of the offline design is visible. The data is relational. |
+| D-75 | 2026-11-23 | Move the due date. The user gave 27 November 2026 as the new due date (reading: 2026-11-27). The S4 and S5 dates in the test plan are not changed by this decision. The new plan for S4 and S5 is in `PROGRESS.md`, section 3. | The planned S4 and S5 end dates have passed. The S4 work is open (DUE-01). | Accepted (user, 2026-11-23)

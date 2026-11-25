@@ -14,6 +14,7 @@ import { ReportEvent, ReportRepository, WeeklyReport as ReportRecord } from '../
 import { SyncService } from '../sync/sync.service';
 import { PunchInput, buildSessions, localDate, minutesByDate, weekStart } from '../../shared/utils/hours';
 import { canEditReport } from '../../shared/utils/report-rules';
+import { dailyMinutesSplit, progressTotals } from '../../shared/utils/progress';
 import { timeOfDay } from '../../shared/utils/format';
 import { newId } from '../../shared/utils/uuid';
 import {
@@ -55,15 +56,11 @@ function manilaInstant(date: string, time: string): string {
 
 /** Logged and approved minutes for each date. A session counts as approved when its time-in is approved. */
 function dtrSummary(punches: readonly Punch[]): Pick<OjtView, 'dailyMinutes' | 'approvedDailyMinutes' | 'lastTimeIn'> {
-  const inputs: PunchInput[] = punches.map((p) => ({ id: p.id, type: p.type, time: p.deviceTime, correctsPunchId: p.correctsPunchId }));
-  const approved = new Set(punches.filter((p) => p.approved).map((p) => p.id));
-  const sessions = buildSessions(inputs);
+  const { daily, approvedDaily } = dailyMinutesSplit(
+    punches.map((p) => ({ id: p.id, type: p.type, time: p.deviceTime, correctsPunchId: p.correctsPunchId, approved: p.approved })),
+  );
   const lastIn = [...punches].reverse().find((p) => p.type === 'in');
-  return {
-    dailyMinutes: Object.fromEntries(minutesByDate(sessions)),
-    approvedDailyMinutes: Object.fromEntries(minutesByDate(sessions.filter((s) => approved.has(s.timeIn.id)))),
-    lastTimeIn: lastIn?.deviceTime ?? null,
-  };
+  return { dailyMinutes: daily, approvedDailyMinutes: approvedDaily, lastTimeIn: lastIn?.deviceTime ?? null };
 }
 
 /** The view of one OJT from its assignment details (empty values if the device has no assignment data yet). */
@@ -184,21 +181,9 @@ export class WorkStore {
   /** FR-MON-01: logged, approved (FR-RPT-07), and remaining hours. */
   progress(ojtId: string): HoursProgress {
     const o = this.ojt(ojtId);
-    const requiredMinutes = (o?.requiredHours ?? 0) * 60;
-    const minutes = Object.values(o?.dailyMinutes ?? {});
-    const loggedMinutes = minutes.reduce((a, b) => a + b, 0);
-    const approvedMinutes = Object.values(o?.approvedDailyMinutes ?? {}).reduce((a, b) => a + b, 0);
-    const remainingMinutes = Math.max(0, requiredMinutes - approvedMinutes);
-    const pct = (m: number) => (requiredMinutes ? Math.min(100, Math.round((m / requiredMinutes) * 100)) : 0);
-    return {
-      requiredMinutes,
-      loggedMinutes,
-      approvedMinutes,
-      remainingMinutes,
-      percent: pct(approvedMinutes),
-      loggedPercent: pct(loggedMinutes),
-      projectedEnd: requiredMinutes ? this.projectedEnd(requiredMinutes - loggedMinutes, minutes) : null,
-    };
+    const totals = progressTotals(o?.requiredHours ?? 0, o?.dailyMinutes ?? {}, o?.approvedDailyMinutes ?? {});
+    const r = totals.requiredMinutes;
+    return { ...totals, projectedEnd: r ? this.projectedEnd(r - totals.loggedMinutes, Object.values(o?.dailyMinutes ?? {})) : null };
   }
 
   /** The report of the week, or a new draft that is not saved yet. */

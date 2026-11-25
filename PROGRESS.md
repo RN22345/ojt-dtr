@@ -6,9 +6,9 @@ This file is the only source for the current project state. Each agent session m
 
 | Item | Value |
 |---|---|
-| Stage | S3 gate passed 2026-11-10. Next stage: S4 (Completion and quality tests), not started. |
+| Stage | S3 gate passed 2026-11-10. S4 (Completion and quality tests) in progress, about 25%. Planned S4 and S5 dates have passed (see open issue DUE-01). |
 | Stage dates | S1: 2026-10-28 to 2026-11-03. S2: 2026-11-04 to 2026-11-10 (work started 2026-10-26). |
-| Gate status | S1, S2, and S3 gates passed 2026-11-10 (reports in `docs/05-testing/reports/`). CI passes on `d6e87ce`. The branch `s3/reports-corrections-admin` is merged into `main` (PR #2, `82520ef`). The LogBound redesign is on the branch `design/logbound-redesign` (D-74), not merged. |
+| Gate status | S1, S2, and S3 gates passed 2026-11-10 (reports in `docs/05-testing/reports/`). CI passes on `d6e87ce`. The branch `s3/reports-corrections-admin` is merged into `main` (PR #2, `82520ef`). The LogBound redesign is merged into `main` (PR #7, `ba458c4`, D-74). CI passes on `ba458c4`. |
 | Gate criteria | `docs/05-testing/test-plan.md`, section 8 |
 
 ## 2. Stage tracker
@@ -19,10 +19,20 @@ This file is the only source for the current project state. Each agent session m
 | S1 | Foundation | 2026-10-28 to 2026-11-03 | Gate passed 2026-11-10 (`S1-test-report.md`). Keep-alive sources A and B; source C deleted (D-73). `prod` comes before S5 (D-40). |
 | S2 | Offline core (DTR and sync) | 2026-11-04 to 2026-11-10 | Gate passed 2026-11-10 (`S2-test-report.md`). |
 | S3 | Reports, corrections, and admin web | 2026-11-11 to 2026-11-14 | Started 2026-10-30 (D-65). Gate passed 2026-11-10 (`S3-test-report.md`). |
-| S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | Not started |
-| S5 | Release and documentation | 2026-11-19 to 2026-11-21 | Not started |
+| S4 | Completion and quality tests | 2026-11-15 to 2026-11-18 | In progress, about 25% (2026-11-23). AUD done. MON, NOTI, EXP partly done. Quality tests not run. See section 3. |
+| S5 | Release and documentation | 2026-11-19 to 2026-11-21 | Not started. About 5% of non-document work (2026-11-23). Production project not made. |
 
 ## 3. Next tasks (stages S1, S2, and S3)
+
+S4 status on 2026-11-23 and next steps (in order). Plan: `PLAN.md`, M1 to M3.
+1. AUD views: done in S3 (admin audit log with filters, TC-ST-ADM-01 S3 part). Confirm in the S4 report.
+2. MON: progress screens exist (`features/monitoring/`, `WorkStore`). No test file for TC-U-MON-01 yet. Write the L1 test and check the progress rule (approved weeks only, A-06).
+3. EXP: the PDF page is a text prototype (`export.page.ts`). Build the real DTR and report PDF (TC-CI-EXP-01). Build `export-csv` Edge Function (planned in `api-contract.md`, section 6) and the CSV test TC-CI-EXP-02. The CSV part of TC-ST-ADM-01 waits for it.
+4. NOTI: notification list and local reminders exist. Build `push-notify` and FCM (readiness plan, item 10), then TC-SI-NOTI-01.
+5. Decide BK-01 (photos not in the backup) before the rebuild drill TC-ST-Q-RE-04.
+6. Quality tests: the 27 S4 test cases in `test-cases.md`, including the pause drill (TC-ST-Q-RE-03), accessibility, security scans, and the usability tests with users.
+7. Real phone runs of the S2 and S3 device tests (S2 observation OBS-S2-01, S3 section 7 item 6).
+8. S5 non-document work: `ojt-dtr-prod` project (ENV-01), production deployment, release APK, TC-ST-DEP-01, TC-ST-Q-FS-01, TC-UAT-* tests.
 
 S3 (branch `s3/reports-corrections-admin`, D-65). Done 2026-10-30:
 - Server: migration `20261030120000_s3_reports_corrections` on `dev` (D-66, D-67). L2 tests TC-CI-RPT-01, TC-CI-RPT-02, TC-CI-AUD-01 pass. Backend coverage 91.0% (71 of 78).
@@ -118,6 +128,7 @@ Open S1 items:
 | UI-02 | The teal and amber hex values (D-64) are agent selections. The Figma file still shows the old orange and blue mood board. The LogBound logo is still blue and orange. The UI/UX team must confirm the hex values and send a teal and amber logo (900 px wide or less). | User (UI/UX team) | Open |
 | BK-01 | The weekly backup (`backup.yml`) does not contain the Storage files (photos). After a rebuild, devices upload the photos of the last 30 days again (offline sync design, section 12). Older photos are lost. Decide before TC-ST-Q-RE-04: add a Storage copy to the backup, or accept the gap with a decision. | Agent | Open |
 | OBS-S2-01 | Observations from the S2 device tests, for the S2 report: (1) The offline time-in median is 940 ms with no GPS position: the 800 ms location wait (D-48) leaves only 60 ms of margin to QR-PE-01. Measure again on a real phone (S4). (2) The WebView `navigator.onLine` turns true some seconds after the network plugin event, so the first sync after the network returns can wait for the retries (about 30 s). (3) The punch message covers the "Log out" button for 2.5 s. (4) TC-SI-SYNC-06 ran 17 minutes, not a simulated 24 hours: the app has no test clock. (5) Punches with a wrong clock still pair by device time in the hours (D-51); the facilitator corrects them. | Agent | Open |
+| DUE-01 | The planned S4 end (2026-11-18) and S5 end (2026-11-21, D-29) have passed. The user set the new due date to 2026-11-27 (D-75). | User | Closed 2026-11-23 (D-75). Test plan dates still old; the S4 and S5 plan is in PROGRESS.md, section 3. |
 | ENV-03 | The `docs/deliverables/` files were lost in the D-28 move. They were restored from `OJT-Appdev-Project.zip`. The path in `extract_test_cases.py` was fixed again. The Google Doc tabs do not show the S0 review fixes yet. | Agent | Watch |
 
 ## 6. Session log
@@ -165,3 +176,5 @@ Add one row at the end of each session. Use the newest row at the bottom.
 | 2026-11-10 | Claude Code (desktop), orchestrator with three Haiku test agents | The user installed WSL 2 and Docker Desktop on the D drive. Local Supabase stack runs (migrations applied, seed with its own local password). New app build configuration `local` and a debug-only HTTP permission for 127.0.0.1 (D-72). Regression of 14 L3 and L4 test cases of S1 and S2 on two emulators: all pass (S3 report, section 2.5). The orchestrator checked each result in the database and ran TC-SI-SYNC-03 (with a table lock, for a real stop during the request) and TC-SI-SYNC-07 itself. Zero new defects. | `system/frontend/angular.json`, `system/frontend/src/environments/environment.local.ts`, `system/frontend/android/app/src/debug/`, `system/frontend/AGENTS.md`, `system/backend/AGENTS.md`, `docs/01-project/decision-log.md`, `docs/05-testing/reports/S3-test-report.md`, `PROGRESS.md` |
 | 2026-11-10 | Claude Code (desktop) | Gate checks. CI had failed since `5b1152a`: the L2 test TC-CI-SYNC-03 (small pages) took more than 30 s on `dev` (test fault); fixed with pages of 40 and a 120 s limit (`362adf2`). Added two L2 tests of report photos (TC-CI-FILE-01 report part, `d6e87ce`). CI passes on `d6e87ce` (frontend 256 tests, backend 122 of 122). The user deleted keep-alive source C (D-73). The S1, S2, and S3 gates pass. Reports updated. | `system/backend/tests/{sync,files}.test.ts`, `system/backend/tests/coverage-map.json`, `docs/01-project/decision-log.md`, `docs/05-testing/test-plan.md`, `docs/07-operations/free-tier-operations-runbook.md`, `docs/05-testing/reports/S{1,2,3}-test-report.md`, `PROGRESS.md` |
 | 2026-11-10 | Claude Code (desktop), orchestrator with a Sonnet agent | PR #2 merged into `main` (`82520ef`) after CI passed. New branch `design/logbound-redesign` from `main`: the LogBound redesign of the UI/UX team (`Yandev13/log-bound`, commit `62a49d5`) carried onto the current code by a Sonnet agent, reviewed by the orchestrator (D-74). Orchestrator fixes after the emulator check: amber tab label on teal (contrast), grey Time out button (a style rule that did not match), raised tab icon over the last item, oval photo placeholder. The mobile Log out button is on Profile: CAUTION with the count, then the login screen in 2.2 s offline. Lint, 256 of 256 unit tests, and the production build pass. Not merged. | `system/frontend/src/theme/{variables,components}.scss`, `system/frontend/src/global.scss`, 16 page and component files in `system/frontend/src/app/`, `docs/04-uiux/design-system.md`, `docs/01-project/decision-log.md`, `PROGRESS.md` |
+| 2026-11-18 | Claude Code (desktop) | PR #7 (LogBound redesign, with more UI/UX team changes after D-74) merged into `main`; CI passes. The untrack of the agent files had deleted the local copies; restored from `c8bc275^` (still not tracked). Rule 13 of `AGENTS.md` added again. Set up the orchestra workflow (Opus plans, OpenCode builders): gate = frontend L1, typecheck, lint; backend L2 stays in CI. `PLAN.md` has M1 to M3 for S4. | `.orchestra/*`, `opencode.json`, `.claude/settings.json`, `.claude/commands/*`, `PLAN.md`, `PROGRESS.md` |
+| 2026-11-23 | Claude Code (desktop) | Status review of S4 and S5 (S4 about 25%, S5 about 5% of non-document work). Added S4 next steps to section 3 and open issue DUE-01 (planned dates passed). Set the S4 stage row. Built a handover zip of the S4 documents and a detailed architecture map (`docs/03-architecture/architecture-visual.html`, levels L0 to L3, data flow, data model, security, operations). | `PROGRESS.md`, `PLAN.md`, `docs/03-architecture/architecture-visual.html`, `docs/AGENTS.md` |
