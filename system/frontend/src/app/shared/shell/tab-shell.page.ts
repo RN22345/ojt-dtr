@@ -47,7 +47,8 @@ addIcons({
   imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
   template: `
     <ion-tabs>
-      <ion-tab-bar [slot]="slot()">
+      <!-- QR-IC-07: on the web the top bar can scroll at a narrow width. A scroll region must take the focus. -->
+      <ion-tab-bar [slot]="slot()" [attr.tabindex]="slot() === 'top' ? 0 : null">
         @for (tab of tabs(); track tab.path) {
           <ion-tab-button [tab]="tab.path">
             <ion-icon aria-hidden="true" [name]="tab.icon" />

@@ -41,7 +41,7 @@ const NO_FILTER: AuditFilter = { entity: '', actorId: '', from: '', to: '' };
         <ion-button fill="outline" (click)="resetFilters()" data-testid="reset">{{ s.reset }}</ion-button>
       </div>
 
-      <div class="adm-scroll">
+      <div class="adm-scroll" tabindex="0">
         <table class="adm-table" data-testid="table">
           <thead>
             <tr>

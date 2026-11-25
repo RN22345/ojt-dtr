@@ -129,6 +129,11 @@ import { AdminOnline } from './admin-online.service';
       border-radius: 7px;
       background: var(--lb-panel);
     }
+    /* QR-IC-07: the table scroll region takes the focus, so a keyboard user can scroll it. */
+    .adm-scroll:focus-visible {
+      outline: 2px solid var(--ion-color-primary);
+      outline-offset: 2px;
+    }
     .adm-table {
       width: 100%;
       min-width: 540px;
@@ -162,13 +167,15 @@ import { AdminOnline } from './admin-online.service';
       font-size: 0.6875rem;
       font-weight: 650;
     }
+    /* QR-IC-06: the Ionic .ion-color-* classes set these values with !important, so these rules need it too.
+       Dark text on the success color gives 4.6:1. White text gave 3.45:1. */
     .adm-table ion-badge[color='success'] {
-      --ion-color-base: var(--lb-admin-success, var(--ion-color-success));
-      --ion-color-contrast: var(--ion-color-dark);
+      --ion-color-base: var(--lb-admin-success, var(--ion-color-success)) !important;
+      --ion-color-contrast: var(--ion-color-dark) !important;
     }
     .adm-table ion-badge[color='medium'] {
-      --ion-color-base: var(--ion-color-light);
-      --ion-color-contrast: var(--ion-color-dark);
+      --ion-color-base: var(--ion-color-light) !important;
+      --ion-color-contrast: var(--ion-color-dark) !important;
     }
     .adm-table .adm-num {
       text-align: right;

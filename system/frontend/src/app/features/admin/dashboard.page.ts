@@ -66,7 +66,7 @@ import { DashboardFilter, NO_FILTER, countBy, filterOptions, filterRows, isFilte
         }
       </div>
 
-      <div class="adm-scroll">
+      <div class="adm-scroll" tabindex="0">
         <table class="adm-table" data-testid="table">
           <thead>
             <tr>

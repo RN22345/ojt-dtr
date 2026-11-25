@@ -81,7 +81,7 @@ import { AdminPageComponent } from './admin-page.component';
 
       <ion-checkbox [checked]="showInactive()" (ionChange)="showInactive.set($any($event).detail.checked)">{{ t.showInactive }}</ion-checkbox>
 
-      <div class="adm-scroll">
+      <div class="adm-scroll" tabindex="0">
         <table class="adm-table" data-testid="table">
           <thead>
             <tr>
