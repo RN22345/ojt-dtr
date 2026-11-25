@@ -86,6 +86,7 @@ There is no UPDATE or DELETE policy. Thus a file cannot be replaced or deleted (
 | `sync_push` | `p_ops jsonb`, `p_device_now timestamptz` (optional) | `jsonb` (see 5.1) | `authenticated`: active OJT and facilitator only | Offline sync design, section 4 |
 | `sync_pull` | `p_cursor bigint` (default 0), `p_epoch uuid` (default null), `p_limit int` (1 to 500, default 500) | `jsonb` (see 5.2) | `authenticated`: active OJT and facilitator only | Offline sync design, section 5 |
 | `admin_dashboard` | None | Table (see 5.3) | `authenticated`: active admin only (others: error `42501`) | Admin dashboard (D-70) |
+| `admin_export_reports` | `p_batch_id uuid` | Table of `ojt_id`, `ojt_name`, `company_name`, `facilitator_name`, `week_start`, `status`, `updated_at`, ordered by `ojt_name`, `week_start` | `authenticated`: active admin only (others: error `42501`) | Report summary of a batch for the CSV export (FR-EXP-03, D-76). One row for each report that is not deleted, of each OJT with an assignment in the batch. Company and facilitator from the active assignment in the batch, else the newest one. |
 
 ### 5.1 `sync_push`
 
@@ -138,7 +139,7 @@ One row for each active assignment that is not deleted. Order: OJT name.
 
 ## 6. Edge Functions
 
-Planned: `export-csv` (S4), `push-notify` (S4).
+Planned: `push-notify` (S4). The `export-csv` function is not made: the CSV export uses `admin_export_reports` and `admin_dashboard` (D-76).
 
 ### 6.1 `admin-users` (S3, D-70)
 

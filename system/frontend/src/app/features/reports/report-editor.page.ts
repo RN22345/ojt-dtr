@@ -7,6 +7,7 @@ import { addIcons } from 'ionicons';
 import { closeCircle, imageOutline } from 'ionicons/icons';
 import { MAX_REPORT_PHOTOS, ReportContent, addDays } from '../../data/store/store-models';
 import { WorkStore } from '../../data/store/work-store.service';
+import { FILE_SHARE } from '../../plugins/file-share.plugin';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { OJT_STRINGS } from '../../shared/strings-ojt';
 import { UI_STRINGS } from '../../shared/strings-ui';
@@ -14,6 +15,7 @@ import { BarChartComponent, BarItem } from '../../shared/ui/bar-chart.component'
 import { StatusBadgeComponent } from '../../shared/ui/status-badge.component';
 import { dateLabel, timeOfDay } from '../../shared/utils/format';
 import { localDate } from '../../shared/utils/hours';
+import { buildReportPdf, pdfFileName } from '../../shared/utils/pdf-export';
 
 addIcons({ closeCircle, imageOutline });
 
@@ -288,6 +290,7 @@ export class ReportEditorPage {
 
   private readonly store = inject(WorkStore);
   private readonly router = inject(Router);
+  private readonly files = inject(FILE_SHARE);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
 
@@ -425,8 +428,27 @@ export class ReportEditorPage {
     }
   }
 
+  /** FR-EXP-02: makes the PDF file of the approved report and opens the share sheet. */
   protected async exportPdf(): Promise<void> {
-    await this.toast(this.text.exportLater, 'medium');
+    const report = this.report();
+    const me = this.store.me();
+    try {
+      const pdf = buildReportPdf({
+        fullName: me.fullName,
+        companyName: me.companyName,
+        weekStart: report.weekStart,
+        minutes: this.minutes(),
+        status: report.status,
+        tasksDone: report.tasksDone,
+        skillsLearned: report.skillsLearned,
+        problems: report.problems,
+        plansNextWeek: report.plansNextWeek,
+      });
+      await this.files.sharePdf(pdfFileName('report', report.weekStart), pdf, this.text.exportPdf);
+      await this.toast(this.text.exported, 'success');
+    } catch {
+      await this.toast(this.text.exportFailed, 'danger');
+    }
   }
 
   private async submit(): Promise<void> {

@@ -59,6 +59,9 @@ export const ADM_STRINGS = {
     tableState: 'State',
     behind: 'Behind',
     onTrack: 'On track',
+    exportDtr: 'Export DTR summary (CSV)',
+    exportReports: 'Export report summary (CSV)',
+    exportFailed: 'The export failed.',
     hoursOf: (minutes: number, required: number) =>
       `${Math.round((minutes / 60) * 10) / 10} of ${required} h`,
   },

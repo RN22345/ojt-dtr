@@ -1,11 +1,14 @@
-// Admin dashboard (FR-MON-03, FR-MON-04): counts, late reports, OJTs behind schedule, a table, and filters.
+// Admin dashboard (FR-MON-03, FR-MON-04, FR-EXP-03): counts, late reports, OJTs behind schedule, a table,
+// filters, and the two CSV exports of the selected batch.
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IonBadge, IonButton, IonSelect, IonSelectOption } from '@ionic/angular';
 import { AdminApi } from '../../data/admin/admin-api.service';
 import { DashboardRow } from '../../data/admin/admin-models';
 import { STRINGS } from '../../shared/strings';
 import { ADM_STRINGS } from '../../shared/strings-adm';
+import { CSV_MIME, csvFileName, dtrSummaryCsv, reportSummaryCsv } from '../../shared/utils/csv';
 import { StatTileComponent } from '../../shared/ui/stat-tile.component';
+import { AdminOnline } from './admin-online.service';
 import { errorMessage } from './admin-forms';
 import { AdminPageComponent } from './admin-page.component';
 import { DashboardFilter, NO_FILTER, countBy, filterOptions, filterRows, isFiltered, totals } from './dashboard-logic';
@@ -40,6 +43,8 @@ import { DashboardFilter, NO_FILTER, countBy, filterOptions, filterRows, isFilte
         </ion-select>
         <ion-button fill="outline" [disabled]="!filtered()" (click)="filter.set(none)" data-testid="reset">{{ s.reset }}</ion-button>
         <ion-button fill="clear" [disabled]="loading()" (click)="load()">{{ s.refresh }}</ion-button>
+        <ion-button fill="outline" [disabled]="!canExport()" (click)="exportDtr()" data-testid="export-dtr">{{ t.exportDtr }}</ion-button>
+        <ion-button fill="outline" [disabled]="!canExport()" (click)="exportReports()" data-testid="export-reports">{{ t.exportReports }}</ion-button>
       </div>
 
       <div class="adm-tiles adm-summary">
@@ -99,6 +104,7 @@ import { DashboardFilter, NO_FILTER, countBy, filterOptions, filterRows, isFilte
 })
 export class AdminDashboardPage implements OnInit {
   private readonly api = inject(AdminApi);
+  private readonly online = inject(AdminOnline);
   protected readonly pages = STRINGS.pages;
   protected readonly s = ADM_STRINGS;
   protected readonly t = ADM_STRINGS.dashboard;
@@ -106,6 +112,7 @@ export class AdminDashboardPage implements OnInit {
 
   protected readonly rows = signal<DashboardRow[]>([]);
   protected readonly loading = signal(false);
+  protected readonly exporting = signal(false);
   protected readonly error = signal('');
   protected readonly filter = signal<DashboardFilter>(NO_FILTER);
 
@@ -115,6 +122,12 @@ export class AdminDashboardPage implements OnInit {
   protected readonly batchCounts = computed(() => countBy(this.visible(), 'batch'));
   protected readonly companyCounts = computed(() => countBy(this.visible(), 'company'));
   protected readonly filtered = computed(() => isFiltered(this.filter()));
+  /** The batch of the filter. The exports need one batch. */
+  protected readonly selectedBatch = computed(
+    () => this.options().batches.find((b) => b.id === this.filter().batchId) ?? null,
+  );
+  /** The export buttons are off when no batch is selected or the app is offline (FR-EXP-03). */
+  protected readonly canExport = computed(() => !!this.selectedBatch() && this.online.online() && !this.exporting());
 
   ngOnInit(): void {
     void this.load();
@@ -122,6 +135,58 @@ export class AdminDashboardPage implements OnInit {
 
   protected patch(change: Partial<DashboardFilter>): void {
     this.filter.update((f) => ({ ...f, ...change }));
+  }
+
+  /** Writes the DTR summary of the selected batch. It uses the rows of that batch, not the other filters. */
+  protected exportDtr(): void {
+    const batch = this.selectedBatch();
+    if (!batch) {
+      return;
+    }
+    const rows = this.rows()
+      .filter((r) => r.batchId === batch.id)
+      .map((r) => ({
+        ojtName: r.ojtName,
+        companyName: r.companyName,
+        facilitatorName: r.facilitatorName,
+        batchName: r.batchName,
+        requiredHours: r.requiredHours,
+        loggedMinutes: r.loggedMinutes,
+        lateReports: r.lateReports,
+        behind: r.behind,
+      }));
+    this.download(dtrSummaryCsv(rows), csvFileName('dtr', batch.name));
+  }
+
+  /** Writes the report summary of the selected batch. The server gives the rows. */
+  protected async exportReports(): Promise<void> {
+    const batch = this.selectedBatch();
+    if (!batch) {
+      return;
+    }
+    this.exporting.set(true);
+    this.error.set('');
+    try {
+      const list = await this.api.reportSummary(batch.id);
+      this.download(reportSummaryCsv(list), csvFileName('reports', batch.name));
+    } catch (e) {
+      this.error.set(`${this.t.exportFailed} ${errorMessage(e)}`);
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  /** Starts the download of the text as a CSV file. */
+  private download(text: string, name: string): void {
+    const url = URL.createObjectURL(new Blob([text], { type: CSV_MIME }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   protected async load(): Promise<void> {

@@ -6,11 +6,13 @@ import { Router } from '@angular/router';
 import { SyncService } from '../data/sync/sync.service';
 import { AuthService } from './auth/auth.service';
 import { PlatformService } from './platform.service';
+import { ReminderService } from './reminder.service';
 
 @Injectable({ providedIn: 'root' })
 export class SyncSessionService {
   private readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
+  private readonly reminders = inject(ReminderService);
   private readonly router = inject(Router);
   private readonly mobile = inject(PlatformService).platform === 'mobile';
   private userId: string | null = null;
@@ -19,7 +21,8 @@ export class SyncSessionService {
     effect(() => {
       const profile = this.auth.profile();
       const id = this.mobile && profile && profile.role !== 'admin' ? profile.id : null;
-      untracked(() => this.follow(id));
+      const ojt = this.mobile && profile?.role === 'ojt';
+      untracked(() => this.follow(id, ojt));
     });
     effect(() => {
       if (this.sync.sessionRejected()) {
@@ -28,15 +31,21 @@ export class SyncSessionService {
     });
   }
 
-  private follow(id: string | null): void {
+  private follow(id: string | null, ojt: boolean): void {
     if (id === this.userId) {
       return;
     }
     this.userId = id;
     if (id) {
       void this.sync.start(id);
+      if (ojt) {
+        // FR-NOTI-01 and FR-NOTI-02: set the reminders at each login of an OJT on the mobile app.
+        void this.reminders.refresh();
+      }
     } else {
       this.sync.stop();
+      // FR-AUTH-05: no reminders after a logout.
+      void this.reminders.clear();
     }
   }
 

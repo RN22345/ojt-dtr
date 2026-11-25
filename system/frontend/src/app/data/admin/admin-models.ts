@@ -58,6 +58,17 @@ export interface DashboardRow {
   behind: boolean;
 }
 
+/** One row of the RPC `admin_export_reports()` (FR-EXP-03): one report of a batch. */
+export interface ReportSummaryRow {
+  ojtId: string;
+  ojtName: string;
+  companyName: string;
+  facilitatorName: string;
+  weekStart: string;
+  status: string;
+  updatedAt: string;
+}
+
 export interface AuditEntry {
   id: string;
   actorId: string | null;

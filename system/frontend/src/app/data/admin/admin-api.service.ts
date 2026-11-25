@@ -1,5 +1,6 @@
 // The one path of the admin web app to the server (D-70). It is online only (D-13): there is no local database.
-// Accounts use the Edge Function `admin-users`. Other data uses the Data API and the RPC `admin_dashboard()`.
+// Accounts use the Edge Function `admin-users`. Other data uses the Data API and the RPCs `admin_dashboard()`
+// and `admin_export_reports()`.
 import { Injectable, inject } from '@angular/core';
 import { SUPABASE } from '../../core/supabase.client';
 import {
@@ -14,6 +15,7 @@ import {
   Company,
   DashboardRow,
   NewUserInput,
+  ReportSummaryRow,
   UserChanges,
 } from './admin-models';
 
@@ -110,6 +112,15 @@ const toDashboardRow = (r: Row): DashboardRow => ({
   loggedMinutes: Number(r['logged_minutes']),
   lateReports: Number(r['late_reports']),
   behind: !!r['behind'],
+});
+const toReportSummaryRow = (r: Row): ReportSummaryRow => ({
+  ojtId: r['ojt_id'],
+  ojtName: r['ojt_name'] ?? '',
+  companyName: r['company_name'] ?? '',
+  facilitatorName: r['facilitator_name'] ?? '',
+  weekStart: r['week_start'],
+  status: r['status'],
+  updatedAt: r['updated_at'],
 });
 const toAudit = (r: Row): AuditEntry => ({
   id: r['id'],
@@ -269,6 +280,12 @@ export class AdminApi {
   async dashboard(): Promise<DashboardRow[]> {
     const result = (await this.db.rpc('admin_dashboard')) as Result<Row[]>;
     return rows(result).map(toDashboardRow);
+  }
+
+  /** The reports of one batch for the CSV export (FR-EXP-03). */
+  async reportSummary(batchId: string): Promise<ReportSummaryRow[]> {
+    const result = (await this.db.rpc('admin_export_reports', { p_batch_id: batchId })) as Result<Row[]>;
+    return rows(result).map(toReportSummaryRow);
   }
 
   // --- Audit log (FR-AUD-02) ---

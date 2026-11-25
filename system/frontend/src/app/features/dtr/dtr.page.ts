@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
 import { IonButton, IonContent, IonRefresher, IonRefresherContent, IonSpinner, ToastController } from '@ionic/angular';
 import { AuthService } from '../../core/auth/auth.service';
+import { ReminderService } from '../../core/reminder.service';
 import { SyncService } from '../../data/sync/sync.service';
 import { GEOLOCATION } from '../../plugins/geolocation.plugin';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
@@ -141,6 +142,7 @@ export class DtrPage {
   private readonly dtr = inject(DtrService);
   private readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
+  private readonly reminders = inject(ReminderService);
   private readonly toasts = inject(ToastController);
 
   constructor() {
@@ -162,6 +164,8 @@ export class DtrPage {
       const result = this.openSince() ? await this.dtr.timeOut() : await this.dtr.timeIn();
       if (result.ok) {
         const saved = this.text.saved[result.punch.type];
+        // FR-NOTI-01 and FR-NOTI-02: the reminders follow the punch state. Do not wait for them.
+        void this.reminders.refresh();
         await this.toast(result.noLocation ? `${saved} ${this.text.noLocation}` : saved, 'success');
       } else {
         await this.toast(this.text.failure[result.reason], 'danger');
